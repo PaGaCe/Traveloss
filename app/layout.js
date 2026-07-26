@@ -1,8 +1,11 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Eslovenia 2026",
-  description: "Itinerario de viaje a Eslovenia",
+  title: "Traveloss",
+  description: "Tus viajes en un solo lugar",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {
