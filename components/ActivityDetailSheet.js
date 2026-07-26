@@ -39,7 +39,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
   return (
     <div className="absolute inset-0 z-30 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 max-h-[88%] overflow-y-auto bg-cloud">
+      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 max-h-[88%] overflow-y-auto bg-cloud max-w-lg mx-auto w-full">
         <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">

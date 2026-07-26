@@ -17,8 +17,8 @@ import AddTripSheet from "../components/AddTripSheet";
 
 function LoginScreen({ signInWithGoogle, error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
-      <div className="w-full max-w-[420px] bg-cloud rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col items-center justify-center px-8">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-[#C5CAD6]">
+      <div className="w-full max-w-sm bg-cloud rounded-3xl shadow-xl overflow-hidden flex flex-col items-center justify-center px-8 py-16">
         <img
           src="/logo.png"
           alt="Traveloss"
@@ -94,34 +94,34 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
-      <div className="relative w-full max-w-[420px] bg-cloud rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
-        {/* header */}
-        <div className="px-5 pt-6 pb-5 bg-gradient-to-br from-ink to-inkLight">
-          <div className="flex items-center gap-2 mb-1">
-            <img src="/logo.png" alt="" className="w-6 h-6 object-contain" />
-            <h1 className="text-white text-[22px] font-semibold font-display">
-              Traveloss
-            </h1>
-            <div className="ml-auto flex items-center gap-2">
-              {user && user.photoURL && (
-                <img
-                  src={user.photoURL}
-                  alt=""
-                  className="w-7 h-7 rounded-full ring-2 ring-white/30"
-                />
-              )}
-              {user && (
-                <button
-                  onClick={signOut}
-                  className="text-white/50 hover:text-white transition-colors"
-                  title="Cerrar sesión"
-                >
-                  <LogOut size={16} />
-                </button>
-              )}
-            </div>
+    <div className="min-h-screen flex flex-col bg-cloud">
+      {/* header */}
+      <div className="px-5 pt-6 pb-5 bg-gradient-to-br from-ink to-inkLight">
+        <div className="max-w-2xl mx-auto flex items-center gap-2 mb-1">
+          <img src="/logo.png" alt="" className="w-6 h-6 object-contain" />
+          <h1 className="text-white text-[22px] font-semibold font-display">
+            Traveloss
+          </h1>
+          <div className="ml-auto flex items-center gap-2">
+            {user && user.photoURL && (
+              <img
+                src={user.photoURL}
+                alt=""
+                className="w-7 h-7 rounded-full ring-2 ring-white/30"
+              />
+            )}
+            {user && (
+              <button
+                onClick={signOut}
+                className="text-white/50 hover:text-white transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
+        </div>
+        <div className="max-w-2xl mx-auto">
           <p className="text-white/70 text-[12.5px] mt-0.5">
             Tus viajes en un solo lugar
           </p>
@@ -131,9 +131,11 @@ export default function HomePage() {
               : "💾 Guardado solo en este navegador"}
           </p>
         </div>
+      </div>
 
-        {/* trip list */}
-        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-24 bg-cloud">
+      {/* trip list */}
+      <div className="flex-1 overflow-y-auto px-5 pt-4 pb-24">
+        <div className="max-w-2xl mx-auto">
           {trips.length === 0 ? (
             <div className="text-center mt-16">
               <Compass size={40} className="text-line mx-auto mb-3" />
@@ -240,26 +242,26 @@ export default function HomePage() {
             </div>
           )}
         </div>
-
-        {/* floating add button */}
-        <button
-          onClick={() => setShowAdd(true)}
-          className="absolute bottom-6 right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform bg-ink"
-        >
-          <Plus size={22} color="white" />
-        </button>
-
-        {showAdd && (
-          <AddTripSheet
-            onClose={() => setShowAdd(false)}
-            onSave={(trip) => {
-              addTrip(trip);
-              setShowAdd(false);
-              router.push(`/trip/${trip.id}`);
-            }}
-          />
-        )}
       </div>
+
+      {/* floating add button */}
+      <button
+        onClick={() => setShowAdd(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform bg-ink"
+      >
+        <Plus size={22} color="white" />
+      </button>
+
+      {showAdd && (
+        <AddTripSheet
+          onClose={() => setShowAdd(false)}
+          onSave={(trip) => {
+            addTrip(trip);
+            setShowAdd(false);
+            router.push(`/trip/${trip.id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

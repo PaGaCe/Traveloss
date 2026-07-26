@@ -96,71 +96,71 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
-      <div className="relative w-full max-w-[420px] bg-cloud rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
-        {/* header */}
-        <div className="relative px-5 pt-6 pb-4">
-          {trip.image ? (
-            <>
-              <img src={trip.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/70" />
-            </>
-          ) : (
-            <div
-              className="absolute inset-0"
-              style={{ background: `linear-gradient(135deg, ${trip.stampColor} 0%, #010615 100%)` }}
-            />
-          )}
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <button onClick={() => router.push("/")} className="text-white/80 hover:text-white transition-colors">
-                <ArrowLeft size={18} />
-              </button>
-              <div className="flex-1" />
-              {isOwner && usingFirebase && (
-                <button
-                  onClick={() => setShowShare(true)}
-                  className="text-white/60 hover:text-white transition-colors flex items-center gap-1"
-                  title="Compartir viaje"
-                >
-                  <Share2 size={16} />
-                  {sharedCount > 0 && (
-                    <span className="text-[10px] bg-white/20 rounded-full px-1.5 py-0.5">{sharedCount}</span>
-                  )}
-                </button>
-              )}
-              {trip._isShared && !isOwner && (
-                <span className="text-white/50 text-[10px] flex items-center gap-1">
-                  <Users size={12} /> Compartido
-                </span>
-              )}
+    <div className="min-h-screen flex flex-col bg-cloud">
+      {/* header */}
+      <div className="relative px-5 pt-6 pb-4">
+        {trip.image ? (
+          <>
+            <img src={trip.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/70" />
+          </>
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg, ${trip.stampColor} 0%, #010615 100%)` }}
+          />
+        )}
+        <div className="relative z-10 max-w-2xl mx-auto">
+          <div className="flex items-center gap-2 mb-2">
+            <button onClick={() => router.push("/")} className="text-white/80 hover:text-white transition-colors">
+              <ArrowLeft size={18} />
+            </button>
+            <div className="flex-1" />
+            {isOwner && usingFirebase && (
               <button
-                onClick={() => coverInputRef.current && coverInputRef.current.click()}
-                className="text-white/60 hover:text-white transition-colors"
-                title="Cambiar foto de portada"
+                onClick={() => setShowShare(true)}
+                className="text-white/60 hover:text-white transition-colors flex items-center gap-1"
+                title="Compartir viaje"
               >
-                <ImagePlus size={16} />
+                <Share2 size={16} />
+                {sharedCount > 0 && (
+                  <span className="text-[10px] bg-white/20 rounded-full px-1.5 py-0.5">{sharedCount}</span>
+                )}
               </button>
-              {isOwner && (
-                <button onClick={() => setShowDeleteConfirm(true)} className="text-white/60 hover:text-white transition-colors">
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverPick} />
-            {uploadingCover && <p className="text-white/70 text-[11px] mb-1">Procesando foto...</p>}
-            <h1 className="text-white text-[24px] font-semibold font-display">{trip.title}</h1>
-            <p className="text-white/85 text-[13px] flex items-center gap-1 mt-0.5">
-              <MapPin size={12} /> {trip.place} · {trip.dateLabel}
-            </p>
-            <p className="text-white/70 text-[11px] mt-1">
-              {usingFirebase ? "☁️ Sincronizado con Firebase" : "💾 Guardado solo en este navegador"}
-            </p>
+            )}
+            {trip._isShared && !isOwner && (
+              <span className="text-white/50 text-[10px] flex items-center gap-1">
+                <Users size={12} /> Compartido
+              </span>
+            )}
+            <button
+              onClick={() => coverInputRef.current && coverInputRef.current.click()}
+              className="text-white/60 hover:text-white transition-colors"
+              title="Cambiar foto de portada"
+            >
+              <ImagePlus size={16} />
+            </button>
+            {isOwner && (
+              <button onClick={() => setShowDeleteConfirm(true)} className="text-white/60 hover:text-white transition-colors">
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
+          <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverPick} />
+          {uploadingCover && <p className="text-white/70 text-[11px] mb-1">Procesando foto...</p>}
+          <h1 className="text-white text-[24px] font-semibold font-display">{trip.title}</h1>
+          <p className="text-white/85 text-[13px] flex items-center gap-1 mt-0.5">
+            <MapPin size={12} /> {trip.place} · {trip.dateLabel}
+          </p>
+          <p className="text-white/70 text-[11px] mt-1">
+            {usingFirebase ? "☁️ Sincronizado con Firebase" : "💾 Guardado solo en este navegador"}
+          </p>
         </div>
+      </div>
 
-        {/* day stamps */}
-        <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-cloud border-b border-line/60">
+      {/* day stamps */}
+      <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-cloud border-b border-line/60">
+        <div className="max-w-2xl mx-auto flex gap-3">
           {trip.days.map((d) => (
             <button
               key={d.id}
@@ -184,44 +184,46 @@ export default function TripDetailPage() {
             <Plus size={18} />
           </button>
         </div>
+      </div>
 
-        {/* day meta + toggle */}
-        <div className="px-5 pt-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[12.5px] font-medium text-ink">{day ? day.label : ""}</span>
-            <span className="text-line">·</span>
-            <input
-              value={day ? day.date : ""}
-              onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
-              className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
-            />
-          </div>
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => setDayView("timeline")}
-              className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
-              style={{
-                background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
-                color: dayView === "timeline" ? "white" : "#5A6478",
-              }}
-            >
-              <List size={12} /> Lista
-            </button>
-            <button
-              onClick={() => setDayView("map")}
-              className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
-              style={{
-                background: dayView === "map" ? trip.stampColor : "#F4F4F7",
-                color: dayView === "map" ? "white" : "#5A6478",
-              }}
-            >
-              <MapIcon size={12} /> Mapa
-            </button>
-          </div>
+      {/* day meta + toggle */}
+      <div className="px-5 pt-3 flex items-center justify-between max-w-2xl mx-auto w-full">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[12.5px] font-medium text-ink">{day ? day.label : ""}</span>
+          <span className="text-line">·</span>
+          <input
+            value={day ? day.date : ""}
+            onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
+            className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
+          />
         </div>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setDayView("timeline")}
+            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
+            style={{
+              background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
+              color: dayView === "timeline" ? "white" : "#5A6478",
+            }}
+          >
+            <List size={12} /> Lista
+          </button>
+          <button
+            onClick={() => setDayView("map")}
+            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
+            style={{
+              background: dayView === "map" ? trip.stampColor : "#F4F4F7",
+              color: dayView === "map" ? "white" : "#5A6478",
+            }}
+          >
+            <MapIcon size={12} /> Mapa
+          </button>
+        </div>
+      </div>
 
-        {/* content */}
-        <div className="flex-1 overflow-y-auto px-5 pt-3 pb-24 bg-cloud">
+      {/* content */}
+      <div className="flex-1 overflow-y-auto px-5 pt-3 pb-24">
+        <div className="max-w-2xl mx-auto">
           {!day ? (
             <p className="text-center text-[13px] mt-10 text-slate">
               Aún no hay días en este viaje. Toca &ldquo;+&rdquo; para añadir el primero.
@@ -240,15 +242,16 @@ export default function TripDetailPage() {
             ))
           )}
         </div>
+      </div>
 
-        {/* floating add button */}
-        <button
-          onClick={() => setShowAdd(true)}
-          className="absolute bottom-6 right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-          style={{ background: trip.stampColor }}
-        >
-          <Plus size={22} color="white" />
-        </button>
+      {/* floating add button */}
+      <button
+        onClick={() => setShowAdd(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+        style={{ background: trip.stampColor }}
+      >
+        <Plus size={22} color="white" />
+      </button>
 
         {showAdd && (
           <AddActivitySheet
@@ -304,7 +307,6 @@ export default function TripDetailPage() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
