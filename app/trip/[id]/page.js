@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, Fragment, useRef, useEffect } from "react";
+import { useState, Fragment, useRef, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus, Share2, Users, Wallet, Check, X, GalleryHorizontal, Upload } from "lucide-react";
+import {
+  Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus,
+  Share2, Users, Check, X, Upload, Camera,
+} from "lucide-react";
 import { useTripsStore } from "../../../lib/useTripsStore";
 import { useAuth } from "../../../lib/useAuth";
 import { compressImage } from "../../../lib/compressImage";
-import { uploadImageToFirebase } from "../../../lib/uploadImage";
-import { firebaseReady } from "../../../lib/firebase";
 import ActivityTicket from "../../../components/ActivityTicket";
 import ActivityDetailSheet from "../../../components/ActivityDetailSheet";
 import AddActivitySheet from "../../../components/AddActivitySheet";
@@ -16,25 +17,25 @@ import ShareTripSheet from "../../../components/ShareTripSheet";
 
 const DayMap = dynamic(() => import("../../../components/DayMap"), { ssr: false });
 
+function TricountLogo({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="5" fill="#1DC3F0" />
+      <path d="M7 7h4v10H7z" fill="white" />
+      <path d="M13 10h4v7h-4z" fill="white" />
+    </svg>
+  );
+}
+
 export default function TripDetailPage() {
   const params = useParams();
   const router = useRouter();
   const tripId = params.id;
   const { user, userId } = useAuth();
   const {
-    getTrip,
-    loaded,
-    addDay,
-    renameDay,
-    addActivity,
-    updateActivity,
-    updateTrip,
-    deleteTrip,
-    shareTrip,
-    unshareTrip,
-    getSharedUsers,
-    joinSharedTrip,
-    usingFirebase,
+    getTrip, loaded, addDay, renameDay, addActivity, updateActivity,
+    updateTrip, deleteTrip, addDayPhoto, removeDayPhoto,
+    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, usingFirebase,
   } = useTripsStore(userId, user?.email);
 
   const trip = getTrip(tripId);
@@ -54,8 +55,9 @@ export default function TripDetailPage() {
   const [titleDraft, setTitleDraft] = useState("");
   const [editingTricount, setEditingTricount] = useState(false);
   const [tricountDraft, setTricountDraft] = useState("");
-  const [galleryUploadProgress, setGalleryUploadProgress] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [galleryScope, setGalleryScope] = useState("day");
   const galleryInputRef = useRef(null);
 
   useEffect(() => {
@@ -68,52 +70,6 @@ export default function TripDetailPage() {
       }
     });
   }, [isInvite, userId, tripId, usingFirebase, joinSharedTrip]);
-
-  function handleTitleSave() {
-    if (titleDraft.trim()) updateTrip(tripId, { title: titleDraft.trim() });
-    setEditingTitle(false);
-  }
-
-  function handleTricountSave() {
-    updateTrip(tripId, { tricountUrl: tricountDraft.trim() });
-    setEditingTricount(false);
-  }
-
-  async function handleGalleryUpload(e) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setGalleryUploadProgress(true);
-    const currentGallery = trip.gallery || [];
-    const newPhotos = [];
-    for (const file of files) {
-      try {
-        const dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
-        if (firebaseReady && usingFirebase) {
-          const path = `trips/${tripId}/gallery/${Date.now()}-${file.name}`;
-          const url = await uploadImageToFirebase(dataUrl, path);
-          newPhotos.push({ url, caption: "", addedAt: Date.now() });
-        } else {
-          newPhotos.push({ url: dataUrl, caption: "", addedAt: Date.now() });
-        }
-      } catch (err) {
-        console.error("Gallery upload error:", err);
-      }
-    }
-    updateTrip(tripId, { gallery: [...currentGallery, ...newPhotos] });
-    setGalleryUploadProgress(false);
-    if (galleryInputRef.current) galleryInputRef.current.value = "";
-  }
-
-  function handleDeletePhoto(idx) {
-    const gallery = (trip.gallery || []).filter((_, i) => i !== idx);
-    updateTrip(tripId, { gallery });
-  }
-
-  function handleCaptionChange(idx, caption) {
-    const gallery = [...(trip.gallery || [])];
-    gallery[idx] = { ...gallery[idx], caption };
-    updateTrip(tripId, { gallery });
-  }
 
   if (!loaded) {
     return (
@@ -141,6 +97,29 @@ export default function TripDetailPage() {
   const isOwner = !trip._isShared || (trip._sharedMeta && trip._sharedMeta.ownerId === userId);
   const sharedCount = trip._isShared && trip._sharedMeta ? trip._sharedMeta.sharedWith.length : 0;
 
+  const allPhotos = useMemo(() => {
+    const photos = [];
+    for (const d of trip.days) {
+      for (const p of (d.gallery || [])) {
+        photos.push({ ...p, dayLabel: d.label, dayId: d.id });
+      }
+    }
+    return photos;
+  }, [trip.days]);
+
+  const dayPhotos = day ? (day.gallery || []) : [];
+  const displayPhotos = galleryScope === "all" ? allPhotos : dayPhotos;
+
+  function handleTitleSave() {
+    if (titleDraft.trim()) updateTrip(tripId, { title: titleDraft.trim() });
+    setEditingTitle(false);
+  }
+
+  function handleTricountSave() {
+    updateTrip(tripId, { tricountUrl: tricountDraft.trim() });
+    setEditingTricount(false);
+  }
+
   function handleAddDay() {
     const newId = addDay(tripId);
     setActiveDayId(newId);
@@ -162,6 +141,34 @@ export default function TripDetailPage() {
       console.error(err);
     } finally {
       setUploadingCover(false);
+    }
+  }
+
+  async function handleGalleryUpload(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !day) return;
+    setGalleryUploading(true);
+    for (const file of files) {
+      try {
+        const dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        addDayPhoto(tripId, day.id, {
+          url: dataUrl,
+          caption: "",
+          addedAt: Date.now(),
+        });
+      } catch (err) {
+        console.error("Gallery upload error:", err);
+      }
+    }
+    setGalleryUploading(false);
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+  }
+
+  function handleDeletePhoto(photo) {
+    if (galleryScope === "all") {
+      removeDayPhoto(tripId, photo.dayId, (trip.days.find((d) => d.id === photo.dayId)?.gallery || []).findIndex((p) => p.addedAt === photo.addedAt));
+    } else if (day) {
+      removeDayPhoto(tripId, day.id, dayPhotos.findIndex((p) => p.addedAt === photo.addedAt));
     }
   }
 
@@ -248,21 +255,22 @@ export default function TripDetailPage() {
             <MapPin size={12} /> {trip.place} · {trip.dateLabel}
           </p>
 
+          {/* Tricount */}
           {editingTricount && isOwner ? (
-            <div className="flex items-center gap-1.5 mt-1.5">
+            <div className="flex items-center gap-1.5 mt-2">
               <input
                 autoFocus
                 value={tricountDraft}
                 onChange={(e) => setTricountDraft(e.target.value)}
                 placeholder="Pega el enlace de Tricount"
                 onKeyDown={(e) => { if (e.key === "Enter") handleTricountSave(); if (e.key === "Escape") setEditingTricount(false); }}
-                className="text-white text-[12px] bg-white/15 rounded-lg px-2 py-1 outline-none flex-1 border border-white/25 placeholder:text-white/40"
+                className="text-white text-[13px] bg-white/15 rounded-xl px-3 py-2 outline-none flex-1 border border-white/25 placeholder:text-white/40"
               />
-              <button onClick={handleTricountSave} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                <Check size={12} className="text-white" />
+              <button onClick={handleTricountSave} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <Check size={14} className="text-white" />
               </button>
-              <button onClick={() => setEditingTricount(false)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                <X size={12} className="text-white/60" />
+              <button onClick={() => setEditingTricount(false)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                <X size={14} className="text-white/60" />
               </button>
             </div>
           ) : trip.tricountUrl ? (
@@ -270,21 +278,24 @@ export default function TripDetailPage() {
               href={trip.tricountUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1.5 text-[11.5px] text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg px-2.5 py-1 transition-colors"
+              className="mt-2 inline-flex items-center gap-2 text-[13px] font-medium text-white rounded-xl px-4 py-2 transition-all hover:brightness-110 active:scale-95"
+              style={{ background: "#1DC3F0" }}
             >
-              <Wallet size={12} /> Tricount
+              <TricountLogo size={20} />
+              Tricount
             </a>
           ) : isOwner ? (
             <button
-              onClick={() => { setTricountDraft(trip.tricountUrl || ""); setEditingTricount(true); }}
-              className="mt-1.5 inline-flex items-center gap-1.5 text-[11.5px] text-white/40 hover:text-white/60 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1 transition-colors border border-dashed border-white/15"
+              onClick={() => { setTricountDraft(""); setEditingTricount(true); }}
+              className="mt-2 inline-flex items-center gap-2 text-[13px] font-medium text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl px-4 py-2 transition-colors border border-dashed border-white/20"
             >
-              <Wallet size={12} /> Añadir Tricount
+              <TricountLogo size={18} />
+              Añadir Tricount
             </button>
           ) : null}
 
-          <p className="text-white/70 text-[11px] mt-1">
-            {usingFirebase ? "☁️ Sincronizado con Firebase" : "💾 Guardado solo en este navegador"}
+          <p className="text-white/50 text-[10px] mt-2">
+            {usingFirebase ? "☁ Sincronizado" : "💾 Local"}
           </p>
         </div>
       </div>
@@ -357,7 +368,7 @@ export default function TripDetailPage() {
               color: dayView === "gallery" ? "white" : "#5A6478",
             }}
           >
-            <GalleryHorizontal size={12} /> Galería
+            <Camera size={12} /> Fotos
           </button>
         </div>
       </div>
@@ -367,21 +378,51 @@ export default function TripDetailPage() {
         <div className="max-w-2xl mx-auto">
           {dayView === "gallery" ? (
             <>
+              {/* scope toggle: day vs all */}
+              <div className="flex items-center gap-2 mb-3">
+                <button
+                  onClick={() => setGalleryScope("day")}
+                  className="px-3 py-1 rounded-lg text-[12px] font-medium transition-colors"
+                  style={{
+                    background: galleryScope === "day" ? `${trip.stampColor}20` : "transparent",
+                    color: galleryScope === "day" ? trip.stampColor : "#8A90A0",
+                    border: `1px solid ${galleryScope === "day" ? trip.stampColor : "#C5CAD6"}`,
+                  }}
+                >
+                  {day ? day.label : "Día"}
+                </button>
+                <button
+                  onClick={() => setGalleryScope("all")}
+                  className="px-3 py-1 rounded-lg text-[12px] font-medium transition-colors"
+                  style={{
+                    background: galleryScope === "all" ? `${trip.stampColor}20` : "transparent",
+                    color: galleryScope === "all" ? trip.stampColor : "#8A90A0",
+                    border: `1px solid ${galleryScope === "all" ? trip.stampColor : "#C5CAD6"}`,
+                  }}
+                >
+                  Todos ({allPhotos.length})
+                </button>
+              </div>
+
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[13px] text-slate font-medium">
-                  {trip.gallery && trip.gallery.length > 0
-                    ? `${trip.gallery.length} foto${trip.gallery.length !== 1 ? "s" : ""}`
-                    : "Sin fotos aún"}
+                  {displayPhotos.length > 0
+                    ? `${displayPhotos.length} foto${displayPhotos.length !== 1 ? "s" : ""}`
+                    : galleryScope === "day"
+                      ? `Sin fotos en ${day ? day.label : "este día"}`
+                      : "Sin fotos en el viaje"}
                 </p>
-                <button
-                  onClick={() => galleryInputRef.current && galleryInputRef.current.click()}
-                  disabled={galleryUploadProgress}
-                  className="flex items-center gap-1 text-[12px] font-medium px-3 py-1.5 rounded-lg text-white"
-                  style={{ background: trip.stampColor, opacity: galleryUploadProgress ? 0.6 : 1 }}
-                >
-                  <Upload size={12} />
-                  {galleryUploadProgress ? "Subiendo..." : "Subir fotos"}
-                </button>
+                {galleryScope === "day" && (
+                  <button
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={galleryUploading}
+                    className="flex items-center gap-1 text-[12px] font-medium px-3 py-1.5 rounded-lg text-white"
+                    style={{ background: trip.stampColor, opacity: galleryUploading ? 0.6 : 1 }}
+                  >
+                    <Upload size={12} />
+                    {galleryUploading ? "Subiendo..." : "Subir fotos"}
+                  </button>
+                )}
               </div>
               <input
                 ref={galleryInputRef}
@@ -391,10 +432,11 @@ export default function TripDetailPage() {
                 className="hidden"
                 onChange={handleGalleryUpload}
               />
-              {trip.gallery && trip.gallery.length > 0 ? (
+
+              {displayPhotos.length > 0 ? (
                 <div className="grid grid-cols-3 gap-1.5">
-                  {trip.gallery.map((photo, idx) => (
-                    <div key={idx} className="relative aspect-square group">
+                  {displayPhotos.map((photo, idx) => (
+                    <div key={`${photo.dayId || ""}-${photo.addedAt}-${idx}`} className="relative aspect-square group">
                       <img
                         src={photo.url}
                         alt={photo.caption || ""}
@@ -403,11 +445,16 @@ export default function TripDetailPage() {
                       />
                       {isOwner && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDeletePhoto(idx); }}
+                          onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
                           className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X size={10} className="text-white" />
                         </button>
+                      )}
+                      {galleryScope === "all" && photo.dayLabel && (
+                        <span className="absolute bottom-1 left-1 text-[9px] font-medium text-white bg-black/50 rounded px-1 py-0.5">
+                          {photo.dayLabel}
+                        </span>
                       )}
                     </div>
                   ))}
@@ -415,10 +462,14 @@ export default function TripDetailPage() {
               ) : (
                 <div
                   className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-slate transition-colors"
-                  onClick={() => galleryInputRef.current && galleryInputRef.current.click()}
+                  onClick={() => galleryScope === "day" && galleryInputRef.current?.click()}
                 >
                   <ImagePlus size={28} className="text-line" />
-                  <p className="text-[12.5px] text-slate">Toca para subir fotos del viaje</p>
+                  <p className="text-[12.5px] text-slate">
+                    {galleryScope === "day"
+                      ? "Toca para subir fotos de este día"
+                      : "Las fotos de todos los días aparecerán aquí"}
+                  </p>
                 </div>
               )}
             </>
@@ -453,72 +504,72 @@ export default function TripDetailPage() {
         </button>
       )}
 
-        {showAdd && (
-          <AddActivitySheet
-            accentColor={trip.stampColor}
-            onClose={() => setShowAdd(false)}
-            onSave={(activity) => {
-              addActivity(tripId, day.id, activity);
-              setShowAdd(false);
-            }}
-          />
-        )}
+      {showAdd && day && (
+        <AddActivitySheet
+          accentColor={trip.stampColor}
+          onClose={() => setShowAdd(false)}
+          onSave={(activity) => {
+            addActivity(tripId, day.id, activity);
+            setShowAdd(false);
+          }}
+        />
+      )}
 
-        {detailItem && (
-          <ActivityDetailSheet
-            item={detailItem}
-            accentColor={trip.stampColor}
-            onClose={() => setDetailItemId(null)}
-            onUpdate={(updates) => updateActivity(tripId, day.id, detailItem.id, updates)}
-          />
-        )}
+      {detailItem && day && (
+        <ActivityDetailSheet
+          item={detailItem}
+          accentColor={trip.stampColor}
+          onClose={() => setDetailItemId(null)}
+          onUpdate={(updates) => updateActivity(tripId, day.id, detailItem.id, updates)}
+        />
+      )}
 
-        {showShare && (
-          <ShareTripSheet
-            tripId={tripId}
-            sharedMeta={trip._sharedMeta}
-            userId={userId}
-            onClose={() => setShowShare(false)}
-            onShare={shareTrip}
-            onUnshare={unshareTrip}
-            getSharedUsers={getSharedUsers}
-          />
-        )}
+      {showShare && (
+        <ShareTripSheet
+          tripId={tripId}
+          sharedMeta={trip._sharedMeta}
+          userId={userId}
+          onClose={() => setShowShare(false)}
+          onShare={shareTrip}
+          onUnshare={unshareTrip}
+          getSharedUsers={getSharedUsers}
+        />
+      )}
 
-        {showDeleteConfirm && (
-          <div className="absolute inset-0 z-30 flex flex-col justify-center items-center">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
-            <div className="relative z-10 bg-cloud rounded-2xl px-6 py-5 shadow-xl max-w-[280px] w-full">
-              <p className="text-[15px] font-semibold text-ink text-center mb-1">¿Eliminar viaje?</p>
-              <p className="text-[13px] text-slate text-center mb-4">
-                Se eliminará &ldquo;{trip.title}&rdquo; y todos sus días. Esta acción no se puede deshacer.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-ink"
-                >
-                  Cancelar
-                </button>
-                <button onClick={handleDeleteTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-coral text-white">
-                  Eliminar
-                </button>
-              </div>
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-30 flex flex-col justify-center items-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative z-10 bg-cloud rounded-2xl px-6 py-5 shadow-xl max-w-[280px] w-full">
+            <p className="text-[15px] font-semibold text-ink text-center mb-1">¿Eliminar viaje?</p>
+            <p className="text-[13px] text-slate text-center mb-4">
+              Se eliminará &ldquo;{trip.title}&rdquo; y todos sus días. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-ink"
+              >
+                Cancelar
+              </button>
+              <button onClick={handleDeleteTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-coral text-white">
+                Eliminar
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {lightboxImg && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
-            <button
-              onClick={() => setLightboxImg(null)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
-            >
-              <X size={18} className="text-white" />
-            </button>
-            <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
-          </div>
-        )}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={18} className="text-white" />
+          </button>
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }
