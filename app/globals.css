@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "leaflet/dist/leaflet.css";
+
+html,
+body {
+  background: #dde3ec;
+}
+
+/* Perforated ticket divider used in ActivityTicket */
+.ticket-divider {
+  background-image: repeating-linear-gradient(to bottom, #e2e6ee 0, #e2e6ee 6px, transparent 6px, transparent 12px);
+  width: 2px;
+}
