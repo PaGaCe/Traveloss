@@ -24,8 +24,6 @@ function LoginScreen({ signInWithGoogle, error }) {
           alt="Traveloss"
           className="w-20 h-20 object-contain mb-4"
         />
-        <h1 className="text-white text-[28px] font-semibold font-display mb-1">Traveloss</h1>
-        <p className="text-white/60 text-[14px] mb-8 text-center">Tus viajes en un solo lugar</p>
 
         <button
           onClick={signInWithGoogle}
@@ -124,9 +122,6 @@ export default function HomePage() {
           </div>
         </div>
         <div className="max-w-2xl mx-auto">
-          <p className="text-white/70 text-[12.5px] mt-0.5">
-            Tus viajes en un solo lugar
-          </p>
           <p className="text-white/50 text-[11px] mt-1">
             {usingFirebase
               ? "☁️ Sincronizado con Firebase"
