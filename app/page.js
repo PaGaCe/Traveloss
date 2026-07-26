@@ -17,13 +17,15 @@ import AddTripSheet from "../components/AddTripSheet";
 
 function LoginScreen({ signInWithGoogle, error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-[#C5CAD6]">
-      <div className="w-full max-w-sm bg-cloud rounded-3xl shadow-xl overflow-hidden flex flex-col items-center justify-center px-8 py-16">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-ink">
+      <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden flex flex-col items-center justify-center px-8 py-16">
         <img
           src="/logo.png"
           alt="Traveloss"
           className="w-20 h-20 object-contain mb-4"
         />
+        <h1 className="text-white text-[28px] font-semibold font-display mb-1">Traveloss</h1>
+        <p className="text-white/60 text-[14px] mb-8 text-center">Tus viajes en un solo lugar</p>
 
         <button
           onClick={signInWithGoogle}
@@ -54,7 +56,7 @@ function LoginScreen({ signInWithGoogle, error }) {
           <p className="text-coral text-[12.5px] mt-3 text-center">{error}</p>
         )}
 
-        <p className="text-slate text-[11.5px] mt-6 text-center leading-relaxed">
+        <p className="text-white/50 text-[11.5px] mt-6 text-center leading-relaxed">
           Guarda tus viajes en la nube y accede desde cualquier dispositivo.
         </p>
       </div>
