@@ -70,7 +70,7 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
   return (
     <div className="absolute inset-0 z-20 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-white max-h-[88%] overflow-y-auto">
+      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-cloud max-h-[88%] overflow-y-auto">
         <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-semibold text-ink font-display">Nueva actividad</h2>
@@ -126,7 +126,7 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
                 />
               </div>
               {suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden">
+                <div className="absolute left-0 right-0 top-full mt-1 bg-cloud rounded-xl shadow-lg z-10 overflow-hidden">
                   {suggestions.map((s) => (
                     <button
                       key={s.place_id}

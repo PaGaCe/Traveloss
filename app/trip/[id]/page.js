@@ -97,7 +97,7 @@ export default function TripDetailPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
-      <div className="relative w-full max-w-[420px] bg-white rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
+      <div className="relative w-full max-w-[420px] bg-cloud rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
         {/* header */}
         <div className="relative px-5 pt-6 pb-4">
           {trip.image ? (
@@ -160,7 +160,7 @@ export default function TripDetailPage() {
         </div>
 
         {/* day stamps */}
-        <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-white border-b border-line/60">
+        <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-cloud border-b border-line/60">
           {trip.days.map((d) => (
             <button
               key={d.id}
@@ -285,7 +285,7 @@ export default function TripDetailPage() {
         {showDeleteConfirm && (
           <div className="absolute inset-0 z-30 flex flex-col justify-center items-center">
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm(false)} />
-            <div className="relative z-10 bg-white rounded-2xl px-6 py-5 shadow-xl max-w-[280px] w-full">
+            <div className="relative z-10 bg-cloud rounded-2xl px-6 py-5 shadow-xl max-w-[280px] w-full">
               <p className="text-[15px] font-semibold text-ink text-center mb-1">¿Eliminar viaje?</p>
               <p className="text-[13px] text-slate text-center mb-4">
                 Se eliminará &ldquo;{trip.title}&rdquo; y todos sus días. Esta acción no se puede deshacer.

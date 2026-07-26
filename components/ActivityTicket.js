@@ -16,7 +16,7 @@ export default function ActivityTicket({ item, onClick }) {
       )}
       <button
         onClick={onClick}
-        className="w-full text-left flex rounded-2xl overflow-hidden shadow-sm bg-white active:scale-[0.99] transition-transform"
+        className="w-full text-left flex rounded-2xl overflow-hidden shadow-sm bg-cloud active:scale-[0.99] transition-transform"
       >
         <div className="w-20 shrink-0 flex flex-col items-center justify-center gap-1 py-3 bg-ink">
           <Icon size={16} className="text-gold" />

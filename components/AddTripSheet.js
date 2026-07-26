@@ -45,7 +45,7 @@ export default function AddTripSheet({ onClose, onSave }) {
   return (
     <div className="absolute inset-0 z-20 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-white max-h-[88%] overflow-y-auto">
+      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-cloud max-h-[88%] overflow-y-auto">
         <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-semibold text-ink font-display">Nuevo viaje</h2>

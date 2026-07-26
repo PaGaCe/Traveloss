@@ -60,7 +60,7 @@ export default function DayMap({ items, color }) {
   const center = [points[0].lat, points[0].lng];
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-sm bg-white mb-3">
+    <div className="rounded-2xl overflow-hidden shadow-sm bg-cloud mb-3">
       <MapContainer center={center} zoom={12} scrollWheelZoom={false} style={{ height: 280, width: "100%" }}>
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
