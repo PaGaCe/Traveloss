@@ -7,13 +7,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#1B2A4A",
-        cloud: "#EFF4F8",
-        coral: "#FF6B4A",
-        gold: "#F2B134",
-        teal: "#2A9D8F",
-        slate: "#8A93A6",
-        line: "#C9CFDA",
+        ink: "#010615",
+        cloud: "#F4F4F7",
+        coral: "#E56508",
+        gold: "#FBA006",
+        teal: "#FDC509",
+        slate: "#8A90A0",
+        line: "#C5CAD6",
+        muted: "#5A6478",
+        inkLight: "#0A1528",
       },
       fontFamily: {
         display: ["Georgia", "'Times New Roman'", "serif"],

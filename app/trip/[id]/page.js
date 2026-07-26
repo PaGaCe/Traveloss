@@ -96,7 +96,7 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#DDE3EC]">
+    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
       <div className="relative w-full max-w-[420px] bg-white rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
         {/* header */}
         <div className="relative px-5 pt-6 pb-4">
@@ -108,7 +108,7 @@ export default function TripDetailPage() {
           ) : (
             <div
               className="absolute inset-0"
-              style={{ background: `linear-gradient(135deg, ${trip.stampColor} 0%, #1B2A4A 100%)` }}
+              style={{ background: `linear-gradient(135deg, ${trip.stampColor} 0%, #010615 100%)` }}
             />
           )}
           <div className="relative z-10">
@@ -167,8 +167,8 @@ export default function TripDetailPage() {
               onClick={() => setActiveDayId(d.id)}
               className="shrink-0 w-14 h-14 rounded-full flex flex-col items-center justify-center transition-all"
               style={{
-                border: `2px dashed ${d.id === (day && day.id) ? trip.stampColor : "#C9CFDA"}`,
-                color: d.id === (day && day.id) ? trip.stampColor : "#8A93A6",
+                border: `2px dashed ${d.id === (day && day.id) ? trip.stampColor : "#C5CAD6"}`,
+                color: d.id === (day && day.id) ? trip.stampColor : "#8A90A0",
                 background: d.id === (day && day.id) ? `${trip.stampColor}14` : "transparent",
                 transform: d.id === (day && day.id) ? "scale(1.06)" : "scale(1)",
               }}
@@ -193,7 +193,7 @@ export default function TripDetailPage() {
             <input
               value={day ? day.date : ""}
               onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
-              className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-[#5A6478]"
+              className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
             />
           </div>
           <div className="flex gap-1.5">
@@ -201,7 +201,7 @@ export default function TripDetailPage() {
               onClick={() => setDayView("timeline")}
               className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
               style={{
-                background: dayView === "timeline" ? trip.stampColor : "#EFF4F8",
+                background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
                 color: dayView === "timeline" ? "white" : "#5A6478",
               }}
             >
@@ -211,7 +211,7 @@ export default function TripDetailPage() {
               onClick={() => setDayView("map")}
               className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
               style={{
-                background: dayView === "map" ? trip.stampColor : "#EFF4F8",
+                background: dayView === "map" ? trip.stampColor : "#F4F4F7",
                 color: dayView === "map" ? "white" : "#5A6478",
               }}
             >

@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { X, MapPin, Calendar, ImagePlus } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 
-const COLORS = ["#2A9D8F", "#FF6B4A", "#F2B134", "#4A90D9", "#9B59B6", "#E74C3C", "#2ECC71", "#1ABC9C"];
+const COLORS = ["#FBA006", "#FDC509", "#E56508", "#010615", "#2A9D8F", "#FF6B4A", "#4A90D9", "#9B59B6"];
 
 export default function AddTripSheet({ onClose, onSave }) {
   const [title, setTitle] = useState("");
@@ -103,7 +103,7 @@ export default function AddTripSheet({ onClose, onSave }) {
           </div>
         </div>
 
-        <p className="text-[12px] font-medium mt-4 mb-2 text-[#5A6478]">Color del viaje</p>
+        <p className="text-[12px] font-medium mt-4 mb-2 text-muted">Color del viaje</p>
         <div className="flex gap-2.5 flex-wrap">
           {COLORS.map((c) => (
             <button

@@ -86,7 +86,7 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
               onClick={() => setType(t.key)}
               className="px-3 py-1.5 rounded-full text-[12.5px] font-medium shrink-0 transition-colors"
               style={{
-                background: type === t.key ? accentColor : "#EFF4F8",
+                background: type === t.key ? accentColor : "#F4F4F7",
                 color: type === t.key ? "white" : "#5A6478",
               }}
             >

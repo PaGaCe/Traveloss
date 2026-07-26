@@ -82,7 +82,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
         )}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
 
-        <label className="text-[12px] font-medium mb-1 block text-[#5A6478]">{detailLabel}</label>
+        <label className="text-[12px] font-medium mb-1 block text-muted">{detailLabel}</label>
         <textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}

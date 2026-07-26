@@ -77,7 +77,7 @@ export default function DayMap({ items, color }) {
       </MapContainer>
       <div className="p-3 flex flex-col gap-1.5">
         {points.map((p, i) => (
-          <div key={p.id} className="flex items-center gap-2 text-[12px] text-[#5A6478]">
+          <div key={p.id} className="flex items-center gap-2 text-[12px] text-muted">
             <span
               className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
               style={{ background: color }}

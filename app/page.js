@@ -9,7 +9,7 @@ import AddTripSheet from "../components/AddTripSheet";
 
 function LoginScreen({ signInWithGoogle, error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#DDE3EC]">
+    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
       <div className="w-full max-w-[420px] bg-white rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col items-center justify-center px-8">
         <img src="/logo.png" alt="Traveloss" className="w-20 h-20 object-contain mb-4" />
         <h1 className="text-ink text-[28px] font-semibold font-display mb-1">Traveloss</h1>
@@ -57,10 +57,10 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#DDE3EC]">
+    <div className="min-h-screen flex items-center justify-center py-6 px-2 bg-[#C5CAD6]">
       <div className="relative w-full max-w-[420px] bg-white rounded-[32px] shadow-2xl overflow-hidden min-h-[85vh] flex flex-col">
         {/* header */}
-        <div className="px-5 pt-6 pb-5 bg-gradient-to-br from-ink to-[#2A3D5C]">
+        <div className="px-5 pt-6 pb-5 bg-gradient-to-br from-ink to-inkLight">
           <div className="flex items-center gap-2 mb-1">
             <img src="/logo.png" alt="" className="w-6 h-6 object-contain" />
             <h1 className="text-white text-[22px] font-semibold font-display">Traveloss</h1>

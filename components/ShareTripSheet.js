@@ -94,7 +94,7 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
 
         {sharedUsers.length > 0 && (
           <div>
-            <p className="text-[12px] font-medium text-[#5A6478] mb-2">Personas con acceso</p>
+            <p className="text-[12px] font-medium text-muted mb-2">Personas con acceso</p>
             <div className="flex flex-col gap-2">
               {sharedUsers.map((u) => (
                 <div key={u.uid} className="flex items-center gap-3 rounded-xl px-4 py-2.5 bg-cloud">
