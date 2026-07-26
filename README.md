@@ -8,7 +8,7 @@ entre paradas (OSRM), fotos desde tu dispositivo y días/actividades editables.
 
 1. Descomprime la carpeta del proyecto.
 2. Ábrela en VSCode: `code slovenia-trip-app`
-3. Instala dependencias (necesitas Node.js 18+): 
+3. Instala dependencias (necesitas Node.js 18+):
    ```
    npm install
    ```
@@ -21,15 +21,18 @@ entre paradas (OSRM), fotos desde tu dispositivo y días/actividades editables.
 ## Desplegar en Vercel
 
 **Opción rápida (sin GitHub):**
+
 ```
 npm install -g vercel
 vercel
 ```
+
 Sigue las preguntas en pantalla (usa la cuenta gratuita de Vercel). Al terminar
 te da una URL pública tipo `https://tu-proyecto.vercel.app`.
 
 **Opción recomendada (con GitHub, para poder seguir editando y que se
 redespliegue solo):**
+
 1. Crea un repositorio nuevo en GitHub y sube este proyecto:
    ```
    git init
@@ -89,7 +92,7 @@ navegador (como antes), sin sincronizar.
    variables en Project Settings → Environment Variables).
 
 **⚠️ Nota de seguridad, léela antes de compartir el link con nadie:** estas
-reglas (`allow read, write: if true`) dejan que *cualquiera* que tenga la URL
+reglas (`allow read, write: if true`) dejan que _cualquiera_ que tenga la URL
 de tu app pueda leer y modificar tu itinerario — no hay usuario ni contraseña.
 La `apiKey` de Firebase no es secreta (siempre queda visible en el código del
 navegador), así que la seguridad depende 100% de estas reglas, no de ocultar
@@ -104,7 +107,6 @@ cuando quieras y lo añadimos.
 Al desplegar, añade las mismas 6 variables de `.env.local` en:
 Project Settings → Environment Variables (en Vercel), para los entornos de
 Production y Preview.
-
 
 ## Sobre el mapa y las rutas
 
