@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Mail, UserMinus, Users } from "lucide-react";
+import { X, Mail, UserMinus, Users, MessageCircle } from "lucide-react";
 
 export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, onShare, onUnshare, getSharedUsers }) {
   const [email, setEmail] = useState("");
@@ -89,6 +89,21 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
             <p className="text-[11px] text-slate mb-4">
               El otro usuario debe haber iniciado sesión al menos una vez con Google para poder compartir.
             </p>
+
+            <div className="border-t border-line pt-4 mb-4">
+              <p className="text-[12px] font-medium text-muted mb-2">O envía un enlace de invitación</p>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/trip/${tripId}?invite=true`;
+                  const text = encodeURIComponent(`¡Te invito a ver mi viaje en Traveloss! 🌍\n\n${url}`);
+                  window.open(`https://wa.me/?text=${text}`, "_blank");
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl py-3 bg-[#25D366] text-white text-[14px] font-medium active:scale-[0.98] transition-transform"
+              >
+                <MessageCircle size={18} />
+                Compartir por WhatsApp
+              </button>
+            </div>
           </>
         )}
 

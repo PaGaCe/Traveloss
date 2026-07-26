@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, Fragment, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, Fragment, useRef, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus, Share2, Users } from "lucide-react";
 import { useTripsStore } from "../../../lib/useTripsStore";
@@ -31,6 +31,7 @@ export default function TripDetailPage() {
     shareTrip,
     unshareTrip,
     getSharedUsers,
+    joinSharedTrip,
     usingFirebase,
   } = useTripsStore(userId, user?.email);
 
@@ -44,6 +45,19 @@ export default function TripDetailPage() {
   const [showShare, setShowShare] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const coverInputRef = useRef(null);
+  const searchParams = useSearchParams();
+  const isInvite = searchParams.get("invite") === "true";
+
+  useEffect(() => {
+    if (!isInvite || !userId || !tripId || !usingFirebase) return;
+    joinSharedTrip(tripId).then((ok) => {
+      if (ok) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("invite");
+        window.history.replaceState({}, "", url.toString());
+      }
+    });
+  }, [isInvite, userId, tripId, usingFirebase, joinSharedTrip]);
 
   if (!loaded) {
     return (
