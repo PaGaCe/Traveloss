@@ -3,10 +3,12 @@
 import { useState, Fragment, useRef, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus, Share2, Users } from "lucide-react";
+import { Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus, Share2, Users, Wallet, Check, X, GalleryHorizontal, Upload } from "lucide-react";
 import { useTripsStore } from "../../../lib/useTripsStore";
 import { useAuth } from "../../../lib/useAuth";
 import { compressImage } from "../../../lib/compressImage";
+import { uploadImageToFirebase } from "../../../lib/uploadImage";
+import { firebaseReady } from "../../../lib/firebase";
 import ActivityTicket from "../../../components/ActivityTicket";
 import ActivityDetailSheet from "../../../components/ActivityDetailSheet";
 import AddActivitySheet from "../../../components/AddActivitySheet";
@@ -48,6 +50,14 @@ export default function TripDetailPage() {
   const searchParams = useSearchParams();
   const isInvite = searchParams.get("invite") === "true";
 
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [editingTricount, setEditingTricount] = useState(false);
+  const [tricountDraft, setTricountDraft] = useState("");
+  const [galleryUploadProgress, setGalleryUploadProgress] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState(null);
+  const galleryInputRef = useRef(null);
+
   useEffect(() => {
     if (!isInvite || !userId || !tripId || !usingFirebase) return;
     joinSharedTrip(tripId).then((ok) => {
@@ -58,6 +68,52 @@ export default function TripDetailPage() {
       }
     });
   }, [isInvite, userId, tripId, usingFirebase, joinSharedTrip]);
+
+  function handleTitleSave() {
+    if (titleDraft.trim()) updateTrip(tripId, { title: titleDraft.trim() });
+    setEditingTitle(false);
+  }
+
+  function handleTricountSave() {
+    updateTrip(tripId, { tricountUrl: tricountDraft.trim() });
+    setEditingTricount(false);
+  }
+
+  async function handleGalleryUpload(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setGalleryUploadProgress(true);
+    const currentGallery = trip.gallery || [];
+    const newPhotos = [];
+    for (const file of files) {
+      try {
+        const dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        if (firebaseReady && usingFirebase) {
+          const path = `trips/${tripId}/gallery/${Date.now()}-${file.name}`;
+          const url = await uploadImageToFirebase(dataUrl, path);
+          newPhotos.push({ url, caption: "", addedAt: Date.now() });
+        } else {
+          newPhotos.push({ url: dataUrl, caption: "", addedAt: Date.now() });
+        }
+      } catch (err) {
+        console.error("Gallery upload error:", err);
+      }
+    }
+    updateTrip(tripId, { gallery: [...currentGallery, ...newPhotos] });
+    setGalleryUploadProgress(false);
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+  }
+
+  function handleDeletePhoto(idx) {
+    const gallery = (trip.gallery || []).filter((_, i) => i !== idx);
+    updateTrip(tripId, { gallery });
+  }
+
+  function handleCaptionChange(idx, caption) {
+    const gallery = [...(trip.gallery || [])];
+    gallery[idx] = { ...gallery[idx], caption };
+    updateTrip(tripId, { gallery });
+  }
 
   if (!loaded) {
     return (
@@ -162,10 +218,71 @@ export default function TripDetailPage() {
           </div>
           <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverPick} />
           {uploadingCover && <p className="text-white/70 text-[11px] mb-1">Procesando foto...</p>}
-          <h1 className="text-white text-[24px] font-semibold font-display">{trip.title}</h1>
+
+          {editingTitle && isOwner ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                autoFocus
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleTitleSave(); if (e.key === "Escape") setEditingTitle(false); }}
+                className="text-white text-[24px] font-semibold font-display bg-white/15 rounded-lg px-2 py-1 outline-none flex-1 border border-white/25"
+              />
+              <button onClick={handleTitleSave} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                <Check size={14} className="text-white" />
+              </button>
+              <button onClick={() => setEditingTitle(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+                <X size={14} className="text-white/60" />
+              </button>
+            </div>
+          ) : (
+            <h1
+              onClick={() => { if (isOwner) { setTitleDraft(trip.title); setEditingTitle(true); } }}
+              className={`text-white text-[24px] font-semibold font-display ${isOwner ? "cursor-pointer hover:opacity-80" : ""}`}
+            >
+              {trip.title}
+            </h1>
+          )}
+
           <p className="text-white/85 text-[13px] flex items-center gap-1 mt-0.5">
             <MapPin size={12} /> {trip.place} · {trip.dateLabel}
           </p>
+
+          {editingTricount && isOwner ? (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <input
+                autoFocus
+                value={tricountDraft}
+                onChange={(e) => setTricountDraft(e.target.value)}
+                placeholder="Pega el enlace de Tricount"
+                onKeyDown={(e) => { if (e.key === "Enter") handleTricountSave(); if (e.key === "Escape") setEditingTricount(false); }}
+                className="text-white text-[12px] bg-white/15 rounded-lg px-2 py-1 outline-none flex-1 border border-white/25 placeholder:text-white/40"
+              />
+              <button onClick={handleTricountSave} className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                <Check size={12} className="text-white" />
+              </button>
+              <button onClick={() => setEditingTricount(false)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                <X size={12} className="text-white/60" />
+              </button>
+            </div>
+          ) : trip.tricountUrl ? (
+            <a
+              href={trip.tricountUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-flex items-center gap-1.5 text-[11.5px] text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg px-2.5 py-1 transition-colors"
+            >
+              <Wallet size={12} /> Tricount
+            </a>
+          ) : isOwner ? (
+            <button
+              onClick={() => { setTricountDraft(trip.tricountUrl || ""); setEditingTricount(true); }}
+              className="mt-1.5 inline-flex items-center gap-1.5 text-[11.5px] text-white/40 hover:text-white/60 bg-white/5 hover:bg-white/10 rounded-lg px-2.5 py-1 transition-colors border border-dashed border-white/15"
+            >
+              <Wallet size={12} /> Añadir Tricount
+            </button>
+          ) : null}
+
           <p className="text-white/70 text-[11px] mt-1">
             {usingFirebase ? "☁️ Sincronizado con Firebase" : "💾 Guardado solo en este navegador"}
           </p>
@@ -232,13 +349,80 @@ export default function TripDetailPage() {
           >
             <MapIcon size={12} /> Mapa
           </button>
+          <button
+            onClick={() => setDayView("gallery")}
+            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
+            style={{
+              background: dayView === "gallery" ? trip.stampColor : "#F4F4F7",
+              color: dayView === "gallery" ? "white" : "#5A6478",
+            }}
+          >
+            <GalleryHorizontal size={12} /> Galería
+          </button>
         </div>
       </div>
 
       {/* content */}
       <div className="flex-1 overflow-y-auto px-5 pt-3 pb-24">
         <div className="max-w-2xl mx-auto">
-          {!day ? (
+          {dayView === "gallery" ? (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[13px] text-slate font-medium">
+                  {trip.gallery && trip.gallery.length > 0
+                    ? `${trip.gallery.length} foto${trip.gallery.length !== 1 ? "s" : ""}`
+                    : "Sin fotos aún"}
+                </p>
+                <button
+                  onClick={() => galleryInputRef.current && galleryInputRef.current.click()}
+                  disabled={galleryUploadProgress}
+                  className="flex items-center gap-1 text-[12px] font-medium px-3 py-1.5 rounded-lg text-white"
+                  style={{ background: trip.stampColor, opacity: galleryUploadProgress ? 0.6 : 1 }}
+                >
+                  <Upload size={12} />
+                  {galleryUploadProgress ? "Subiendo..." : "Subir fotos"}
+                </button>
+              </div>
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleGalleryUpload}
+              />
+              {trip.gallery && trip.gallery.length > 0 ? (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {trip.gallery.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-square group">
+                      <img
+                        src={photo.url}
+                        alt={photo.caption || ""}
+                        className="w-full h-full object-cover rounded-lg cursor-pointer"
+                        onClick={() => setLightboxImg(photo.url)}
+                      />
+                      {isOwner && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeletePhoto(idx); }}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={10} className="text-white" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-slate transition-colors"
+                  onClick={() => galleryInputRef.current && galleryInputRef.current.click()}
+                >
+                  <ImagePlus size={28} className="text-line" />
+                  <p className="text-[12.5px] text-slate">Toca para subir fotos del viaje</p>
+                </div>
+              )}
+            </>
+          ) : !day ? (
             <p className="text-center text-[13px] mt-10 text-slate">
               Aún no hay días en este viaje. Toca &ldquo;+&rdquo; para añadir el primero.
             </p>
@@ -259,13 +443,15 @@ export default function TripDetailPage() {
       </div>
 
       {/* floating add button */}
-      <button
-        onClick={() => setShowAdd(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-        style={{ background: trip.stampColor }}
-      >
-        <Plus size={22} color="white" />
-      </button>
+      {dayView !== "gallery" && (
+        <button
+          onClick={() => setShowAdd(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+          style={{ background: trip.stampColor }}
+        >
+          <Plus size={22} color="white" />
+        </button>
+      )}
 
         {showAdd && (
           <AddActivitySheet
@@ -319,6 +505,18 @@ export default function TripDetailPage() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {lightboxImg && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+            <button
+              onClick={() => setLightboxImg(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+            >
+              <X size={18} className="text-white" />
+            </button>
+            <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
           </div>
         )}
     </div>
