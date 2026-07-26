@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, useRef, useEffect, useMemo } from "react";
+import { useState, Fragment, useRef, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
@@ -97,15 +97,12 @@ export default function TripDetailPage() {
   const isOwner = !trip._isShared || (trip._sharedMeta && trip._sharedMeta.ownerId === userId);
   const sharedCount = trip._isShared && trip._sharedMeta ? trip._sharedMeta.sharedWith.length : 0;
 
-  const allPhotos = useMemo(() => {
-    const photos = [];
-    for (const d of trip.days) {
-      for (const p of (d.gallery || [])) {
-        photos.push({ ...p, dayLabel: d.label, dayId: d.id });
-      }
+  const allPhotos = [];
+  for (const d of trip.days) {
+    for (const p of (d.gallery || [])) {
+      allPhotos.push({ ...p, dayLabel: d.label, dayId: d.id });
     }
-    return photos;
-  }, [trip.days]);
+  }
 
   const dayPhotos = day ? (day.gallery || []) : [];
   const displayPhotos = galleryScope === "all" ? allPhotos : dayPhotos;
