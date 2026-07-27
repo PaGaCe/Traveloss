@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus } from "lucide-react";
+import DatePicker from "./DatePicker";
 
 function parseDateFromLabel(label) {
   if (!label) return null;
@@ -42,13 +43,25 @@ function openBookingLink(url) {
   }
 }
 
+function formatStayDates(hotel) {
+  const ci = hotel.checkinDate;
+  const co = hotel.checkoutDate;
+  if (ci && co) return `${ci} → ${co}`;
+  if (ci) return `Check-in: ${ci}`;
+  return null;
+}
+
 export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
   const [editingUrl, setEditingUrl] = useState(null);
   const [urlDraft, setUrlDraft] = useState("");
+  const [editingDates, setEditingDates] = useState(null);
+  const [checkinDraft, setCheckinDraft] = useState("");
+  const [checkoutDraft, setCheckoutDraft] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPlace, setNewPlace] = useState("");
-  const [newDayId, setNewDayId] = useState(trip.days[0]?.id || "");
+  const [newCheckinDate, setNewCheckinDate] = useState("");
+  const [newCheckoutDate, setNewCheckoutDate] = useState("");
   const [newBookingUrl, setNewBookingUrl] = useState("");
 
   const hotels = [];
@@ -65,7 +78,8 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
 
   let currentHotel = null;
   for (const h of hotels) {
-    const checkin = parseDateFromLabel(h.dayDate);
+    const dateStr = h.checkinDate || h.dayDate;
+    const checkin = parseDateFromLabel(dateStr);
     if (checkin && checkin <= today) {
       currentHotel = h;
     }
@@ -88,24 +102,83 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setUrlDraft(hotel.bookingUrl || "");
   }
 
+  function startEditDates(hotel) {
+    setEditingDates(hotel.id);
+    setCheckinDraft(hotel.checkinDate || hotel.dayDate || "");
+    setCheckoutDraft(hotel.checkoutDate || "");
+  }
+
+  function handleSaveDates(hotel) {
+    const updates = {};
+    if (checkinDraft) updates.checkinDate = checkinDraft;
+    if (checkoutDraft) updates.checkoutDate = checkoutDraft;
+    const updatedDays = trip.days.map((d) => ({
+      ...d,
+      items: d.items.map((item) =>
+        item.id === hotel.id ? { ...item, ...updates } : item
+      ),
+    }));
+    onUpdateTrip({ days: updatedDays });
+    setEditingDates(null);
+  }
+
+  function findDayForDate(dateStr) {
+    if (!dateStr) return trip.days[0]?.id || "";
+    const target = parseDateFromLabel(dateStr);
+    if (!target) return trip.days[0]?.id || "";
+    let bestId = trip.days[0]?.id || "";
+    let bestDiff = Infinity;
+    for (const d of trip.days) {
+      const dayDate = parseDateFromLabel(d.date);
+      if (!dayDate) continue;
+      const diff = Math.abs(dayDate.getTime() - target.getTime());
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestId = d.id;
+      }
+    }
+    return bestId;
+  }
+
   function handleAddHotel() {
-    if (!newTitle.trim() || !newDayId) return;
+    if (!newTitle.trim()) return;
+    const dayId = findDayForDate(newCheckinDate);
     const newHotel = {
       id: `n${Date.now()}`,
       title: newTitle.trim(),
       place: newPlace.trim(),
       time: "14:00",
       type: "stay",
+      ...(newCheckinDate ? { checkinDate: newCheckinDate } : {}),
+      ...(newCheckoutDate ? { checkoutDate: newCheckoutDate } : {}),
       ...(newBookingUrl.trim() ? { bookingUrl: newBookingUrl.trim() } : {}),
     };
     const updatedDays = trip.days.map((d) =>
-      d.id === newDayId ? { ...d, items: [...d.items, newHotel] } : d
+      d.id === dayId ? { ...d, items: [...d.items, newHotel] } : d
     );
     onUpdateTrip({ days: updatedDays });
     setNewTitle("");
     setNewPlace("");
+    setNewCheckinDate("");
+    setNewCheckoutDate("");
     setNewBookingUrl("");
     setShowAdd(false);
+  }
+
+  function renderHotelDates(hotel) {
+    const formatted = formatStayDates(hotel);
+    if (formatted) {
+      return (
+        <p className="text-[11px] text-muted flex items-center gap-1 mt-1">
+          <Calendar size={10} /> {formatted}
+        </p>
+      );
+    }
+    return (
+      <p className="text-[11px] text-muted flex items-center gap-1 mt-1">
+        <Calendar size={10} /> {hotel.dayLabel} · {hotel.dayDate}
+      </p>
+    );
   }
 
   return (
@@ -138,15 +211,26 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
               placeholder="Dirección o ciudad"
               className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
             />
-            <select
-              value={newDayId}
-              onChange={(e) => setNewDayId(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line appearance-none cursor-pointer"
-            >
-              {trip.days.map((d) => (
-                <option key={d.id} value={d.id}>{d.label} — {d.date}</option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-in</label>
+                <DatePicker
+                  value={newCheckinDate}
+                  onChange={setNewCheckinDate}
+                  accentColor={accentColor}
+                  placeholder="Entrada"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-out</label>
+                <DatePicker
+                  value={newCheckoutDate}
+                  onChange={setNewCheckoutDate}
+                  accentColor={accentColor}
+                  placeholder="Salida"
+                />
+              </div>
+            </div>
             <input
               value={newBookingUrl}
               onChange={(e) => setNewBookingUrl(e.target.value)}
@@ -212,7 +296,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                 <ExternalLink size={16} style={{ color: accentColor }} />
               )}
             </div>
-            <p className="text-[12px] text-muted">{currentHotel.dayLabel} · {currentHotel.dayDate}</p>
+            {renderHotelDates(currentHotel)}
             {currentHotel.bookingUrl && (
               <p className="text-[11px] mt-1.5 font-medium" style={{ color: accentColor }}>
                 Toca para abrir en Booking/Airbnb →
@@ -231,6 +315,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
           <div className="flex flex-col gap-2">
             {hotels.map((hotel) => {
               const isCurrent = currentHotel && hotel.id === currentHotel.id;
+              const isEditingDates = editingDates === hotel.id;
               return (
                 <div
                   key={hotel.id}
@@ -249,9 +334,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                       <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
                         <MapPin size={10} /> {hotel.place}
                       </p>
-                      <p className="text-[11px] text-muted flex items-center gap-1 mt-1">
-                        <Calendar size={10} /> {hotel.dayLabel} · {hotel.dayDate}
-                      </p>
+                      {renderHotelDates(hotel)}
                     </div>
                     {isCurrent && (
                       <span
@@ -263,24 +346,47 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                     )}
                   </div>
 
-                  {editingUrl === hotel.id ? (
-                    <div className="mt-3 flex items-center gap-2">
-                      <input
-                        autoFocus
-                        value={urlDraft}
-                        onChange={(e) => setUrlDraft(e.target.value)}
-                        placeholder="Pega el enlace de Booking o Airbnb"
-                        className="flex-1 rounded-lg px-3 py-2 text-[12px] outline-none bg-white border border-line text-ink"
-                      />
-                      <button onClick={() => handleSaveUrl(hotel)} className="w-8 h-8 rounded-full bg-teal/20 flex items-center justify-center shrink-0">
-                        <Check size={13} className="text-teal" />
-                      </button>
-                      <button onClick={() => setEditingUrl(null)} className="w-8 h-8 rounded-full bg-cloud flex items-center justify-center shrink-0">
-                        <X size={13} className="text-slate" />
-                      </button>
+                  {/* Date editing */}
+                  {isEditingDates ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-in</label>
+                          <DatePicker
+                            value={checkinDraft}
+                            onChange={setCheckinDraft}
+                            accentColor={accentColor}
+                            placeholder="Entrada"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-out</label>
+                          <DatePicker
+                            value={checkoutDraft}
+                            onChange={setCheckoutDraft}
+                            accentColor={accentColor}
+                            placeholder="Salida"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveDates(hotel)}
+                          className="flex-1 rounded-xl py-2 text-[12px] font-semibold text-white flex items-center justify-center gap-1"
+                          style={{ background: accentColor }}
+                        >
+                          <Check size={12} /> Guardar fechas
+                        </button>
+                        <button
+                          onClick={() => setEditingDates(null)}
+                          className="rounded-xl py-2 px-3 text-[12px] font-medium bg-cloud text-slate border border-line"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="mt-2.5 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                       {hotel.bookingUrl ? (
                         <button
                           onClick={() => openBookingLink(hotel.bookingUrl)}
@@ -298,6 +404,12 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                           <ExternalLink size={11} /> Añadir enlace
                         </button>
                       )}
+                      <button
+                        onClick={() => startEditDates(hotel)}
+                        className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
+                      >
+                        <Calendar size={11} /> Editar fechas
+                      </button>
                       <button
                         onClick={() => startEditUrl(hotel)}
                         className="p-1.5 rounded-lg hover:bg-cloud"

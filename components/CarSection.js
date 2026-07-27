@@ -3,10 +3,11 @@
 import { useState, useRef } from "react";
 import {
   Car, Fuel, Users, MapPin, FileText, Upload, X, Check, Pencil,
-  Settings, Trash2,
+  Settings, Trash2, ExternalLink,
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import DatePicker from "./DatePicker";
+import TimePicker from "./TimePicker";
 
 const FUEL_OPTIONS = [
   { key: "gasolina", label: "Gasolina" },
@@ -26,7 +27,9 @@ const EMPTY_CAR = {
   fuel: "gasolina",
   occupants: 2,
   pickupDate: "",
+  pickupTime: "",
   dropoffDate: "",
+  dropoffTime: "",
   pickupLocation: "",
   dropoffLocation: "",
   reservationRef: "",
@@ -74,6 +77,17 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
     onUpdateDocs(updated);
   }
 
+  function openDoc(url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function formatDateTime(date, time) {
+    const parts = [];
+    if (date) parts.push(date);
+    if (time) parts.push(time);
+    return parts.join(", ") || "—";
+  }
+
   if (!car && !editing) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -117,7 +131,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
             value={draft.model}
             onChange={(e) => handleFieldChange("model", e.target.value)}
             placeholder="Modelo del coche"
-            className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line"
+            className="w-full rounded-xl px-4 py-3.5 text-[14px] outline-none bg-cloud text-ink border border-line"
           />
 
           <div className="flex gap-3">
@@ -181,66 +195,64 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <MapPin size={10} /> Recogida
-              </label>
-              <DatePicker
-                value={draft.pickupDate}
-                onChange={(val) => handleFieldChange("pickupDate", val)}
-                accentColor={accentColor}
-                placeholder="Fecha recogida"
-              />
-              <input
-                value={draft.pickupLocation}
-                onChange={(e) => handleFieldChange("pickupLocation", e.target.value)}
-                placeholder="Lugar recogida"
-                className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
-              />
+          {/* Recogida */}
+          <div>
+            <label className="text-[11px] font-medium text-muted mb-1.5 block flex items-center gap-1">
+              <MapPin size={10} /> Recogida
+            </label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <DatePicker
+                  value={draft.pickupDate}
+                  onChange={(val) => handleFieldChange("pickupDate", val)}
+                  accentColor={accentColor}
+                  placeholder="Fecha"
+                />
+              </div>
+              <div className="w-28">
+                <TimePicker
+                  value={draft.pickupTime}
+                  onChange={(val) => handleFieldChange("pickupTime", val)}
+                  accentColor={accentColor}
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <MapPin size={10} /> Entrega
-              </label>
-              <DatePicker
-                value={draft.dropoffDate}
-                onChange={(val) => handleFieldChange("dropoffDate", val)}
-                accentColor={accentColor}
-                placeholder="Fecha entrega"
-              />
-              <input
-                value={draft.dropoffLocation}
-                onChange={(e) => handleFieldChange("dropoffLocation", e.target.value)}
-                placeholder="Lugar entrega"
-                className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
-              />
-            </div>
+            <input
+              value={draft.pickupLocation}
+              onChange={(e) => handleFieldChange("pickupLocation", e.target.value)}
+              placeholder="Lugar recogida"
+              className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
+            />
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <MapPin size={10} /> Lugar recogida
-              </label>
-              <input
-                value={draft.pickupLocation}
-                onChange={(e) => handleFieldChange("pickupLocation", e.target.value)}
-                placeholder="Ej: Aeropuerto"
-                className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none bg-cloud text-ink border border-line"
-              />
+          {/* Entrega */}
+          <div>
+            <label className="text-[11px] font-medium text-muted mb-1.5 block flex items-center gap-1">
+              <MapPin size={10} /> Entrega
+            </label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <DatePicker
+                  value={draft.dropoffDate}
+                  onChange={(val) => handleFieldChange("dropoffDate", val)}
+                  accentColor={accentColor}
+                  placeholder="Fecha"
+                />
+              </div>
+              <div className="w-28">
+                <TimePicker
+                  value={draft.dropoffTime}
+                  onChange={(val) => handleFieldChange("dropoffTime", val)}
+                  accentColor={accentColor}
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <MapPin size={10} /> Lugar entrega
-              </label>
-              <input
-                value={draft.dropoffLocation}
-                onChange={(e) => handleFieldChange("dropoffLocation", e.target.value)}
-                placeholder="Ej: Aeropuerto"
-                className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none bg-cloud text-ink border border-line"
-              />
-            </div>
+            <input
+              value={draft.dropoffLocation}
+              onChange={(e) => handleFieldChange("dropoffLocation", e.target.value)}
+              placeholder="Lugar entrega"
+              className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
+            />
           </div>
 
           <input
@@ -294,14 +306,14 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           <div className="flex items-start gap-2 text-[12.5px]">
             <MapPin size={13} className="text-teal shrink-0 mt-0.5" />
             <div>
-              <p className="text-muted">Recogida: <span className="text-ink font-medium">{car.pickupDate || "—"}</span></p>
+              <p className="text-muted">Recogida: <span className="text-ink font-medium">{formatDateTime(car.pickupDate, car.pickupTime)}</span></p>
               <p className="text-slate text-[11.5px]">{car.pickupLocation || "Sin ubicación"}</p>
             </div>
           </div>
           <div className="flex items-start gap-2 text-[12.5px]">
             <MapPin size={13} className="text-coral shrink-0 mt-0.5" />
             <div>
-              <p className="text-muted">Entrega: <span className="text-ink font-medium">{car.dropoffDate || "—"}</span></p>
+              <p className="text-muted">Entrega: <span className="text-ink font-medium">{formatDateTime(car.dropoffDate, car.dropoffTime)}</span></p>
               <p className="text-slate text-[11.5px]">{car.dropoffLocation || "Sin ubicación"}</p>
             </div>
           </div>
@@ -334,13 +346,21 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
         {(rentalDocs || []).length > 0 ? (
           <div className="flex flex-col gap-1.5">
             {rentalDocs.map((doc, idx) => (
-              <div key={doc.addedAt || idx} className="flex items-center gap-2 bg-cloud rounded-xl px-3 py-2.5 border border-line">
+              <button
+                key={doc.addedAt || idx}
+                onClick={() => openDoc(doc.url)}
+                className="flex items-center gap-2 bg-cloud rounded-xl px-3 py-2.5 border border-line text-left w-full hover:bg-white/60 transition-colors"
+              >
                 <FileText size={14} className="text-slate shrink-0" />
                 <span className="flex-1 text-[12.5px] text-ink truncate">{doc.name}</span>
-                <button onClick={() => handleRemoveDoc(idx)} className="p-1 hover:bg-white/60 rounded-lg">
+                <ExternalLink size={12} className="text-slate shrink-0" />
+                <span
+                  onClick={(e) => { e.stopPropagation(); handleRemoveDoc(idx); }}
+                  className="p-1 hover:bg-white/60 rounded-lg"
+                >
                   <Trash2 size={12} className="text-coral" />
-                </button>
-              </div>
+                </span>
+              </button>
             ))}
           </div>
         ) : (
