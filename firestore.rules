@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Perfil de usuario ──────────────────────────────────
+    // Cada usuario lee/escribe su propio doc.
+    // Lectura compartida (para buscar por email al compartir).
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Viajes propios ─────────────────────────────────────
+    // Solo el propietario (doc ID = su UID) puede leer/escribir.
+    match /userTrips/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // ── Viajes compartidos ─────────────────────────────────
+    // Lectura y actualización: cualquier usuario en sharedWith.
+    // Creación: cualquier autenticado (al compartir un viaje).
+    // Borrado: solo el propietario original (ownerId).
+    match /sharedTrips/{tripId} {
+      allow read: if request.auth != null
+                  && request.auth.uid in resource.data.sharedWith;
+
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null
+                    && request.auth.uid in resource.data.sharedWith;
+
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.ownerId;
+    }
+  }
+}
