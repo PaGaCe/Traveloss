@@ -20,6 +20,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const [placeSearching, setPlaceSearching] = useState(false);
   const fileInputRef = useRef(null);
   const ticketInputRef = useRef(null);
+  const placeInputRef = useRef(null);
   const Icon = ICONS[item.type] || Sparkles;
 
   const isFlight = item.type === "flight";
@@ -91,7 +92,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   }
 
   function handleSavePlace() {
-    const updates = { place: placeDraft.trim() };
+    const updates = { place: placeDraft.trim(), lat: null, lng: null };
     if (placeCoords) {
       updates.lat = placeCoords.lat;
       updates.lng = placeCoords.lng;
@@ -100,12 +101,22 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     setEditingPlace(false);
   }
 
+  function handleClearPlace() {
+    onUpdate({ place: "", lat: null, lng: null });
+    setEditingPlace(false);
+    setPlaceDraft("");
+    setPlaceCoords(null);
+  }
+
   const hasCoords = item.lat && item.lng;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl">
+      <div
+        className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accentColor}22` }}>
@@ -115,60 +126,10 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
               <p className={`font-semibold text-[16px] text-ink font-display ${item.completed ? "line-through opacity-60" : ""}`}>
                 {item.title}
               </p>
-              {editingPlace ? (
-                <div className="relative mt-1">
-                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 bg-white border border-line">
-                    <MapPin size={12} className="text-slate shrink-0" />
-                    <input
-                      autoFocus
-                      value={placeDraft}
-                      onChange={(e) => { setPlaceDraft(e.target.value); setPlaceCoords(null); }}
-                      placeholder="Lugar"
-                      className="w-full bg-transparent text-[12px] outline-none text-ink"
-                    />
-                  </div>
-                  {placeSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
-                      {placeSuggestions.map((s) => (
-                        <button
-                          key={s.place_id}
-                          onClick={() => {
-                            setPlaceDraft(s.display_name.split(",").slice(0, 2).join(","));
-                            setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
-                            setPlaceSuggestions([]);
-                          }}
-                          className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
-                        >
-                          {s.display_name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {placeSearching && <p className="text-[10px] text-slate mt-0.5">Buscando...</p>}
-                  {placeCoords && <p className="text-[10px] text-teal mt-0.5">✓ Ubicación fijada</p>}
-                  <div className="flex gap-1.5 mt-1.5">
-                    <button
-                      onClick={handleSavePlace}
-                      className="flex items-center gap-1 text-[11px] font-semibold text-white px-2.5 py-1 rounded-lg"
-                      style={{ background: accentColor }}
-                    >
-                      <CheckCircle2 size={11} /> Guardar
-                    </button>
-                    <button
-                      onClick={() => { setEditingPlace(false); setPlaceDraft(item.place || ""); setPlaceCoords(item.lat ? { lat: item.lat, lng: item.lng } : null); }}
-                      className="text-[11px] text-slate px-2 py-1 rounded-lg"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setEditingPlace(true)}
-                  className="text-[12px] text-slate flex items-center gap-1 hover:text-muted"
-                >
-                  <MapPin size={11} /> {item.place}
-                </button>
+              {!editingPlace && (
+                <p className="text-[12px] text-slate flex items-center gap-1">
+                  {item.place || "Sin ubicación"}
+                </p>
               )}
             </div>
           </div>
@@ -211,6 +172,94 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             <ExternalLink size={13} className="text-slate" />
           </a>
         )}
+
+        {/* Ubicación */}
+        <div className="mb-3">
+          {editingPlace ? (
+            <div className="rounded-xl bg-white border border-line p-3">
+              <div className="relative">
+                <div className="flex items-center gap-1.5 rounded-lg px-3 py-2 bg-cloud border border-line">
+                  <MapPin size={13} className="text-slate shrink-0" />
+                  <input
+                    ref={placeInputRef}
+                    value={placeDraft}
+                    onChange={(e) => { setPlaceDraft(e.target.value); setPlaceCoords(null); }}
+                    placeholder="Escribe un lugar..."
+                    className="w-full bg-transparent text-[13px] outline-none text-ink"
+                  />
+                  {placeDraft && (
+                    <button onClick={() => { setPlaceDraft(""); setPlaceCoords(null); setPlaceSuggestions([]); }} className="shrink-0 text-slate">
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+                {placeSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line max-h-[150px] overflow-y-auto">
+                    {placeSuggestions.map((s) => (
+                      <button
+                        key={s.place_id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPlaceDraft(s.display_name.split(",").slice(0, 2).join(","));
+                          setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
+                          setPlaceSuggestions([]);
+                        }}
+                        className="w-full text-left px-3 py-2 text-[11.5px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                      >
+                        {s.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {placeSearching && <p className="text-[10.5px] text-slate mt-1.5">Buscando...</p>}
+              {placeCoords && <p className="text-[10.5px] text-teal mt-1.5">✓ Ubicación fijada</p>}
+              <div className="flex gap-1.5 mt-2.5">
+                <button
+                  onClick={handleSavePlace}
+                  className="flex items-center gap-1 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg"
+                  style={{ background: accentColor }}
+                >
+                  <CheckCircle2 size={12} /> Guardar
+                </button>
+                {(item.place || item.lat) && (
+                  <button
+                    onClick={handleClearPlace}
+                    className="flex items-center gap-1 text-[12px] text-coral px-3 py-1.5 rounded-lg hover:bg-red-50"
+                  >
+                    <Trash2 size={11} /> Borrar
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setEditingPlace(false);
+                    setPlaceDraft(item.place || "");
+                    setPlaceCoords(null);
+                    setPlaceSuggestions([]);
+                  }}
+                  className="text-[12px] text-slate px-3 py-1.5 rounded-lg hover:bg-cloud"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setEditingPlace(true);
+                setPlaceDraft(item.place || "");
+                setPlaceCoords(null);
+                setPlaceSuggestions([]);
+              }}
+              className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3 bg-white border border-line text-left hover:bg-cloud transition-colors"
+            >
+              <MapPin size={15} style={{ color: accentColor }} />
+              <span className={`text-[13px] font-medium flex-1 ${item.place ? "text-ink" : "text-slate"}`}>
+                {item.place || "Añadir ubicación"}
+              </span>
+            </button>
+          )}
+        </div>
 
         <div className="mb-3">
           <TimePicker value={time} onChange={setTime} accentColor={accentColor} />

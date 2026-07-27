@@ -25,19 +25,8 @@ function parseDateFromLabel(label) {
 function openBookingLink(url) {
   if (!url) return;
   try {
-    const u = new URL(url);
-    const host = u.hostname.toLowerCase();
-    if (host.includes("booking.com")) {
-      const deepLink = url.replace(/^https?:\/\//, "booking://");
-      window.location.href = deepLink;
-      setTimeout(() => { window.open(url, "_blank"); }, 2000);
-    } else if (host.includes("airbnb.com")) {
-      const deepLink = url.replace(/^https?:\/\//, "airbnb://");
-      window.location.href = deepLink;
-      setTimeout(() => { window.open(url, "_blank"); }, 2000);
-    } else {
-      window.open(url, "_blank");
-    }
+    new URL(url);
+    window.open(url, "_blank");
   } catch {
     window.open(url, "_blank");
   }
