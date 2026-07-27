@@ -187,7 +187,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
         />
 
         <button
-          onClick={() => onUpdate({ details, time })}
+          onClick={() => { onUpdate({ details, time }); onClose(); }}
           className="w-full mt-4 rounded-xl py-3.5 text-[15px] font-semibold text-white"
           style={{ background: accentColor }}
         >

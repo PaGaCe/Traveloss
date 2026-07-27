@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Car, Fuel, Users, MapPin, FileText, Upload, X, Check, Pencil,
-  Settings, Trash2, ExternalLink,
+  Settings, Trash2, ExternalLink, Download, Navigation,
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import DatePicker from "./DatePicker";
@@ -40,6 +40,78 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   const [draft, setDraft] = useState(car || { ...EMPTY_CAR });
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const docInputRef = useRef(null);
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [pickupSearching, setPickupSearching] = useState(false);
+  const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
+  const [dropoffSearching, setDropoffSearching] = useState(false);
+
+  useEffect(() => {
+    const loc = draft.pickupLocation || "";
+    if (loc.trim().length < 3 || draft.pickupLat) {
+      setPickupSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    setPickupSearching(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(loc)}`
+        );
+        const data = await res.json();
+        if (!cancelled) setPickupSuggestions(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setPickupSearching(false);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [draft.pickupLocation, draft.pickupLat]);
+
+  useEffect(() => {
+    const loc = draft.dropoffLocation || "";
+    if (loc.trim().length < 3 || draft.dropoffLat) {
+      setDropoffSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    setDropoffSearching(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(loc)}`
+        );
+        const data = await res.json();
+        if (!cancelled) setDropoffSuggestions(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setDropoffSearching(false);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [draft.dropoffLocation, draft.dropoffLat]);
+
+  function pickPickupSuggestion(s) {
+    setDraft((prev) => ({
+      ...prev,
+      pickupLocation: s.display_name.split(",").slice(0, 2).join(","),
+      pickupLat: parseFloat(s.lat),
+      pickupLng: parseFloat(s.lon),
+    }));
+    setPickupSuggestions([]);
+  }
+
+  function pickDropoffSuggestion(s) {
+    setDraft((prev) => ({
+      ...prev,
+      dropoffLocation: s.display_name.split(",").slice(0, 2).join(","),
+      dropoffLat: parseFloat(s.lat),
+      dropoffLng: parseFloat(s.lon),
+    }));
+    setDropoffSuggestions([]);
+  }
 
   function handleSave() {
     onUpdateCar(draft);
@@ -57,10 +129,21 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
     const newDocs = [...(rentalDocs || [])];
     for (const file of files) {
       try {
-        const dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        let dataUrl;
+        if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error("No se pudo leer el PDF"));
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        } else {
+          dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        }
         newDocs.push({
           name: file.name,
           url: dataUrl,
+          type: file.type || (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg"),
           addedAt: Date.now(),
         });
       } catch (err) {
@@ -79,6 +162,15 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
 
   function openDoc(url) {
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function downloadDoc(doc) {
+    const a = document.createElement("a");
+    a.href = doc.url;
+    a.download = doc.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   function formatDateTime(date, time) {
@@ -217,12 +309,34 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
                 />
               </div>
             </div>
-            <input
-              value={draft.pickupLocation}
-              onChange={(e) => handleFieldChange("pickupLocation", e.target.value)}
-              placeholder="Lugar recogida"
-              className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
-            />
+            <div className="relative mt-1.5">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
+                <MapPin size={13} className="text-slate shrink-0" />
+                <input
+                  value={draft.pickupLocation}
+                  onChange={(e) => {
+                    setDraft((prev) => ({ ...prev, pickupLocation: e.target.value, pickupLat: undefined, pickupLng: undefined }));
+                  }}
+                  placeholder="Lugar recogida"
+                  className="w-full bg-transparent text-[12px] outline-none text-ink"
+                />
+              </div>
+              {pickupSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                  {pickupSuggestions.map((s) => (
+                    <button
+                      key={s.place_id}
+                      onClick={() => pickPickupSuggestion(s)}
+                      className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                    >
+                      {s.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {pickupSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
+              {draft.pickupLat && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+            </div>
           </div>
 
           {/* Entrega */}
@@ -247,12 +361,34 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
                 />
               </div>
             </div>
-            <input
-              value={draft.dropoffLocation}
-              onChange={(e) => handleFieldChange("dropoffLocation", e.target.value)}
-              placeholder="Lugar entrega"
-              className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
-            />
+            <div className="relative mt-1.5">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
+                <MapPin size={13} className="text-slate shrink-0" />
+                <input
+                  value={draft.dropoffLocation}
+                  onChange={(e) => {
+                    setDraft((prev) => ({ ...prev, dropoffLocation: e.target.value, dropoffLat: undefined, dropoffLng: undefined }));
+                  }}
+                  placeholder="Lugar entrega"
+                  className="w-full bg-transparent text-[12px] outline-none text-ink"
+                />
+              </div>
+              {dropoffSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                  {dropoffSuggestions.map((s) => (
+                    <button
+                      key={s.place_id}
+                      onClick={() => pickDropoffSuggestion(s)}
+                      className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                    >
+                      {s.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {dropoffSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
+              {draft.dropoffLat && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+            </div>
           </div>
 
           <input
@@ -305,17 +441,37 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
         <div className="border-t border-line pt-3 flex flex-col gap-2">
           <div className="flex items-start gap-2 text-[12.5px]">
             <MapPin size={13} className="text-teal shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-muted">Recogida: <span className="text-ink font-medium">{formatDateTime(car.pickupDate, car.pickupTime)}</span></p>
               <p className="text-slate text-[11.5px]">{car.pickupLocation || "Sin ubicación"}</p>
             </div>
+            {car.pickupLat && car.pickupLng && (
+              <a
+                href={`https://www.google.com/maps?q=${car.pickupLat},${car.pickupLng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 p-1.5 rounded-lg hover:bg-cloud"
+              >
+                <Navigation size={13} style={{ color: accentColor }} />
+              </a>
+            )}
           </div>
           <div className="flex items-start gap-2 text-[12.5px]">
             <MapPin size={13} className="text-coral shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-muted">Entrega: <span className="text-ink font-medium">{formatDateTime(car.dropoffDate, car.dropoffTime)}</span></p>
               <p className="text-slate text-[11.5px]">{car.dropoffLocation || "Sin ubicación"}</p>
             </div>
+            {car.dropoffLat && car.dropoffLng && (
+              <a
+                href={`https://www.google.com/maps?q=${car.dropoffLat},${car.dropoffLng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 p-1.5 rounded-lg hover:bg-cloud"
+              >
+                <Navigation size={13} style={{ color: accentColor }} />
+              </a>
+            )}
           </div>
         </div>
 
@@ -346,21 +502,33 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
         {(rentalDocs || []).length > 0 ? (
           <div className="flex flex-col gap-1.5">
             {rentalDocs.map((doc, idx) => (
-              <button
+              <div
                 key={doc.addedAt || idx}
-                onClick={() => openDoc(doc.url)}
-                className="flex items-center gap-2 bg-cloud rounded-xl px-3 py-2.5 border border-line text-left w-full hover:bg-white/60 transition-colors"
+                className="flex items-center gap-1 bg-cloud rounded-xl px-2.5 py-2 border border-line"
               >
-                <FileText size={14} className="text-slate shrink-0" />
-                <span className="flex-1 text-[12.5px] text-ink truncate">{doc.name}</span>
-                <ExternalLink size={12} className="text-slate shrink-0" />
-                <span
-                  onClick={(e) => { e.stopPropagation(); handleRemoveDoc(idx); }}
-                  className="p-1 hover:bg-white/60 rounded-lg"
+                <button
+                  onClick={() => openDoc(doc.url)}
+                  className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white/60 rounded-lg px-1.5 py-1 transition-colors"
+                >
+                  <FileText size={14} className="text-slate shrink-0" />
+                  <span className="flex-1 text-[12.5px] text-ink truncate">{doc.name}</span>
+                  <ExternalLink size={12} className="text-slate shrink-0" />
+                </button>
+                <button
+                  onClick={() => downloadDoc(doc)}
+                  className="p-1.5 hover:bg-white/60 rounded-lg shrink-0"
+                  title="Descargar"
+                >
+                  <Download size={13} className="text-teal" />
+                </button>
+                <button
+                  onClick={() => handleRemoveDoc(idx)}
+                  className="p-1.5 hover:bg-white/60 rounded-lg shrink-0"
+                  title="Eliminar"
                 >
                   <Trash2 size={12} className="text-coral" />
-                </span>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
         ) : (
