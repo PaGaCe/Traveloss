@@ -14,6 +14,10 @@ import ActivityTicket from "../../../components/ActivityTicket";
 import ActivityDetailSheet from "../../../components/ActivityDetailSheet";
 import AddActivitySheet from "../../../components/AddActivitySheet";
 import ShareTripSheet from "../../../components/ShareTripSheet";
+import BottomNav from "../../../components/BottomNav";
+import CarSection from "../../../components/CarSection";
+import HotelSection from "../../../components/HotelSection";
+import TranslatorSection from "../../../components/TranslatorSection";
 
 const DayMap = dynamic(() => import("../../../components/DayMap"), { ssr: false });
 
@@ -42,6 +46,7 @@ export default function TripDetailPage() {
 
   const [activeDayId, setActiveDayId] = useState(null);
   const [dayView, setDayView] = useState("timeline");
+  const [activeTab, setActiveTab] = useState("itinerary");
   const [showAdd, setShowAdd] = useState(false);
   const [detailItemId, setDetailItemId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -167,6 +172,18 @@ export default function TripDetailPage() {
     } else if (day) {
       removeDayPhoto(tripId, day.id, dayPhotos.findIndex((p) => p.addedAt === photo.addedAt));
     }
+  }
+
+  function handleUpdateCar(car) {
+    updateTrip(tripId, { car });
+  }
+
+  function handleUpdateDocs(docs) {
+    updateTrip(tripId, { rentalDocs: docs });
+  }
+
+  function handleUpdateTranslatorLangs(langs) {
+    updateTrip(tripId, { translatorLangs: langs });
   }
 
   return (
@@ -325,55 +342,99 @@ export default function TripDetailPage() {
         </div>
       </div>
 
-      {/* day meta + toggle */}
-      <div className="px-5 pt-3 flex items-center justify-between max-w-2xl mx-auto w-full">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[12.5px] font-medium text-ink">{day ? day.label : ""}</span>
-          <span className="text-line">·</span>
-          <input
-            value={day ? day.date : ""}
-            onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
-            className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
-          />
-        </div>
-        <div className="flex gap-1.5">
-          <button
-            onClick={() => setDayView("timeline")}
-            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
-            style={{
-              background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
-              color: dayView === "timeline" ? "white" : "#5A6478",
-            }}
-          >
-            <List size={12} /> Lista
-          </button>
-          <button
-            onClick={() => setDayView("map")}
-            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
-            style={{
-              background: dayView === "map" ? trip.stampColor : "#F4F4F7",
-              color: dayView === "map" ? "white" : "#5A6478",
-            }}
-          >
-            <MapIcon size={12} /> Mapa
-          </button>
-          <button
-            onClick={() => setDayView("gallery")}
-            className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
-            style={{
-              background: dayView === "gallery" ? trip.stampColor : "#F4F4F7",
-              color: dayView === "gallery" ? "white" : "#5A6478",
-            }}
-          >
-            <Camera size={12} /> Fotos
-          </button>
-        </div>
-      </div>
-
-      {/* content */}
+      {/* content area - scrollable */}
       <div className="flex-1 overflow-y-auto px-5 pt-3 pb-24">
         <div className="max-w-2xl mx-auto">
-          {dayView === "gallery" ? (
+
+          {/* === ITINERARY TAB === */}
+          {activeTab === "itinerary" && (
+            <>
+              {/* day meta + sub-toggle */}
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12.5px] font-medium text-ink">{day ? day.label : ""}</span>
+                  <span className="text-line">·</span>
+                  <input
+                    value={day ? day.date : ""}
+                    onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
+                    className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
+                  />
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setDayView("timeline")}
+                    className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
+                    style={{
+                      background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
+                      color: dayView === "timeline" ? "white" : "#5A6478",
+                    }}
+                  >
+                    <List size={12} /> Lista
+                  </button>
+                  <button
+                    onClick={() => setDayView("map")}
+                    className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
+                    style={{
+                      background: dayView === "map" ? trip.stampColor : "#F4F4F7",
+                      color: dayView === "map" ? "white" : "#5A6478",
+                    }}
+                  >
+                    <MapIcon size={12} /> Mapa
+                  </button>
+                </div>
+              </div>
+
+              {dayView === "map" ? (
+                <DayMap items={day.items} color={trip.stampColor} />
+              ) : !day ? (
+                <p className="text-center text-[13px] mt-10 text-slate">
+                  Aún no hay días en este viaje. Toca &ldquo;+&rdquo; para añadir el primero.
+                </p>
+              ) : day.items.length === 0 ? (
+                <p className="text-center text-[13px] mt-10 text-slate">
+                  Aún no hay planes para este día. Toca &ldquo;+&rdquo; para añadir el primero.
+                </p>
+              ) : (
+                day.items.map((item) => (
+                  <Fragment key={item.id}>
+                    <ActivityTicket item={item} onClick={() => setDetailItemId(item.id)} />
+                  </Fragment>
+                ))
+              )}
+            </>
+          )}
+
+          {/* === CAR TAB === */}
+          {activeTab === "car" && (
+            <CarSection
+              car={trip.car}
+              rentalDocs={trip.rentalDocs || []}
+              accentColor={trip.stampColor}
+              onUpdateCar={handleUpdateCar}
+              onUpdateDocs={handleUpdateDocs}
+            />
+          )}
+
+          {/* === HOTELS TAB === */}
+          {activeTab === "hotels" && (
+            <HotelSection
+              trip={trip}
+              accentColor={trip.stampColor}
+              onUpdateTrip={(updates) => updateTrip(tripId, updates)}
+            />
+          )}
+
+          {/* === TRANSLATOR TAB === */}
+          {activeTab === "translator" && (
+            <TranslatorSection
+              translatorLangs={trip.translatorLangs}
+              accentColor={trip.stampColor}
+              onUpdateLangs={handleUpdateTranslatorLangs}
+            />
+          )}
+
+          {/* === GALLERY TAB === */}
+          {activeTab === "gallery" && (
             <>
               {/* scope toggle: day vs all */}
               <div className="flex items-center gap-2 mb-3">
@@ -470,37 +531,26 @@ export default function TripDetailPage() {
                 </div>
               )}
             </>
-          ) : !day ? (
-            <p className="text-center text-[13px] mt-10 text-slate">
-              Aún no hay días en este viaje. Toca &ldquo;+&rdquo; para añadir el primero.
-            </p>
-          ) : dayView === "map" ? (
-            <DayMap items={day.items} color={trip.stampColor} />
-          ) : day.items.length === 0 ? (
-            <p className="text-center text-[13px] mt-10 text-slate">
-              Aún no hay planes para este día. Toca &ldquo;+&rdquo; para añadir el primero.
-            </p>
-          ) : (
-            day.items.map((item) => (
-              <Fragment key={item.id}>
-                <ActivityTicket item={item} onClick={() => setDetailItemId(item.id)} />
-              </Fragment>
-            ))
           )}
+
         </div>
       </div>
 
-      {/* floating add button */}
-      {dayView !== "gallery" && (
+      {/* floating add button (only for itinerary tab, not gallery) */}
+      {activeTab === "itinerary" && (
         <button
           onClick={() => setShowAdd(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+          className="fixed bottom-[72px] right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform z-30"
           style={{ background: trip.stampColor }}
         >
           <Plus size={22} color="white" />
         </button>
       )}
 
+      {/* bottom navigation */}
+      <BottomNav active={activeTab} onChange={setActiveTab} accentColor={trip.stampColor} />
+
+      {/* sheets */}
       {showAdd && day && (
         <AddActivitySheet
           accentColor={trip.stampColor}

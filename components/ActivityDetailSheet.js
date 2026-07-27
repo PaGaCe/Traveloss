@@ -1,15 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus } from "lucide-react";
+import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Clock, Trash2 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
 
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
 
-export default function ActivityDetailSheet({ item, onClose, onUpdate, accentColor }) {
+export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor }) {
   const [details, setDetails] = useState(item.details || "");
+  const [time, setTime] = useState(item.time || "");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
   const Icon = ICONS[item.type] || Sparkles;
@@ -37,10 +38,9 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
   }
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col justify-end">
+    <div className="absolute inset-0 z-30 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 max-h-[88%] overflow-y-auto bg-cloud max-w-lg mx-auto w-full">
-        <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
+      <div className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accentColor}22` }}>
@@ -49,7 +49,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
             <div>
               <p className="font-semibold text-[16px] text-ink font-display">{item.title}</p>
               <p className="text-[12px] text-slate">
-                {item.time} · {item.place}
+                {item.place}
               </p>
             </div>
           </div>
@@ -59,6 +59,16 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
         </div>
 
         {item.note && <p className="text-[12.5px] italic mb-3 text-gold">✦ {item.note}</p>}
+
+        <div className="flex items-center gap-2 mb-3 rounded-xl px-4 py-2.5 bg-cloud border border-line">
+          <Clock size={14} className="text-slate shrink-0" />
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="bg-transparent text-[14px] font-medium text-ink outline-none flex-1"
+          />
+        </div>
 
         {item.image ? (
           <div className="relative mb-3">
@@ -91,7 +101,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, accentCol
         />
 
         <button
-          onClick={() => onUpdate({ details })}
+          onClick={() => onUpdate({ details, time })}
           className="w-full mt-4 rounded-xl py-3.5 text-[15px] font-semibold text-white"
           style={{ background: accentColor }}
         >

@@ -1,0 +1,21 @@
+{
+  "name": "Traveloss",
+  "short_name": "Traveloss",
+  "description": "Tu compañero de viaje",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F4F7",
+  "theme_color": "#010615",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
