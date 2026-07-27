@@ -40,7 +40,7 @@ export default function TripDetailPage() {
   const {
     getTrip, loaded, addDay, renameDay, addActivity, updateActivity,
     updateTrip, deleteTrip, addDayPhoto, removeDayPhoto,
-    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, usingFirebase,
+    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, dismissTrip, usingFirebase,
   } = useTripsStore(userId, user?.email);
 
   const trip = getTrip(tripId);
@@ -51,6 +51,7 @@ export default function TripDetailPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [detailItemId, setDetailItemId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDismissConfirm, setShowDismissConfirm] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const coverInputRef = useRef(null);
@@ -130,6 +131,11 @@ export default function TripDetailPage() {
 
   function handleDeleteTrip() {
     deleteTrip(tripId);
+    router.push("/");
+  }
+
+  function handleDismissTrip() {
+    dismissTrip(tripId);
     router.push("/");
   }
 
@@ -221,9 +227,13 @@ export default function TripDetailPage() {
               </button>
             )}
             {trip._isShared && !isOwner && (
-              <span className="text-white/50 text-[10px] flex items-center gap-1">
-                <Users size={12} /> Compartido
-              </span>
+              <button
+                onClick={() => setShowDismissConfirm(true)}
+                className="text-white/50 hover:text-coral transition-colors flex items-center gap-1"
+                title="Quitar de mi lista"
+              >
+                <Users size={12} /> <span className="text-[10px]">Quitar de mi lista</span>
+              </button>
             )}
             <button
               onClick={() => coverInputRef.current && coverInputRef.current.click()}
@@ -606,6 +616,29 @@ export default function TripDetailPage() {
               </button>
               <button onClick={handleDeleteTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-coral text-white">
                 Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDismissConfirm && (
+        <div className="absolute inset-0 z-30 flex flex-col justify-center items-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowDismissConfirm(false)} />
+          <div className="relative z-10 bg-cloud rounded-2xl px-6 py-5 shadow-xl max-w-[280px] w-full">
+            <p className="text-[15px] font-semibold text-ink text-center mb-1">¿Quitar de tu lista?</p>
+            <p className="text-[13px] text-slate text-center mb-4">
+              &ldquo;{trip.title}&rdquo; se ocultará de tu vista. El propietario y otros usuarios seguirán viéndolo.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDismissConfirm(false)}
+                className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-ink"
+              >
+                Cancelar
+              </button>
+              <button onClick={handleDismissTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-ink text-white">
+                Quitar
               </button>
             </div>
           </div>

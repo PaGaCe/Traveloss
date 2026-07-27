@@ -15,7 +15,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const [uploading, setUploading] = useState(false);
   const [editingPlace, setEditingPlace] = useState(false);
   const [placeDraft, setPlaceDraft] = useState(item.place || "");
-  const [placeCoords, setPlaceCoords] = useState(item.lat ? { lat: item.lat, lng: item.lng } : null);
+  const [placeCoords, setPlaceCoords] = useState(null);
   const [placeSuggestions, setPlaceSuggestions] = useState([]);
   const [placeSearching, setPlaceSearching] = useState(false);
   const fileInputRef = useRef(null);

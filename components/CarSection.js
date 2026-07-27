@@ -173,18 +173,8 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   function openDoc(doc) {
     const blob = dataUrlToBlob(doc.url);
     const blobUrl = URL.createObjectURL(blob);
-    if (doc.type === "application/pdf" || doc.name.toLowerCase().endsWith(".pdf")) {
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.target = "_blank";
-      a.rel = "noopener,noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } else {
-      window.open(blobUrl, "_blank", "noopener,noreferrer");
-    }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+    window.open(blobUrl, "_blank");
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
   }
 
   function downloadDoc(doc) {

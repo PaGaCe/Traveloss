@@ -73,7 +73,7 @@ export default function HomePage() {
     authReady,
     error: authError,
   } = useAuth();
-  const { trips, loaded, addTrip, deleteTrip, usingFirebase } = useTripsStore(
+  const { trips, loaded, addTrip, deleteTrip, dismissTrip, usingFirebase } = useTripsStore(
     userId,
     user?.email,
   );
@@ -178,18 +178,21 @@ export default function HomePage() {
                             {trip.days.length !== 1 ? "s" : ""}
                           </p>
                         </div>
-                        {!trip._isShared && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (trip._isShared) {
+                              if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
+                                dismissTrip(trip.id);
+                            } else {
                               if (confirm(`¿Eliminar "${trip.title}"?`))
                                 deleteTrip(trip.id);
-                            }}
-                            className="text-white/40 hover:text-coral transition-colors p-1"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
+                            }
+                          }}
+                          className="text-white/40 hover:text-coral transition-colors p-1"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </>
                   ) : (
@@ -218,18 +221,21 @@ export default function HomePage() {
                               {trip.days.length !== 1 ? "s" : ""}
                             </p>
                           </div>
-                          {!trip._isShared && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (trip._isShared) {
+                                if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
+                                  dismissTrip(trip.id);
+                              } else {
                                 if (confirm(`¿Eliminar "${trip.title}"?`))
                                   deleteTrip(trip.id);
-                              }}
-                              className="text-line hover:text-coral transition-colors p-1"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
+                              }
+                            }}
+                            className="text-line hover:text-coral transition-colors p-1"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
                     </div>
