@@ -18,6 +18,7 @@ import BottomNav from "../../../components/BottomNav";
 import CarSection from "../../../components/CarSection";
 import HotelSection from "../../../components/HotelSection";
 import TranslatorSection from "../../../components/TranslatorSection";
+import DatePicker from "../../../components/DatePicker";
 
 const DayMap = dynamic(() => import("../../../components/DayMap"), { ssr: false });
 
@@ -354,11 +355,14 @@ export default function TripDetailPage() {
                 <div className="flex items-center gap-1.5">
                   <span className="text-[12.5px] font-medium text-ink">{day ? day.label : ""}</span>
                   <span className="text-line">·</span>
-                  <input
-                    value={day ? day.date : ""}
-                    onChange={(e) => day && renameDay(tripId, day.id, e.target.value)}
-                    className="text-[12.5px] bg-transparent outline-none border-b border-dashed border-line w-24 text-muted"
-                  />
+                  <div className="w-28">
+                    <DatePicker
+                      value={day ? day.date : ""}
+                      onChange={(val) => day && renameDay(tripId, day.id, val)}
+                      accentColor={trip.stampColor}
+                      placeholder="Fecha"
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-1.5">
                   <button

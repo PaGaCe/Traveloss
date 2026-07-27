@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Clock, Trash2 } from "lucide-react";
+import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
+import TimePicker from "./TimePicker";
 
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
 
@@ -38,7 +39,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   }
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl">
         <div className="flex items-start justify-between mb-3">
@@ -60,14 +61,8 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
 
         {item.note && <p className="text-[12.5px] italic mb-3 text-gold">✦ {item.note}</p>}
 
-        <div className="flex items-center gap-2 mb-3 rounded-xl px-4 py-2.5 bg-cloud border border-line">
-          <Clock size={14} className="text-slate shrink-0" />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="bg-transparent text-[14px] font-medium text-ink outline-none flex-1"
-          />
+        <div className="mb-3">
+          <TimePicker value={time} onChange={setTime} accentColor={accentColor} />
         </div>
 
         {item.image ? (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Clock, MapPin } from "lucide-react";
+import { X, MapPin } from "lucide-react";
+import TimePicker from "./TimePicker";
 
 const TYPES = [
   { key: "sight", label: "Lugar" },
@@ -103,14 +104,8 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
             className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink"
           />
           <div className="flex gap-3">
-            <div className="flex-1 flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud">
-              <Clock size={15} className="text-slate" />
-              <input
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                placeholder="Hora"
-                className="w-full bg-transparent text-[14px] outline-none text-ink"
-              />
+            <div className="flex-1">
+              <TimePicker value={time} onChange={setTime} accentColor={accentColor} />
             </div>
             <div className="flex-1 relative">
               <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud">

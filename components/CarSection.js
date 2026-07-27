@@ -2,10 +2,11 @@
 
 import { useState, useRef } from "react";
 import {
-  Car, Fuel, Users, MapPin, Calendar, FileText, Upload, X, Check, Pencil,
+  Car, Fuel, Users, MapPin, FileText, Upload, X, Check, Pencil,
   Settings, Trash2,
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
+import DatePicker from "./DatePicker";
 
 const FUEL_OPTIONS = [
   { key: "gasolina", label: "Gasolina" },
@@ -183,24 +184,36 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <Calendar size={10} /> Recogida
+                <MapPin size={10} /> Recogida
               </label>
-              <input
+              <DatePicker
                 value={draft.pickupDate}
-                onChange={(e) => handleFieldChange("pickupDate", e.target.value)}
-                placeholder="Fecha"
-                className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none bg-cloud text-ink border border-line"
+                onChange={(val) => handleFieldChange("pickupDate", val)}
+                accentColor={accentColor}
+                placeholder="Fecha recogida"
+              />
+              <input
+                value={draft.pickupLocation}
+                onChange={(e) => handleFieldChange("pickupLocation", e.target.value)}
+                placeholder="Lugar recogida"
+                className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
               />
             </div>
             <div className="flex-1">
               <label className="text-[11px] font-medium text-muted mb-1 block flex items-center gap-1">
-                <Calendar size={10} /> Entrega
+                <MapPin size={10} /> Entrega
               </label>
-              <input
+              <DatePicker
                 value={draft.dropoffDate}
-                onChange={(e) => handleFieldChange("dropoffDate", e.target.value)}
-                placeholder="Fecha"
-                className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none bg-cloud text-ink border border-line"
+                onChange={(val) => handleFieldChange("dropoffDate", val)}
+                accentColor={accentColor}
+                placeholder="Fecha entrega"
+              />
+              <input
+                value={draft.dropoffLocation}
+                onChange={(e) => handleFieldChange("dropoffLocation", e.target.value)}
+                placeholder="Lugar entrega"
+                className="w-full rounded-xl px-3 py-2.5 text-[12px] outline-none bg-white text-ink border border-line mt-1.5"
               />
             </div>
           </div>
