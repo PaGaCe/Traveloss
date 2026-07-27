@@ -23,6 +23,7 @@ const TRANSMISSION_OPTIONS = [
 
 const EMPTY_CAR = {
   model: "",
+  company: "",
   transmission: "automático",
   fuel: "gasolina",
   occupants: 2,
@@ -160,17 +161,42 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
     onUpdateDocs(updated);
   }
 
-  function openDoc(url) {
-    window.open(url, "_blank", "noopener,noreferrer");
+  function dataUrlToBlob(dataUrl) {
+    const [header, data] = dataUrl.split(",");
+    const mime = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+    return new Blob([array], { type: mime });
+  }
+
+  function openDoc(doc) {
+    const blob = dataUrlToBlob(doc.url);
+    const blobUrl = URL.createObjectURL(blob);
+    if (doc.type === "application/pdf" || doc.name.toLowerCase().endsWith(".pdf")) {
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.target = "_blank";
+      a.rel = "noopener,noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+    }
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
   }
 
   function downloadDoc(doc) {
+    const blob = dataUrlToBlob(doc.url);
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = doc.url;
+    a.href = blobUrl;
     a.download = doc.name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
   }
 
   function formatDateTime(date, time) {
@@ -223,6 +249,12 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
             value={draft.model}
             onChange={(e) => handleFieldChange("model", e.target.value)}
             placeholder="Modelo del coche"
+            className="w-full rounded-xl px-4 py-3.5 text-[14px] outline-none bg-cloud text-ink border border-line"
+          />
+          <input
+            value={draft.company}
+            onChange={(e) => handleFieldChange("company", e.target.value)}
+            placeholder="Compañía de alquiler (opcional)"
             className="w-full rounded-xl px-4 py-3.5 text-[14px] outline-none bg-cloud text-ink border border-line"
           />
 
@@ -430,6 +462,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           <div>
             <p className="text-[15px] font-semibold text-ink">{car.model}</p>
             <p className="text-[12px] text-slate capitalize">{car.transmission} · {car.fuel}</p>
+            {car.company && <p className="text-[12px] text-muted mt-0.5">{car.company}</p>}
           </div>
         </div>
 
@@ -507,7 +540,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
                 className="flex items-center gap-1 bg-cloud rounded-xl px-2.5 py-2 border border-line"
               >
                 <button
-                  onClick={() => openDoc(doc.url)}
+                  onClick={() => openDoc(doc)}
                   className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white/60 rounded-lg px-1.5 py-1 transition-colors"
                 >
                   <FileText size={14} className="text-slate shrink-0" />

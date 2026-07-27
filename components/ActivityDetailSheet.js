@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2, CheckCircle2, Circle, Navigation } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2, CheckCircle2, Circle, Navigation, MapPin } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
@@ -13,6 +13,11 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const [details, setDetails] = useState(item.details || "");
   const [time, setTime] = useState(item.time || "");
   const [uploading, setUploading] = useState(false);
+  const [editingPlace, setEditingPlace] = useState(false);
+  const [placeDraft, setPlaceDraft] = useState(item.place || "");
+  const [placeCoords, setPlaceCoords] = useState(item.lat ? { lat: item.lat, lng: item.lng } : null);
+  const [placeSuggestions, setPlaceSuggestions] = useState([]);
+  const [placeSearching, setPlaceSearching] = useState(false);
   const fileInputRef = useRef(null);
   const ticketInputRef = useRef(null);
   const Icon = ICONS[item.type] || Sparkles;
@@ -21,6 +26,29 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
 
   const detailLabel =
     isFlight ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas adicionales";
+
+  useEffect(() => {
+    if (!editingPlace || placeDraft.trim().length < 3 || placeCoords) {
+      setPlaceSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    setPlaceSearching(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(placeDraft)}`
+        );
+        const data = await res.json();
+        if (!cancelled) setPlaceSuggestions(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setPlaceSearching(false);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [placeDraft, placeCoords, editingPlace]);
 
   async function handleImagePick(e) {
     const file = e.target.files && e.target.files[0];
@@ -62,6 +90,16 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     }
   }
 
+  function handleSavePlace() {
+    const updates = { place: placeDraft.trim() };
+    if (placeCoords) {
+      updates.lat = placeCoords.lat;
+      updates.lng = placeCoords.lng;
+    }
+    onUpdate(updates);
+    setEditingPlace(false);
+  }
+
   const hasCoords = item.lat && item.lng;
 
   return (
@@ -77,9 +115,61 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
               <p className={`font-semibold text-[16px] text-ink font-display ${item.completed ? "line-through opacity-60" : ""}`}>
                 {item.title}
               </p>
-              <p className="text-[12px] text-slate">
-                {item.place}
-              </p>
+              {editingPlace ? (
+                <div className="relative mt-1">
+                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 bg-white border border-line">
+                    <MapPin size={12} className="text-slate shrink-0" />
+                    <input
+                      autoFocus
+                      value={placeDraft}
+                      onChange={(e) => { setPlaceDraft(e.target.value); setPlaceCoords(null); }}
+                      placeholder="Lugar"
+                      className="w-full bg-transparent text-[12px] outline-none text-ink"
+                    />
+                  </div>
+                  {placeSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                      {placeSuggestions.map((s) => (
+                        <button
+                          key={s.place_id}
+                          onClick={() => {
+                            setPlaceDraft(s.display_name.split(",").slice(0, 2).join(","));
+                            setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
+                            setPlaceSuggestions([]);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                        >
+                          {s.display_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {placeSearching && <p className="text-[10px] text-slate mt-0.5">Buscando...</p>}
+                  {placeCoords && <p className="text-[10px] text-teal mt-0.5">✓ Ubicación fijada</p>}
+                  <div className="flex gap-1.5 mt-1.5">
+                    <button
+                      onClick={handleSavePlace}
+                      className="flex items-center gap-1 text-[11px] font-semibold text-white px-2.5 py-1 rounded-lg"
+                      style={{ background: accentColor }}
+                    >
+                      <CheckCircle2 size={11} /> Guardar
+                    </button>
+                    <button
+                      onClick={() => { setEditingPlace(false); setPlaceDraft(item.place || ""); setPlaceCoords(item.lat ? { lat: item.lat, lng: item.lng } : null); }}
+                      className="text-[11px] text-slate px-2 py-1 rounded-lg"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditingPlace(true)}
+                  className="text-[12px] text-slate flex items-center gap-1 hover:text-muted"
+                >
+                  <MapPin size={11} /> {item.place}
+                </button>
+              )}
             </div>
           </div>
           <button onClick={onClose}>
@@ -128,7 +218,6 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
 
         {isFlight ? (
           <>
-            {/* Ticket upload for flights */}
             {item.ticketImage ? (
               <div className="relative mb-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -153,7 +242,6 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
           </>
         ) : (
           <>
-            {/* Regular photo for non-flight activities */}
             {item.image ? (
               <div className="relative mb-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
