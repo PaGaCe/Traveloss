@@ -399,11 +399,13 @@ export default function TripDetailPage() {
                   Aún no hay planes para este día. Toca &ldquo;+&rdquo; para añadir el primero.
                 </p>
               ) : (
-                day.items.map((item) => (
-                  <Fragment key={item.id}>
-                    <ActivityTicket item={item} onClick={() => setDetailItemId(item.id)} />
-                  </Fragment>
-                ))
+                [...day.items]
+                  .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))
+                  .map((item) => (
+                    <Fragment key={item.id}>
+                      <ActivityTicket item={item} onClick={() => setDetailItemId(item.id)} />
+                    </Fragment>
+                  ))
               )}
             </>
           )}

@@ -57,6 +57,11 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
   const [editingDates, setEditingDates] = useState(null);
   const [checkinDraft, setCheckinDraft] = useState("");
   const [checkoutDraft, setCheckoutDraft] = useState("");
+  const [editingPlace, setEditingPlace] = useState(null);
+  const [placeDraft, setPlaceDraft] = useState("");
+  const [placeCoords, setPlaceCoords] = useState(null);
+  const [placeSuggestions, setPlaceSuggestions] = useState([]);
+  const [placeSearching, setPlaceSearching] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPlace, setNewPlace] = useState("");
@@ -92,6 +97,29 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
       clearTimeout(timeout);
     };
   }, [newPlace, newCoords]);
+
+  useEffect(() => {
+    if (placeDraft.trim().length < 3 || placeCoords) {
+      setPlaceSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    setPlaceSearching(true);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(placeDraft)}`
+        );
+        const data = await res.json();
+        if (!cancelled) setPlaceSuggestions(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setPlaceSearching(false);
+      }
+    }, 500);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [placeDraft, placeCoords]);
 
   function pickSuggestion(s) {
     setNewPlace(s.display_name.split(",").slice(0, 2).join(","));
@@ -141,6 +169,30 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setEditingDates(hotel.id);
     setCheckinDraft(hotel.checkinDate || hotel.dayDate || "");
     setCheckoutDraft(hotel.checkoutDate || "");
+  }
+
+  function startEditPlace(hotel) {
+    setEditingPlace(hotel.id);
+    setPlaceDraft(hotel.place || "");
+    setPlaceCoords(hotel.lat ? { lat: hotel.lat, lng: hotel.lng } : null);
+  }
+
+  function handleSavePlace(hotel) {
+    const updates = { place: placeDraft.trim() };
+    if (placeCoords) {
+      updates.lat = placeCoords.lat;
+      updates.lng = placeCoords.lng;
+    }
+    const updatedDays = trip.days.map((d) => ({
+      ...d,
+      items: d.items.map((item) =>
+        item.id === hotel.id ? { ...item, ...updates } : item
+      ),
+    }));
+    onUpdateTrip({ days: updatedDays });
+    setEditingPlace(null);
+    setPlaceDraft("");
+    setPlaceCoords(null);
   }
 
   function handleSaveDates(hotel) {
@@ -471,6 +523,58 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                         </button>
                       </div>
                     </div>
+                  ) : editingPlace === hotel.id ? (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <div className="relative">
+                        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
+                          <MapPin size={13} className="text-slate shrink-0" />
+                          <input
+                            autoFocus
+                            value={placeDraft}
+                            onChange={(e) => {
+                              setPlaceDraft(e.target.value);
+                              setPlaceCoords(null);
+                            }}
+                            placeholder="Dirección o ciudad"
+                            className="w-full bg-transparent text-[12px] outline-none text-ink"
+                          />
+                        </div>
+                        {placeSuggestions.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                            {placeSuggestions.map((s) => (
+                              <button
+                                key={s.place_id}
+                                onClick={() => {
+                                  setPlaceDraft(s.display_name.split(",").slice(0, 2).join(","));
+                                  setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
+                                  setPlaceSuggestions([]);
+                                }}
+                                className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                              >
+                                {s.display_name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {placeSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
+                        {placeCoords && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSavePlace(hotel)}
+                          className="flex-1 rounded-xl py-2 text-[12px] font-semibold text-white flex items-center justify-center gap-1"
+                          style={{ background: accentColor }}
+                        >
+                          <Check size={12} /> Guardar dirección
+                        </button>
+                        <button
+                          onClick={() => { setEditingPlace(null); setPlaceCoords(null); }}
+                          className="rounded-xl py-2 px-3 text-[12px] font-medium bg-cloud text-slate border border-line"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                       {hotel.bookingUrl ? (
@@ -495,6 +599,12 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                         className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
                       >
                         <Calendar size={11} /> Editar fechas
+                      </button>
+                      <button
+                        onClick={() => startEditPlace(hotel)}
+                        className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
+                      >
+                        <MapPin size={11} /> Editar dirección
                       </button>
                       <button
                         onClick={() => startEditUrl(hotel)}

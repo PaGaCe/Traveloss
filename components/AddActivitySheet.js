@@ -56,15 +56,29 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
     setSuggestions([]);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!title) return;
+    let finalCoords = coords;
+    if (!finalCoords && place.trim().length >= 3) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(place)}`
+        );
+        const data = await res.json();
+        if (data && data.length > 0) {
+          finalCoords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        }
+      } catch (err) {
+        console.error("Geocoding error:", err);
+      }
+    }
     onSave({
       id: `n${Date.now()}`,
       title,
       place,
       time: time || "--:--",
       type,
-      ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+      ...(finalCoords ? { lat: finalCoords.lat, lng: finalCoords.lng } : {}),
     });
   }
 
