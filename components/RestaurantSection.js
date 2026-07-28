@@ -272,7 +272,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                     color: category === cat ? "white" : "#5A6478",
                   }}
                 >
-                  <CategoryIcon category={cat} size={13} />
+                  <CategoryIcon category={cat} size={26} />
                   {cat}
                 </button>
               ))}
@@ -324,8 +324,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   color: filter === cat ? "white" : "#5A6478",
                 }}
               >
-                <CategoryIcon category={cat} size={14} />
-                <span className="text-[10px]">{count}</span>
+                <CategoryIcon category={cat} size={28} />
               </button>
             );
           })}
@@ -418,7 +417,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                     className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
                     style={{ background: `${accentColor}18`, color: accentColor }}
                   >
-                    <CategoryIcon category={rest.category} size={10} />
+                    <CategoryIcon category={rest.category} size={22} />
                     {rest.category}
                   </span>
                   {rest.price && (
