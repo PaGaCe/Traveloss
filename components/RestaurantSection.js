@@ -405,7 +405,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
                   {rest.website && (
                     <a
-                      href={rest.website}
+                      href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -440,9 +440,9 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 </div>
               </div>
               <div className="flex flex-col items-center gap-1 shrink-0">
-                {rest.website ? (
+                {rest.website && (
                   <a
-                    href={rest.website}
+                    href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -451,15 +451,14 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   >
                     <ExternalLink size={13} />
                   </a>
-                ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
-                    className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-                    title="Buscar en Google Maps"
-                  >
-                    <MapPin size={13} />
-                  </button>
                 )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
+                  className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+                  title="Buscar en Google Maps"
+                >
+                  <MapPin size={13} />
+                </button>
               </div>
             </div>
           ))}
