@@ -165,7 +165,11 @@ export default function TripDetailPage() {
         const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
         let url = dataUrl;
         if (firebaseReady) {
-          url = await uploadImageToFirebase(dataUrl, `gallery/${tripId}/${day.id}/${Date.now()}-${file.name}`);
+          try {
+            url = await uploadImageToFirebase(dataUrl, `gallery/${tripId}/${day.id}/${Date.now()}-${file.name}`);
+          } catch (storageErr) {
+            console.warn("Storage upload failed, using inline image:", storageErr);
+          }
         }
         addDayPhoto(tripId, day.id, {
           url,

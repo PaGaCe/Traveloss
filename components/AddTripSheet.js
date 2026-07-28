@@ -24,8 +24,13 @@ export default function AddTripSheet({ onClose, onSave }) {
     try {
       const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.6 });
       if (firebaseReady) {
-        const url = await uploadImageToFirebase(dataUrl, `trips/${Date.now()}-${file.name}`);
-        setImage(url);
+        try {
+          const url = await uploadImageToFirebase(dataUrl, `trips/${Date.now()}-${file.name}`);
+          setImage(url);
+        } catch (storageErr) {
+          console.warn("Storage upload failed, using inline image:", storageErr);
+          setImage(dataUrl);
+        }
       } else {
         setImage(dataUrl);
       }

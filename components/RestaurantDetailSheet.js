@@ -31,8 +31,13 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
     try {
       const dataUrl = await compressImage(file);
       if (firebaseReady) {
-        const url = await uploadImageToFirebase(dataUrl, `restaurants/${Date.now()}-${file.name}`);
-        setImage(url);
+        try {
+          const url = await uploadImageToFirebase(dataUrl, `restaurants/${Date.now()}-${file.name}`);
+          setImage(url);
+        } catch (storageErr) {
+          console.warn("Storage upload failed, using inline image:", storageErr);
+          setImage(dataUrl);
+        }
       } else {
         setImage(dataUrl);
       }
