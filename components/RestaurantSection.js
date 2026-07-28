@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal, Pencil } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import RestaurantDetailSheet from "./RestaurantDetailSheet";
@@ -99,6 +99,8 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [uploading, setUploading] = useState(false);
 
   const restaurants = trip.restaurants || [];
+  const restaurantsRef = useRef(restaurants);
+  restaurantsRef.current = restaurants;
 
   const filtered = filter
     ? restaurants.filter((r) => r.category === filter)
@@ -156,12 +158,14 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   }
 
   function handleDelete(id) {
-    onUpdateTrip({ restaurants: restaurants.filter((r) => r.id !== id) });
+    const current = restaurantsRef.current;
+    onUpdateTrip({ restaurants: current.filter((r) => r.id !== id) });
   }
 
   function handleUpdate(id, updates) {
+    const current = restaurantsRef.current;
     onUpdateTrip({
-      restaurants: restaurants.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+      restaurants: current.map((r) => (r.id === id ? { ...r, ...updates } : r)),
     });
   }
 

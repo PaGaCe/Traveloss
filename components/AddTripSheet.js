@@ -39,6 +39,7 @@ export default function AddTripSheet({ onClose, onSave }) {
       stampColor: color,
       ...(image ? { image } : {}),
       days: [],
+      restaurants: [],
     });
   }
 
