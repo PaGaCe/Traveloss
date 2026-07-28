@@ -53,6 +53,7 @@ function openGoogleMaps(name, place) {
 export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState("");
+  const [sortBy, setSortBy] = useState("default");
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
   const [category, setCategory] = useState("");
@@ -67,6 +68,12 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const filtered = filter
     ? restaurants.filter((r) => r.category === filter)
     : restaurants;
+
+  let sorted = [...filtered];
+  if (sortBy === "price_asc") sorted.sort((a, b) => (a.price || 99) - (b.price || 99));
+  if (sortBy === "price_desc") sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+  if (sortBy === "rating_desc") sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  if (sortBy === "rating_asc") sorted.sort((a, b) => (a.rating || 99) - (b.rating || 99));
 
   async function handleImagePick(e) {
     const file = e.target.files && e.target.files[0];
@@ -281,6 +288,32 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
         </div>
       )}
 
+      {/* Sort options */}
+      {restaurants.length > 1 && (
+        <div className="flex items-center gap-1.5 mb-4 text-[11px]">
+          <span className="text-muted font-medium">Ordenar:</span>
+          {[
+            { key: "default", label: "Por defecto" },
+            { key: "price_asc", label: "Precio ↑" },
+            { key: "price_desc", label: "Precio ↓" },
+            { key: "rating_desc", label: "Valoración ↑" },
+            { key: "rating_asc", label: "Valoración ↓" },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setSortBy(opt.key)}
+              className="px-2 py-1 rounded-lg font-medium transition-all"
+              style={{
+                background: sortBy === opt.key ? accentColor : "#F4F4F7",
+                color: sortBy === opt.key ? "white" : "#5A6478",
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Empty state */}
       {restaurants.length === 0 && !showAdd && (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
@@ -297,9 +330,9 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
       )}
 
       {/* Restaurant list */}
-      {filtered.length > 0 && (
+      {sorted.length > 0 && (
         <div className="flex flex-col gap-2">
-          {filtered.map((rest) => (
+          {sorted.map((rest) => (
             <div
               key={rest.id}
               className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3"
