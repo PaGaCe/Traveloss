@@ -45,25 +45,35 @@ function StarRating({ value, onChange, size = 14 }) {
   );
 }
 
+const CATEGORY_FILES = [
+  "01_cafe_croissant",   // Desayuno
+  "02_cafe_para_llevar", // Café
+  "03_coctel",           // Cocktel
+  "04_pasta",            // Italiano
+  "05_noodles",          // Asiático
+  "06_helado",           // Helados
+  "07_hamburguesa",      // Hamburguesas
+  "08_taco",             // Mexicano
+  "09_ensalada_griega",  // Mediterráneo
+  "10_canape",           // Tapas
+  "11_pizza",            // Pizza
+  "12_sushi",            // Sushi
+  "13_bistec",           // Parrilla
+  "14_ensalada_verde",   // Saludable
+  "15_puntos_vacio",     // Otros
+];
+
 function CategoryIcon({ category, size = 20 }) {
   const idx = CATEGORIES.indexOf(category);
   if (idx === -1) {
     return <Utensils size={size} />;
   }
-  const col = idx % 5;
-  const row = Math.floor(idx / 5);
-  const pctX = (col / 4) * 100;
-  const pctY = (row / 2) * 100;
   return (
-    <div
-      className="shrink-0 bg-no-repeat rounded-full overflow-hidden"
-      style={{
-        width: size,
-        height: size,
-        backgroundImage: "url(/categories.png)",
-        backgroundSize: "500% 300%",
-        backgroundPosition: `${pctX}% ${pctY}%`,
-      }}
+    <img
+      src={`/${CATEGORY_FILES[idx]}.png`}
+      alt={category}
+      className="shrink-0 rounded-full object-cover"
+      style={{ width: size, height: size }}
     />
   );
 }
