@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils, MapPin, X, ImagePlus, Trash2 } from "lucide-react";
+import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 
 const CATEGORIES = [
@@ -22,12 +22,43 @@ const CATEGORIES = [
   "Otros",
 ];
 
+const PRICES = ["€", "€€", "€€€", "€€€€"];
+
+function StarRating({ value, onChange, size = 14 }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => onChange?.(s === value ? 0 : s)}
+          className="p-0.5 transition-transform active:scale-90"
+        >
+          <Star
+            size={size}
+            fill={s <= value ? "#FBA006" : "none"}
+            className={s <= value ? "text-gold" : "text-line"}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function openGoogleMaps(name, place) {
+  const q = encodeURIComponent(`${name} ${place || ""}`.trim());
+  window.open(`https://www.google.com/maps/search/${q}`, "_blank");
+}
+
 export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState("");
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
   const [category, setCategory] = useState("");
+  const [price, setPrice] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [mapsUrl, setMapsUrl] = useState("");
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -58,18 +89,29 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
       name: name.trim(),
       place: place.trim() || undefined,
       category,
+      price: price || undefined,
+      rating: rating || undefined,
+      mapsUrl: mapsUrl.trim() || undefined,
       image: image || undefined,
     };
     onUpdateTrip({ restaurants: [...restaurants, newRest] });
     setName("");
     setPlace("");
     setCategory("");
+    setPrice(0);
+    setRating(0);
+    setMapsUrl("");
     setImage(null);
     setShowAdd(false);
   }
 
   function handleDelete(id) {
     onUpdateTrip({ restaurants: restaurants.filter((r) => r.id !== id) });
+  }
+
+  function formatPrice(level) {
+    if (!level) return null;
+    return PRICES[level - 1] || "€".repeat(level);
   }
 
   return (
@@ -107,6 +149,41 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 className="w-full bg-transparent text-[13px] outline-none text-ink"
               />
             </div>
+            {/* Price selector */}
+            <div className="flex gap-1.5">
+              {PRICES.map((p, i) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPrice(price === i + 1 ? 0 : i + 1)}
+                  className="px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all"
+                  style={{
+                    background: price === i + 1 ? accentColor : "#F4F4F7",
+                    color: price === i + 1 ? "white" : "#5A6478",
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            {/* Rating selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-medium text-muted">Valoración:</span>
+              <StarRating value={rating} onChange={setRating} />
+              {rating > 0 && (
+                <span className="text-[12px] text-muted">{rating}/5</span>
+              )}
+            </div>
+            {/* Google Maps URL */}
+            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
+              <ExternalLink size={14} className="text-slate shrink-0" />
+              <input
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="Enlace de Google Maps (opcional)"
+                className="w-full bg-transparent text-[13px] outline-none text-ink"
+              />
+            </div>
             {/* Image picker */}
             {image ? (
               <div className="relative w-full h-28 rounded-xl overflow-hidden bg-white border border-line">
@@ -139,6 +216,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
+                  type="button"
                   onClick={() => setCategory(cat === category ? "" : cat)}
                   className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
                   style={{
@@ -238,26 +316,59 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
+                  {rest.mapsUrl && (
+                    <a
+                      href={rest.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-slate hover:text-teal transition-colors"
+                      title="Abrir en Google Maps"
+                    >
+                      <ExternalLink size={11} />
+                    </a>
+                  )}
+                </div>
                 {rest.place && (
                   <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
                     <MapPin size={10} /> {rest.place}
                   </p>
                 )}
-                <span
-                  className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                  style={{ background: `${accentColor}18`, color: accentColor }}
-                >
-                  {rest.category}
-                </span>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span
+                    className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: `${accentColor}18`, color: accentColor }}
+                  >
+                    {rest.category}
+                  </span>
+                  {rest.price && (
+                    <span className="text-[11px] font-medium text-muted">
+                      {formatPrice(rest.price)}
+                    </span>
+                  )}
+                  {rest.rating > 0 && (
+                    <StarRating value={rest.rating} size={10} />
+                  )}
+                </div>
               </div>
-              <button
-                onClick={() => handleDelete(rest.id)}
-                className="p-1.5 rounded-lg hover:bg-white/60 text-line hover:text-coral transition-colors shrink-0"
-                title="Eliminar"
-              >
-                <Trash2 size={13} />
-              </button>
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <button
+                  onClick={() => openGoogleMaps(rest.name, rest.place)}
+                  className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+                  title="Buscar en Google Maps"
+                >
+                  <MapPin size={13} />
+                </button>
+                <button
+                  onClick={() => handleDelete(rest.id)}
+                  className="p-1.5 rounded-lg hover:bg-white/60 text-line hover:text-coral transition-colors"
+                  title="Eliminar"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
