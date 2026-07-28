@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { X, MapPin, Calendar, ImagePlus } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
+import { uploadImageToFirebase } from "../lib/uploadImage";
+import { firebaseReady } from "../lib/firebase";
 
 const COLORS = ["#FBA006", "#FDC509", "#E56508", "#010615", "#2A9D8F", "#FF6B4A", "#4A90D9", "#9B59B6"];
 
@@ -21,7 +23,12 @@ export default function AddTripSheet({ onClose, onSave }) {
     setUploading(true);
     try {
       const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.6 });
-      setImage(dataUrl);
+      if (firebaseReady) {
+        const url = await uploadImageToFirebase(dataUrl, `trips/${Date.now()}-${file.name}`);
+        setImage(url);
+      } else {
+        setImage(dataUrl);
+      }
     } catch (err) {
       console.error(err);
     } finally {

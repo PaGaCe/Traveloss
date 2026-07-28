@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Utensils, MapPin, X, ImagePlus, Trash2, ExternalLink } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
+import { uploadImageToFirebase } from "../lib/uploadImage";
+import { firebaseReady } from "../lib/firebase";
 
 const CATEGORIES = [
   "Desayuno", "Café", "Cocktel", "Italiano", "Asiático",
@@ -27,8 +29,13 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
     if (!file) return;
     setUploading(true);
     try {
-      const dataUrl = await compressImage(file, { maxWidth: 800, quality: 0.65 });
-      setImage(dataUrl);
+      const dataUrl = await compressImage(file);
+      if (firebaseReady) {
+        const url = await uploadImageToFirebase(dataUrl, `restaurants/${Date.now()}-${file.name}`);
+        setImage(url);
+      } else {
+        setImage(dataUrl);
+      }
     } catch (err) {
       console.error(err);
     } finally {

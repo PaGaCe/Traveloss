@@ -6,6 +6,8 @@ import {
   Settings, Trash2, ExternalLink, Download, Navigation,
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
+import { uploadImageToFirebase } from "../lib/uploadImage";
+import { firebaseReady } from "../lib/firebase";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 
@@ -139,11 +141,20 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
             reader.readAsDataURL(file);
           });
         } else {
-          dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+          dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
+        }
+        let url = dataUrl;
+        if (firebaseReady) {
+          try {
+            const ext = file.name.toLowerCase().endsWith(".pdf") ? ".pdf" : ".jpg";
+            url = await uploadImageToFirebase(dataUrl, `cars/${Date.now()}-${file.name}`);
+          } catch (uploadErr) {
+            console.error("Storage upload error, falling back to inline:", uploadErr);
+          }
         }
         newDocs.push({
           name: file.name,
-          url: dataUrl,
+          url: url,
           type: file.type || (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg"),
           addedAt: Date.now(),
         });

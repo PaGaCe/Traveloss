@@ -10,6 +10,8 @@ import {
 import { useTripsStore } from "../../../lib/useTripsStore";
 import { useAuth } from "../../../lib/useAuth";
 import { compressImage } from "../../../lib/compressImage";
+import { uploadImageToFirebase } from "../../../lib/uploadImage";
+import { firebaseReady } from "../../../lib/firebase";
 import ActivityTicket from "../../../components/ActivityTicket";
 import ActivityDetailSheet from "../../../components/ActivityDetailSheet";
 import AddActivitySheet from "../../../components/AddActivitySheet";
@@ -160,9 +162,13 @@ export default function TripDetailPage() {
     setGalleryUploading(true);
     for (const file of files) {
       try {
-        const dataUrl = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
+        let url = dataUrl;
+        if (firebaseReady) {
+          url = await uploadImageToFirebase(dataUrl, `gallery/${tripId}/${day.id}/${Date.now()}-${file.name}`);
+        }
         addDayPhoto(tripId, day.id, {
-          url: dataUrl,
+          url,
           caption: "",
           addedAt: Date.now(),
         });
