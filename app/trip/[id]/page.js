@@ -17,6 +17,7 @@ import ShareTripSheet from "../../../components/ShareTripSheet";
 import BottomNav from "../../../components/BottomNav";
 import CarSection from "../../../components/CarSection";
 import HotelSection from "../../../components/HotelSection";
+import RestaurantSection from "../../../components/RestaurantSection";
 import TranslatorSection from "../../../components/TranslatorSection";
 import DatePicker from "../../../components/DatePicker";
 
@@ -420,6 +421,15 @@ export default function TripDetailPage() {
                   ))
               )}
             </>
+          )}
+
+          {/* === FOOD TAB === */}
+          {activeTab === "food" && (
+            <RestaurantSection
+              trip={trip}
+              accentColor={trip.stampColor}
+              onUpdateTrip={(updates) => updateTrip(tripId, updates)}
+            />
           )}
 
           {/* === CAR TAB === */}

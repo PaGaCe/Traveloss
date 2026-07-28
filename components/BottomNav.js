@@ -1,10 +1,11 @@
 "use client";
 
-import { List, Car, Bed, Languages, Camera } from "lucide-react";
+import { List, Car, Bed, Languages, Camera, Utensils } from "lucide-react";
 
 const TABS = [
   { key: "itinerary", icon: List, label: "Itinerario" },
   { key: "car", icon: Car, label: "Coche" },
+  { key: "food", icon: Utensils, label: "Comida" },
   { key: "hotels", icon: Bed, label: "Hoteles" },
   { key: "translator", icon: Languages, label: "Traducción" },
   { key: "gallery", icon: Camera, label: "Galería" },
