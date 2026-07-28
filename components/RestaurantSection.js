@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal } from "lucide-react";
+import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal, Pencil } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
+import RestaurantDetailSheet from "./RestaurantDetailSheet";
 
 const CATEGORIES = [
   "Desayuno",
@@ -85,6 +86,7 @@ function openGoogleMaps(name, place) {
 
 export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [filter, setFilter] = useState("");
   const [sortBy, setSortBy] = useState("default");
   const [name, setName] = useState("");
@@ -155,6 +157,12 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
 
   function handleDelete(id) {
     onUpdateTrip({ restaurants: restaurants.filter((r) => r.id !== id) });
+  }
+
+  function handleUpdate(id, updates) {
+    onUpdateTrip({
+      restaurants: restaurants.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+    });
   }
 
   function formatPrice(level) {
@@ -324,7 +332,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   color: filter === cat ? "white" : "#5A6478",
                 }}
               >
-                <CategoryIcon category={cat} size={28} />
+                <CategoryIcon category={cat} size={36} />
               </button>
             );
           })}
@@ -376,10 +384,11 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
       {sorted.length > 0 && (
         <div className="flex flex-col gap-2">
           {sorted.map((rest) => (
-            <div
-              key={rest.id}
-              className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3"
-            >
+              <div
+                key={rest.id}
+                onClick={() => setEditingRestaurant(rest)}
+                className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+              >
               {rest.image ? (
                 <img
                   src={rest.image}
@@ -436,6 +445,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                     href={rest.website}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
                     title="Abrir web"
                   >
@@ -443,24 +453,27 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   </a>
                 ) : (
                   <button
-                    onClick={() => openGoogleMaps(rest.name, rest.place)}
+                    onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
                     className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
                     title="Buscar en Google Maps"
                   >
                     <MapPin size={13} />
                   </button>
                 )}
-                <button
-                  onClick={() => handleDelete(rest.id)}
-                  className="p-1.5 rounded-lg hover:bg-white/60 text-line hover:text-coral transition-colors"
-                  title="Eliminar"
-                >
-                  <Trash2 size={13} />
-                </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {editingRestaurant && (
+        <RestaurantDetailSheet
+          restaurant={editingRestaurant}
+          accentColor={accentColor}
+          onClose={() => setEditingRestaurant(null)}
+          onUpdate={(updates) => handleUpdate(editingRestaurant.id, updates)}
+          onDelete={(id) => handleDelete(id)}
+        />
       )}
     </div>
   );
