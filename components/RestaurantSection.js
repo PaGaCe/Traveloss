@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink } from "lucide-react";
+import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 
 const CATEGORIES = [
@@ -45,6 +45,29 @@ function StarRating({ value, onChange, size = 14 }) {
   );
 }
 
+function CategoryIcon({ category, size = 20 }) {
+  const idx = CATEGORIES.indexOf(category);
+  if (idx === -1) {
+    return <Utensils size={size} />;
+  }
+  const col = idx % 5;
+  const row = Math.floor(idx / 5);
+  const pctX = (col / 4) * 100;
+  const pctY = (row / 2) * 100;
+  return (
+    <div
+      className="shrink-0 bg-no-repeat rounded-full overflow-hidden"
+      style={{
+        width: size,
+        height: size,
+        backgroundImage: "url(/categories.png)",
+        backgroundSize: "500% 300%",
+        backgroundPosition: `${pctX}% ${pctY}%`,
+      }}
+    />
+  );
+}
+
 function openGoogleMaps(name, place) {
   const q = encodeURIComponent(`${name} ${place || ""}`.trim());
   window.open(`https://www.google.com/maps/search/${q}`, "_blank");
@@ -59,7 +82,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState(0);
   const [rating, setRating] = useState(0);
-  const [mapsUrl, setMapsUrl] = useState("");
+  const [website, setWebsite] = useState("");
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -89,6 +112,17 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
     }
   }
 
+  function resetForm() {
+    setName("");
+    setPlace("");
+    setCategory("");
+    setPrice(0);
+    setRating(0);
+    setWebsite("");
+    setImage(null);
+    setShowAdd(false);
+  }
+
   function handleAdd() {
     if (!name.trim() || !category) return;
     const newRest = {
@@ -98,18 +132,15 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
       category,
       price: price || undefined,
       rating: rating || undefined,
-      mapsUrl: mapsUrl.trim() || undefined,
+      website: website.trim() || undefined,
       image: image || undefined,
     };
-    onUpdateTrip({ restaurants: [...restaurants, newRest] });
-    setName("");
-    setPlace("");
-    setCategory("");
-    setPrice(0);
-    setRating(0);
-    setMapsUrl("");
-    setImage(null);
-    setShowAdd(false);
+    try {
+      onUpdateTrip({ restaurants: [...restaurants, newRest] });
+    } catch (err) {
+      console.error("Error al guardar restaurante:", err);
+    }
+    resetForm();
   }
 
   function handleDelete(id) {
@@ -181,13 +212,13 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 <span className="text-[12px] text-muted">{rating}/5</span>
               )}
             </div>
-            {/* Google Maps URL */}
+            {/* Website URL */}
             <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
               <ExternalLink size={14} className="text-slate shrink-0" />
               <input
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="Enlace de Google Maps (opcional)"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="Web del restaurante (opcional)"
                 className="w-full bg-transparent text-[13px] outline-none text-ink"
               />
             </div>
@@ -225,12 +256,13 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat === category ? "" : cat)}
-                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
                   style={{
                     background: category === cat ? accentColor : "#F4F4F7",
                     color: category === cat ? "white" : "#5A6478",
                   }}
                 >
+                  <CategoryIcon category={cat} size={13} />
                   {cat}
                 </button>
               ))}
@@ -238,7 +270,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
           </div>
           <div className="flex gap-2 mt-3">
             <button
-              onClick={() => setShowAdd(false)}
+              onClick={resetForm}
               className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-slate border border-line"
             >
               Cancelar
@@ -260,12 +292,13 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
         <div className="flex flex-wrap gap-1.5 mb-4">
           <button
             onClick={() => setFilter("")}
-            className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
             style={{
               background: !filter ? accentColor : "#F4F4F7",
               color: !filter ? "white" : "#5A6478",
             }}
           >
+            <MoreHorizontal size={13} />
             Todos
           </button>
           {CATEGORIES.map((cat) => {
@@ -275,13 +308,14 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
               <button
                 key={cat}
                 onClick={() => setFilter(filter === cat ? "" : cat)}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
                 style={{
                   background: filter === cat ? accentColor : "#F4F4F7",
                   color: filter === cat ? "white" : "#5A6478",
                 }}
               >
-                {cat} ({count})
+                <CategoryIcon category={cat} size={14} />
+                <span className="text-[10px]">{count}</span>
               </button>
             );
           })}
@@ -294,8 +328,8 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
           <span className="text-muted font-medium">Ordenar:</span>
           {[
             { key: "default", label: "Por defecto" },
-            { key: "price_asc", label: "Precio ↑" },
-            { key: "price_desc", label: "Precio ↓" },
+            { key: "price_desc", label: "Precio ↑" },
+            { key: "price_asc", label: "Precio ↓" },
             { key: "rating_desc", label: "Valoración ↑" },
             { key: "rating_asc", label: "Valoración ↓" },
           ].map((opt) => (
@@ -351,14 +385,14 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
-                  {rest.mapsUrl && (
+                  {rest.website && (
                     <a
-                      href={rest.mapsUrl}
+                      href={rest.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       className="text-slate hover:text-teal transition-colors"
-                      title="Abrir en Google Maps"
+                      title="Abrir web del restaurante"
                     >
                       <ExternalLink size={11} />
                     </a>
@@ -371,9 +405,10 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 )}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span
-                    className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
                     style={{ background: `${accentColor}18`, color: accentColor }}
                   >
+                    <CategoryIcon category={rest.category} size={10} />
                     {rest.category}
                   </span>
                   {rest.price && (
@@ -387,13 +422,25 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 </div>
               </div>
               <div className="flex flex-col items-center gap-1 shrink-0">
-                <button
-                  onClick={() => openGoogleMaps(rest.name, rest.place)}
-                  className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-                  title="Buscar en Google Maps"
-                >
-                  <MapPin size={13} />
-                </button>
+                {rest.website ? (
+                  <a
+                    href={rest.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+                    title="Abrir web"
+                  >
+                    <ExternalLink size={13} />
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => openGoogleMaps(rest.name, rest.place)}
+                    className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+                    title="Buscar en Google Maps"
+                  >
+                    <MapPin size={13} />
+                  </button>
+                )}
                 <button
                   onClick={() => handleDelete(rest.id)}
                   className="p-1.5 rounded-lg hover:bg-white/60 text-line hover:text-coral transition-colors"
