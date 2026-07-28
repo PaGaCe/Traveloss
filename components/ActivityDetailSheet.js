@@ -10,6 +10,7 @@ import TimePicker from "./TimePicker";
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
 
 export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor }) {
+  const [titleDraft, setTitleDraft] = useState(item.title || "");
   const [note, setNote] = useState(item.note || "");
   const [details, setDetails] = useState(item.details || "");
   const [time, setTime] = useState(item.time || "");
@@ -124,9 +125,11 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
               <Icon size={16} style={{ color: accentColor }} />
             </div>
             <div>
-              <p className={`font-semibold text-[16px] text-ink font-display ${item.completed ? "line-through opacity-60" : ""}`}>
-                {item.title}
-              </p>
+              <input
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                className={`font-semibold text-[16px] text-ink font-display bg-transparent outline-none border-b border-transparent focus:border-line w-full ${item.completed ? "line-through opacity-60" : ""}`}
+              />
               {!editingPlace && (
                 <p className="text-[12px] text-slate flex items-center gap-1">
                   {item.place || "Sin ubicación"}
@@ -333,7 +336,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
         />
 
         <button
-          onClick={() => { onUpdate({ details, time, note }); onClose(); }}
+          onClick={() => { onUpdate({ title: titleDraft, details, time, note }); onClose(); }}
           className="w-full mt-4 rounded-xl py-3.5 text-[15px] font-semibold text-white"
           style={{ background: accentColor }}
         >
