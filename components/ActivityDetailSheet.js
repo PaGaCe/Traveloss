@@ -10,6 +10,7 @@ import TimePicker from "./TimePicker";
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
 
 export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor }) {
+  const [note, setNote] = useState(item.note || "");
   const [details, setDetails] = useState(item.details || "");
   const [time, setTime] = useState(item.time || "");
   const [uploading, setUploading] = useState(false);
@@ -138,7 +139,15 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
           </button>
         </div>
 
-        {item.note && <p className="text-[12.5px] italic mb-3 text-gold">✦ {item.note}</p>}
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 mb-3 bg-white border border-line">
+          <span className="text-gold text-[14px]">✦</span>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Nota rápida (opcional)"
+            className="w-full bg-transparent text-[13px] outline-none text-ink italic"
+          />
+        </div>
 
         {/* Completed toggle */}
         <button
@@ -324,7 +333,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
         />
 
         <button
-          onClick={() => { onUpdate({ details, time }); onClose(); }}
+          onClick={() => { onUpdate({ details, time, note }); onClose(); }}
           className="w-full mt-4 rounded-xl py-3.5 text-[15px] font-semibold text-white"
           style={{ background: accentColor }}
         >

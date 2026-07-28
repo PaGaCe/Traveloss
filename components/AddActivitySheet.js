@@ -17,6 +17,7 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
   const [place, setPlace] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState("activity");
+  const [note, setNote] = useState("");
   const [coords, setCoords] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -78,6 +79,7 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
       place,
       time: time || "--:--",
       type,
+      note: note || undefined,
       ...(finalCoords ? { lat: finalCoords.lat, lng: finalCoords.lng } : {}),
     });
   }
@@ -149,6 +151,12 @@ export default function AddActivitySheet({ onClose, onSave, accentColor }) {
               )}
             </div>
           </div>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Nota rápida (opcional)"
+            className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink italic"
+          />
           {coords && (
             <p className="text-[11px] text-teal -mt-1">✓ Ubicación fijada — aparecerá en el mapa del día</p>
           )}

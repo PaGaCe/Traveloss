@@ -325,33 +325,35 @@ export default function TripDetailPage() {
         </div>
       </div>
 
-      {/* day stamps */}
-      <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-cloud border-b border-line/60">
-        <div className="max-w-2xl mx-auto flex gap-3">
-          {trip.days.map((d) => (
+      {/* day stamps — solo en itinerario o galería */}
+      {(activeTab === "itinerary" || activeTab === "gallery") && (
+        <div className="flex gap-3 px-5 py-4 overflow-x-auto bg-cloud border-b border-line/60">
+          <div className="max-w-2xl mx-auto flex gap-3">
+            {trip.days.map((d) => (
+              <button
+                key={d.id}
+                onClick={() => setActiveDayId(d.id)}
+                className="shrink-0 w-14 h-14 rounded-full flex flex-col items-center justify-center transition-all"
+                style={{
+                  border: `2px dashed ${d.id === (day && day.id) ? trip.stampColor : "#C5CAD6"}`,
+                  color: d.id === (day && day.id) ? trip.stampColor : "#8A90A0",
+                  background: d.id === (day && day.id) ? `${trip.stampColor}14` : "transparent",
+                  transform: d.id === (day && day.id) ? "scale(1.06)" : "scale(1)",
+                }}
+              >
+                <span className="text-[10px] font-semibold leading-none">D{d.label.split(" ")[1]}</span>
+                <span className="text-[8.5px] leading-none mt-0.5">{d.date}</span>
+              </button>
+            ))}
             <button
-              key={d.id}
-              onClick={() => setActiveDayId(d.id)}
-              className="shrink-0 w-14 h-14 rounded-full flex flex-col items-center justify-center transition-all"
-              style={{
-                border: `2px dashed ${d.id === (day && day.id) ? trip.stampColor : "#C5CAD6"}`,
-                color: d.id === (day && day.id) ? trip.stampColor : "#8A90A0",
-                background: d.id === (day && day.id) ? `${trip.stampColor}14` : "transparent",
-                transform: d.id === (day && day.id) ? "scale(1.06)" : "scale(1)",
-              }}
+              onClick={handleAddDay}
+              className="shrink-0 w-14 h-14 rounded-full flex items-center justify-center border-2 border-dashed border-line text-slate"
             >
-              <span className="text-[10px] font-semibold leading-none">{d.label.split(" ")[1]}</span>
-              <span className="text-[9px] leading-none mt-0.5">{d.date.split(" ")[0]}</span>
+              <Plus size={18} />
             </button>
-          ))}
-          <button
-            onClick={handleAddDay}
-            className="shrink-0 w-14 h-14 rounded-full flex items-center justify-center border-2 border-dashed border-line text-slate"
-          >
-            <Plus size={18} />
-          </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* content area - scrollable */}
       <div className="flex-1 overflow-y-auto px-5 pt-3 pb-24">
