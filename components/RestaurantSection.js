@@ -87,13 +87,103 @@ function openGoogleMaps(name, place) {
   window.open(`https://www.google.com/maps/search/${q}`, "_blank");
 }
 
+function RestaurantCard({ rest, accentColor, openGoogleMaps, setEditingRestaurant, setLightboxImg, formatPrice }) {
+  return (
+    <div
+      onClick={() => setEditingRestaurant(rest)}
+      className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+    >
+      {rest.image ? (
+        <img
+          src={rest.image}
+          alt=""
+          className="w-14 h-14 rounded-xl object-cover shrink-0 cursor-pointer"
+          onClick={(e) => { e.stopPropagation(); setLightboxImg(rest.image); }}
+        />
+      ) : (
+        <div className="w-14 h-14 rounded-xl bg-white border border-line flex items-center justify-center shrink-0">
+          <Utensils size={18} className="text-slate" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
+          {rest.website && (
+            <a
+              href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-slate hover:text-teal transition-colors"
+              title="Abrir web del restaurante"
+            >
+              <ExternalLink size={11} />
+            </a>
+          )}
+        </div>
+        {rest.place && (
+          <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
+            <MapPin size={10} /> {rest.place}
+          </p>
+        )}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+            style={{ background: `${accentColor}18`, color: accentColor }}
+          >
+            <CategoryIcon category={rest.category} size={22} />
+            {rest.category}
+          </span>
+          {rest.zone && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/60 text-muted border border-line">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              {rest.zone}
+            </span>
+          )}
+          {rest.price && (
+            <span className="text-[11px] font-medium text-muted">
+              {formatPrice(rest.price)}
+            </span>
+          )}
+          {rest.rating > 0 && (
+            <StarRating value={rest.rating} size={10} />
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-1 shrink-0">
+        {rest.website && (
+          <a
+            href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+            title="Abrir web"
+          >
+            <ExternalLink size={13} />
+          </a>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
+          className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
+          title="Buscar en Google Maps"
+        >
+          <MapPin size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [filter, setFilter] = useState("");
+  const [zoneFilter, setZoneFilter] = useState("");
   const [sortBy, setSortBy] = useState("default");
   const [name, setName] = useState("");
   const [place, setPlace] = useState("");
+  const [zone, setZone] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState(0);
   const [rating, setRating] = useState(0);
@@ -107,9 +197,13 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const restaurantsRef = useRef(restaurants);
   restaurantsRef.current = restaurants;
 
-  const filtered = filter
-    ? restaurants.filter((r) => r.category === filter)
-    : restaurants;
+  const zones = [...new Set(restaurants.map((r) => r.zone).filter(Boolean))].sort();
+
+  const filtered = restaurants.filter((r) => {
+    if (filter && r.category !== filter) return false;
+    if (zoneFilter && r.zone !== zoneFilter) return false;
+    return true;
+  });
 
   let sorted = [...filtered];
   if (sortBy === "price_asc") sorted.sort((a, b) => (a.price || 99) - (b.price || 99));
@@ -144,6 +238,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   function resetForm() {
     setName("");
     setPlace("");
+    setZone("");
     setCategory("");
     setPrice(0);
     setRating(0);
@@ -158,6 +253,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
       id: `r${Date.now()}`,
       name: name.trim(),
       place: place.trim() || undefined,
+      zone: zone.trim() || undefined,
       category,
       price: price || undefined,
       rating: rating || undefined,
@@ -223,6 +319,15 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 value={place}
                 onChange={(e) => setPlace(e.target.value)}
                 placeholder="Dirección o ubicación"
+                className="w-full bg-transparent text-[13px] outline-none text-ink"
+              />
+            </div>
+            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <input
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+                placeholder="Zona (ej: Liubliana, Bled...)"
                 className="w-full bg-transparent text-[13px] outline-none text-ink"
               />
             </div>
@@ -360,6 +465,39 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
         </div>
       )}
 
+      {/* Zone filter */}
+      {zones.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          <button
+            onClick={() => setZoneFilter("")}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+            style={{
+              background: !zoneFilter ? accentColor : "#F4F4F7",
+              color: !zoneFilter ? "white" : "#5A6478",
+            }}
+          >
+            Todas las zonas
+          </button>
+          {zones.map((z) => {
+            const count = restaurants.filter((r) => r.zone === z).length;
+            return (
+              <button
+                key={z}
+                onClick={() => setZoneFilter(zoneFilter === z ? "" : z)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                style={{
+                  background: zoneFilter === z ? accentColor : "#F4F4F7",
+                  color: zoneFilter === z ? "white" : "#5A6478",
+                }}
+              >
+                {z}
+                <span className="text-[10px] opacity-70">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Sort options */}
       {restaurants.length > 1 && (
         <div className="flex items-center gap-1.5 mb-4 text-[11px]">
@@ -403,87 +541,53 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
 
       {/* Restaurant list */}
       {sorted.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {sorted.map((rest) => (
-              <div
-                key={rest.id}
-                onClick={() => setEditingRestaurant(rest)}
-                className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform"
-              >
-              {rest.image ? (
-                <img
-                  src={rest.image}
-                  alt=""
-                  className="w-14 h-14 rounded-xl object-cover shrink-0 cursor-pointer"
-                  onClick={(e) => { e.stopPropagation(); setLightboxImg(rest.image); }}
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-xl bg-white border border-line flex items-center justify-center shrink-0">
-                  <Utensils size={18} className="text-slate" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
-                  {rest.website && (
-                    <a
-                      href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-slate hover:text-teal transition-colors"
-                      title="Abrir web del restaurante"
-                    >
-                      <ExternalLink size={11} />
-                    </a>
+        <div className="flex flex-col gap-3">
+          {zoneFilter ? (
+            /* Single zone view */
+            sorted.map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)
+          ) : (
+            /* Grouped by zone */
+            (() => {
+              const grouped = {};
+              const noZone = [];
+              for (const r of sorted) {
+                if (r.zone) {
+                  if (!grouped[r.zone]) grouped[r.zone] = [];
+                  grouped[r.zone].push(r);
+                } else {
+                  noZone.push(r);
+                }
+              }
+              const zoneNames = Object.keys(grouped).sort();
+              return (
+                <>
+                  {zoneNames.map((z) => (
+                    <div key={z}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                        <span className="text-[13px] font-semibold text-ink">{z}</span>
+                        <span className="text-[11px] text-muted">({grouped[z].length})</span>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {grouped[z].map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)}
+                      </div>
+                    </div>
+                  ))}
+                  {noZone.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[13px] font-semibold text-muted">Sin zona</span>
+                        <span className="text-[11px] text-muted">({noZone.length})</span>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {noZone.map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)}
+                      </div>
+                    </div>
                   )}
-                </div>
-                {rest.place && (
-                  <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
-                    <MapPin size={10} /> {rest.place}
-                  </p>
-                )}
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span
-                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                    style={{ background: `${accentColor}18`, color: accentColor }}
-                  >
-                    <CategoryIcon category={rest.category} size={22} />
-                    {rest.category}
-                  </span>
-                  {rest.price && (
-                    <span className="text-[11px] font-medium text-muted">
-                      {formatPrice(rest.price)}
-                    </span>
-                  )}
-                  {rest.rating > 0 && (
-                    <StarRating value={rest.rating} size={10} />
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1 shrink-0">
-                {rest.website && (
-                  <a
-                    href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-                    title="Abrir web"
-                  >
-                    <ExternalLink size={13} />
-                  </a>
-                )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
-                  className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-                  title="Buscar en Google Maps"
-                >
-                  <MapPin size={13} />
-                </button>
-              </div>
-            </div>
-          ))}
+                </>
+              );
+            })()
+          )}
         </div>
       )}
 

@@ -18,6 +18,7 @@ const PRICES = ["€", "€€", "€€€", "€€€€"];
 export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, onDelete, accentColor }) {
   const [name, setName] = useState(restaurant.name || "");
   const [place, setPlace] = useState(restaurant.place || "");
+  const [zone, setZone] = useState(restaurant.zone || "");
   const [category, setCategory] = useState(restaurant.category || "");
   const [price, setPrice] = useState(restaurant.price || 0);
   const [rating, setRating] = useState(restaurant.rating || 0);
@@ -56,6 +57,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
     onUpdate({
       name: name.trim(),
       place: place.trim() || undefined,
+      zone: zone.trim() || undefined,
       category,
       price: price || undefined,
       rating: rating || undefined,
@@ -94,6 +96,16 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
               value={place}
               onChange={(e) => setPlace(e.target.value)}
               placeholder="Dirección o ubicación"
+              className="w-full bg-transparent text-[13px] outline-none text-ink"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <input
+              value={zone}
+              onChange={(e) => setZone(e.target.value)}
+              placeholder="Zona (ej: Liubliana, Bled...)"
               className="w-full bg-transparent text-[13px] outline-none text-ink"
             />
           </div>
