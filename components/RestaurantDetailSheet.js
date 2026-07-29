@@ -5,6 +5,7 @@ import { Utensils, MapPin, X, ImagePlus, Trash2, ExternalLink } from "lucide-rea
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
+import { useToast } from "./Toast";
 
 const CATEGORIES = [
   "Desayuno", "Café", "Cocktel", "Italiano", "Asiático",
@@ -23,6 +24,8 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
   const [website, setWebsite] = useState(restaurant.website || "");
   const [image, setImage] = useState(restaurant.image || null);
   const [uploading, setUploading] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState(null);
+  const addToast = useToast();
 
   async function handleImagePick(e) {
     const file = e.target.files && e.target.files[0];
@@ -35,7 +38,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
           const url = await uploadImageToFirebase(dataUrl, `restaurants/${Date.now()}-${file.name}`);
           setImage(url);
         } catch (storageErr) {
-          console.warn("Storage upload failed, using inline image:", storageErr);
+          addToast("No se pudo subir la foto a la nube, se guarda localmente", "warning");
           setImage(dataUrl);
         }
       } else {
@@ -59,6 +62,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
       website: website.trim() || undefined,
       image: image || undefined,
     });
+    addToast("Restaurante actualizado", "success");
     onClose();
   }
 
@@ -146,7 +150,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
           {/* Image */}
           {image ? (
             <div className="relative w-full h-32 rounded-xl overflow-hidden bg-white border border-line">
-              <img src={image} alt="" className="w-full h-full object-cover" />
+              <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
               <button
                 onClick={() => setImage(null)}
                 className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
@@ -207,6 +211,19 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
           </button>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={18} className="text-white" />
+          </button>
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

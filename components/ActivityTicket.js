@@ -1,12 +1,20 @@
 "use client";
 
-import { Utensils, Camera, Plane, Bed, Sparkles, MapPin, ChevronRight, Navigation, CheckCircle2, Circle } from "lucide-react";
+import { useState } from "react";
+import { Utensils, Camera, Plane, Bed, Sparkles, MapPin, ChevronRight, Navigation, CheckCircle2, Circle, X } from "lucide-react";
 
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
 
 export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
+  const [lightboxImg, setLightboxImg] = useState(null);
   const Icon = ICONS[item.type] || Sparkles;
   const hasCoords = item.lat && item.lng;
+
+  const ticketImages = Array.isArray(item.ticketImages)
+    ? item.ticketImages
+    : item.ticketImage
+      ? [item.ticketImage]
+      : [];
 
   return (
     <div className="mb-3">
@@ -52,11 +60,22 @@ export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
             </div>
             {item.image && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.image} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0" />
+              <img
+                src={item.image} alt=""
+                className="w-11 h-11 rounded-lg object-cover shrink-0 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); setLightboxImg(item.image); }}
+              />
             )}
-            {item.ticketImage && (
+            {ticketImages.length > 0 && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.ticketImage} alt="Billete" className="w-11 h-11 rounded-lg object-cover shrink-0" />
+              <img
+                src={ticketImages[0]} alt="Ticket"
+                className="w-11 h-11 rounded-lg object-cover shrink-0 cursor-pointer border border-gold/30"
+                onClick={(e) => { e.stopPropagation(); setLightboxImg(ticketImages[0]); }}
+              />
+            )}
+            {ticketImages.length > 1 && (
+              <span className="text-[10px] font-bold text-gold shrink-0">+{ticketImages.length - 1}</span>
             )}
             <ChevronRight size={16} className="text-line shrink-0" />
           </div>
@@ -76,6 +95,20 @@ export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
           </a>
         )}
       </div>
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={18} className="text-white" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

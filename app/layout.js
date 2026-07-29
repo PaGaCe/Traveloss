@@ -1,4 +1,5 @@
 import "./globals.css";
+import { ToastProvider } from "../components/Toast";
 
 export const metadata = {
   icons: {
@@ -17,7 +18,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className="font-body">{children}</body>
+      <body className="font-body">
+        <ToastProvider>{children}</ToastProvider>
+      </body>
     </html>
   );
 }

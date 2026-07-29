@@ -20,15 +20,21 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const [placeCoords, setPlaceCoords] = useState(null);
   const [placeSuggestions, setPlaceSuggestions] = useState([]);
   const [placeSearching, setPlaceSearching] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState(null);
   const fileInputRef = useRef(null);
   const ticketInputRef = useRef(null);
   const placeInputRef = useRef(null);
   const Icon = ICONS[item.type] || Sparkles;
 
-  const isFlight = item.type === "flight";
+  // ticketImages: array de URLs (backward compat: si ticketImage es string, lo tratamos como array de 1)
+  const ticketImages = Array.isArray(item.ticketImages)
+    ? item.ticketImages
+    : item.ticketImage
+      ? [item.ticketImage]
+      : [];
 
   const detailLabel =
-    isFlight ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas adicionales";
+    item.type === "flight" ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas adicionales";
 
   useEffect(() => {
     if (!editingPlace || placeDraft.trim().length < 3 || placeCoords) {
@@ -74,22 +80,35 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   }
 
   async function handleTicketPick(e) {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const dataUrl = await compressImage(file);
-      if (firebaseReady) {
-        const url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}.jpg`);
-        onUpdate({ ticketImage: url });
-      } else {
-        onUpdate({ ticketImage: dataUrl });
+      const newTickets = [...ticketImages];
+      for (const file of files) {
+        const dataUrl = await compressImage(file);
+        if (firebaseReady) {
+          const url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}.jpg`);
+          newTickets.push(url);
+        } else {
+          newTickets.push(dataUrl);
+        }
       }
+      onUpdate({ ticketImages: newTickets, ticketImage: undefined });
     } catch (err) {
       console.error(err);
     } finally {
       setUploading(false);
       if (ticketInputRef.current) ticketInputRef.current.value = "";
+    }
+  }
+
+  function handleRemoveTicket(idx) {
+    const newTickets = ticketImages.filter((_, i) => i !== idx);
+    if (newTickets.length === 0) {
+      onUpdate({ ticketImages: [], ticketImage: undefined });
+    } else {
+      onUpdate({ ticketImages: newTickets, ticketImage: undefined });
     }
   }
 
@@ -277,72 +296,114 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
           <TimePicker value={time} onChange={setTime} accentColor={accentColor} />
         </div>
 
-        {isFlight ? (
-          <>
-            {item.ticketImage ? (
-              <div className="relative mb-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.ticketImage} alt="Billete" className="w-full h-40 object-cover rounded-xl" />
-                <button
-                  onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
-                  className="absolute bottom-2 right-2 rounded-full px-3 py-1.5 text-[12px] font-medium text-white bg-black/60"
-                >
-                  {uploading ? "Subiendo..." : "Cambiar billete"}
-                </button>
-              </div>
-            ) : (
+        {/* Foto de actividad */}
+        {item.image ? (
+          <div className="relative mb-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.image} alt=""
+              className="w-full h-40 object-cover rounded-xl cursor-pointer"
+              onClick={() => setLightboxImg(item.image)}
+            />
+            <button
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              className="absolute bottom-2 right-2 rounded-full px-3 py-1.5 text-[12px] font-medium text-white bg-black/60"
+            >
+              {uploading ? "Subiendo..." : "Cambiar foto"}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+            className="w-full h-24 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 mb-3 text-slate"
+          >
+            <ImagePlus size={18} />
+            <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir foto desde tu dispositivo"}</span>
+          </button>
+        )}
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+
+        {/* Entradas / Tickets — disponible para todos los tipos de actividad */}
+        {ticketImages.length > 0 ? (
+          <div className="mb-3">
+            <label className="text-[12px] font-medium mb-1.5 block text-muted">Entradas / tickets</label>
+            <div className="flex flex-wrap gap-2">
+              {ticketImages.map((ticketUrl, idx) => (
+                <div key={idx} className="relative w-28 h-28 rounded-xl overflow-hidden border border-line bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={ticketUrl} alt={`Ticket ${idx + 1}`}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => setLightboxImg(ticketUrl)}
+                  />
+                  <button
+                    onClick={() => handleRemoveTicket(idx)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
+                  >
+                    <X size={10} className="text-white" />
+                  </button>
+                </div>
+              ))}
               <button
                 onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
-                className="w-full h-24 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 mb-3 text-slate"
+                className="w-28 h-28 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-slate hover:text-muted transition-colors"
               >
-                <Plane size={18} />
-                <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir billete / boarding pass"}</span>
+                <ImagePlus size={16} />
+                <span className="text-[10px] text-center">Añadir otro</span>
               </button>
-            )}
-            <input ref={ticketInputRef} type="file" accept="image/*" className="hidden" onChange={handleTicketPick} />
-          </>
+            </div>
+          </div>
         ) : (
-          <>
-            {item.image ? (
-              <div className="relative mb-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image} alt="" className="w-full h-40 object-cover rounded-xl" />
-                <button
-                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  className="absolute bottom-2 right-2 rounded-full px-3 py-1.5 text-[12px] font-medium text-white bg-black/60"
-                >
-                  {uploading ? "Subiendo..." : "Cambiar foto"}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                className="w-full h-24 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 mb-3 text-slate"
-              >
-                <ImagePlus size={18} />
-                <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir foto desde tu dispositivo"}</span>
-              </button>
-            )}
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
-          </>
+          <button
+            onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
+            className="w-full h-20 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 mb-3 text-slate hover:text-muted transition-colors"
+          >
+            <ImagePlus size={16} />
+            <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir entrada / ticket"}</span>
+          </button>
         )}
+        <input ref={ticketInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleTicketPick} />
 
         <label className="text-[12px] font-medium mb-1 block text-muted">{detailLabel}</label>
         <textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}
-          placeholder={isFlight ? "Nº de reserva, aerolínea, asiento..." : "Escribe aquí cualquier detalle extra"}
+          placeholder={item.type === "flight" ? "Nº de reserva, aerolínea, asiento..." : "Escribe aquí cualquier detalle extra"}
           className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none min-h-[90px] bg-cloud text-ink"
         />
 
-        <button
-          onClick={() => { onUpdate({ title: titleDraft, details, time, note }); onClose(); }}
-          className="w-full mt-4 rounded-xl py-3.5 text-[15px] font-semibold text-white"
-          style={{ background: accentColor }}
-        >
-          Guardar
-        </button>
+        <div className="flex gap-2 mt-4">
+          {onDelete && (
+            <button
+              onClick={() => { onDelete(); onClose(); }}
+              className="flex items-center justify-center gap-1.5 rounded-xl py-3.5 px-4 text-[13px] font-medium bg-coral text-white"
+            >
+              <Trash2 size={13} /> Eliminar
+            </button>
+          )}
+          <button
+            onClick={() => { onUpdate({ title: titleDraft, details, time, note }); onClose(); }}
+            className="flex-1 rounded-xl py-3.5 text-[15px] font-semibold text-white"
+            style={{ background: accentColor }}
+          >
+            Guardar
+          </button>
+        </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={18} className="text-white" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
+import { useToast } from "./Toast";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 
@@ -43,6 +44,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   const [draft, setDraft] = useState(car || { ...EMPTY_CAR });
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const docInputRef = useRef(null);
+  const addToast = useToast();
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [pickupSearching, setPickupSearching] = useState(false);
   const [dropoffSuggestions, setDropoffSuggestions] = useState([]);
@@ -119,11 +121,14 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   function handleSave() {
     onUpdateCar(draft);
     setEditing(false);
+    addToast("Coche guardado correctamente", "success");
   }
 
   function handleFieldChange(field, value) {
     setDraft((prev) => ({ ...prev, [field]: value }));
   }
+
+  const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5 MB
 
   async function handleDocUpload(e) {
     const files = e.target.files;
@@ -134,6 +139,10 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
       try {
         let dataUrl;
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+          if (file.size > MAX_PDF_SIZE) {
+            addToast(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
+            continue;
+          }
           dataUrl = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onerror = () => reject(new Error("No se pudo leer el PDF"));
@@ -141,15 +150,18 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
             reader.readAsDataURL(file);
           });
         } else {
+          if (file.size > 10 * 1024 * 1024) {
+            addToast(`"${file.name}" es demasiado grande (máx 10 MB)`, "warning");
+            continue;
+          }
           dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
         }
         let url = dataUrl;
         if (firebaseReady) {
           try {
-            const ext = file.name.toLowerCase().endsWith(".pdf") ? ".pdf" : ".jpg";
             url = await uploadImageToFirebase(dataUrl, `cars/${Date.now()}-${file.name}`);
           } catch (uploadErr) {
-            console.error("Storage upload error, falling back to inline:", uploadErr);
+            addToast(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
           }
         }
         newDocs.push({
@@ -159,10 +171,13 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           addedAt: Date.now(),
         });
       } catch (err) {
-        console.error("Doc upload error:", err);
+        addToast(`Error al subir "${file.name}": ${err.message || "Error desconocido"}`, "error");
       }
     }
     onUpdateDocs(newDocs);
+    if (newDocs.length > (rentalDocs || []).length) {
+      addToast("Documento subido correctamente", "success");
+    }
     setUploadingDoc(false);
     if (docInputRef.current) docInputRef.current.value = "";
   }

@@ -22,6 +22,7 @@ import HotelSection from "../../../components/HotelSection";
 import RestaurantSection from "../../../components/RestaurantSection";
 import TranslatorSection from "../../../components/TranslatorSection";
 import DatePicker from "../../../components/DatePicker";
+import { useToast } from "../../../components/Toast";
 
 const DayMap = dynamic(() => import("../../../components/DayMap"), { ssr: false });
 
@@ -41,7 +42,7 @@ export default function TripDetailPage() {
   const tripId = params.id;
   const { user, userId } = useAuth();
   const {
-    getTrip, loaded, addDay, renameDay, addActivity, updateActivity,
+    getTrip, loaded, addDay, renameDay, addActivity, updateActivity, deleteActivity,
     updateTrip, deleteTrip, addDayPhoto, removeDayPhoto,
     shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, dismissTrip, usingFirebase,
   } = useTripsStore(userId, user?.email);
@@ -68,6 +69,7 @@ export default function TripDetailPage() {
   const [galleryUploading, setGalleryUploading] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
   const [galleryScope, setGalleryScope] = useState("day");
+  const addToast = useToast();
   const galleryInputRef = useRef(null);
 
   useEffect(() => {
@@ -130,10 +132,12 @@ export default function TripDetailPage() {
   function handleAddDay() {
     const newId = addDay(tripId);
     setActiveDayId(newId);
+    addToast("Nuevo día añadido", "success");
   }
 
   function handleDeleteTrip() {
     deleteTrip(tripId);
+    addToast("Viaje eliminado", "info");
     router.push("/");
   }
 
@@ -426,7 +430,11 @@ export default function TripDetailPage() {
                   .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"))
                   .map((item) => (
                     <Fragment key={item.id}>
-                      <ActivityTicket item={item} onClick={() => setDetailItemId(item.id)} />
+                      <ActivityTicket
+                        item={item}
+                        onClick={() => setDetailItemId(item.id)}
+                        onToggleCompleted={(id, completed) => updateActivity(tripId, day.id, id, { completed })}
+                      />
                     </Fragment>
                   ))
               )}
@@ -595,6 +603,7 @@ export default function TripDetailPage() {
           onClose={() => setShowAdd(false)}
           onSave={(activity) => {
             addActivity(tripId, day.id, activity);
+            addToast("Actividad añadida", "success");
             setShowAdd(false);
           }}
         />
@@ -606,6 +615,7 @@ export default function TripDetailPage() {
           accentColor={trip.stampColor}
           onClose={() => setDetailItemId(null)}
           onUpdate={(updates) => updateActivity(tripId, day.id, detailItem.id, updates)}
+          onDelete={() => { deleteActivity(tripId, day.id, detailItem.id); setDetailItemId(null); }}
         />
       )}
 

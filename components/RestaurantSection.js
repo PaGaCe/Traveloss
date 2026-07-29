@@ -5,6 +5,7 @@ import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizon
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
+import { useToast } from "./Toast";
 import RestaurantDetailSheet from "./RestaurantDetailSheet";
 
 const CATEGORIES = [
@@ -99,6 +100,8 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   const [website, setWebsite] = useState("");
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState(null);
+  const addToast = useToast();
 
   const restaurants = trip.restaurants || [];
   const restaurantsRef = useRef(restaurants);
@@ -163,8 +166,9 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
     };
     try {
       onUpdateTrip({ restaurants: [...restaurants, newRest] });
+      addToast("Restaurante añadido correctamente", "success");
     } catch (err) {
-      console.error("Error al guardar restaurante:", err);
+      addToast("Error al guardar restaurante", "error");
     }
     resetForm();
   }
@@ -172,6 +176,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   function handleDelete(id) {
     const current = restaurantsRef.current;
     onUpdateTrip({ restaurants: current.filter((r) => r.id !== id) });
+    addToast("Restaurante eliminado", "success");
   }
 
   function handleUpdate(id, updates) {
@@ -259,7 +264,7 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
             {/* Image picker */}
             {image ? (
               <div className="relative w-full h-28 rounded-xl overflow-hidden bg-white border border-line">
-                <img src={image} alt="" className="w-full h-full object-cover" />
+                <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
                 <button
                   onClick={() => setImage(null)}
                   className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
@@ -409,7 +414,8 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
                 <img
                   src={rest.image}
                   alt=""
-                  className="w-14 h-14 rounded-xl object-cover shrink-0"
+                  className="w-14 h-14 rounded-xl object-cover shrink-0 cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setLightboxImg(rest.image); }}
                 />
               ) : (
                 <div className="w-14 h-14 rounded-xl bg-white border border-line flex items-center justify-center shrink-0">
@@ -489,6 +495,19 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
           onUpdate={(updates) => handleUpdate(editingRestaurant.id, updates)}
           onDelete={(id) => handleDelete(id)}
         />
+      )}
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+          <button
+            onClick={() => setLightboxImg(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+          >
+            <X size={18} className="text-white" />
+          </button>
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+        </div>
       )}
     </div>
   );
