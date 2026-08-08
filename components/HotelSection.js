@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus, FileText, Download, Trash2 } from "lucide-react";
 import DatePicker from "./DatePicker";
+import HotelDetailSheet from "./HotelDetailSheet";
+import { compressImage } from "../lib/compressImage";
+import { uploadImageToFirebase } from "../lib/uploadImage";
+import { firebaseReady } from "../lib/firebase";
+import { useToast } from "./Toast";
 
 function parseDateFromLabel(label) {
   if (!label) return null;
@@ -60,6 +65,11 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
   const [newCheckinDate, setNewCheckinDate] = useState("");
   const [newCheckoutDate, setNewCheckoutDate] = useState("");
   const [newBookingUrl, setNewBookingUrl] = useState("");
+  const [newFile, setNewFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [editHotelId, setEditHotelId] = useState(null);
+  const addToast = useToast();
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (newPlace.trim().length < 3 || newCoords) {
@@ -198,6 +208,93 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setEditingDates(null);
   }
 
+  function handleUpdateHotel(hotelId, updates) {
+    const updatedDays = trip.days.map((d) => ({
+      ...d,
+      items: d.items.map((item) =>
+        item.id === hotelId ? { ...item, ...updates } : item
+      ),
+    }));
+    onUpdateTrip({ days: updatedDays });
+  }
+
+  function handleDeleteHotel(hotelId) {
+    const updatedDays = trip.days.map((d) => ({
+      ...d,
+      items: d.items.filter((item) => item.id !== hotelId),
+    }));
+    onUpdateTrip({ days: updatedDays });
+    addToast("Hotel eliminado", "info");
+  }
+
+  function isDataUrl(url) {
+    return typeof url === "string" && url.startsWith("data:");
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const [header, data] = dataUrl.split(",");
+    const mime = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+    return new Blob([array], { type: mime });
+  }
+
+  function openBookingFile(file) {
+    if (!file) return;
+    if (isDataUrl(file.url)) {
+      const blob = dataUrlToBlob(file.url);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      window.open(file.url, "_blank");
+    }
+  }
+
+  function downloadBookingFile(file) {
+    if (!file) return;
+    const a = document.createElement("a");
+    if (isDataUrl(file.url)) {
+      const blob = dataUrlToBlob(file.url);
+      const blobUrl = URL.createObjectURL(blob);
+      a.href = blobUrl;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+    } else {
+      a.href = file.url;
+      a.download = file.name;
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+
+  async function handleNewFilePick(e) {
+    const picked = e.target.files && e.target.files[0];
+    if (!picked) return;
+    setUploadingFile(true);
+    try {
+      const dataUrl = await compressImage(picked, { maxWidth: 800, quality: 0.6 });
+      setNewFile({
+        name: picked.name,
+        url: dataUrl,
+        type: picked.type || (picked.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream"),
+        addedAt: Date.now(),
+      });
+    } catch (err) {
+      console.error(err);
+      addToast("No se pudo leer el archivo", "error");
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   function findDayForDate(dateStr) {
     if (!dateStr) return trip.days[0]?.id || "";
     const target = parseDateFromLabel(dateStr);
@@ -216,11 +313,31 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     return bestId;
   }
 
-  function handleAddHotel() {
+  async function handleAddHotel() {
     if (!newTitle.trim()) return;
     const dayId = findDayForDate(newCheckinDate);
+    const newId = `n${Date.now()}`;
+    let bookingFile = null;
+    if (newFile) {
+      setUploadingFile(true);
+      try {
+        if (firebaseReady) {
+          try {
+            const url = await uploadImageToFirebase(newFile.url, `hotels/${newId}-${Date.now()}-${newFile.name}`);
+            bookingFile = { ...newFile, url };
+          } catch (storageErr) {
+            console.warn("No se pudo subir el archivo a la nube, se guarda localmente:", storageErr);
+            bookingFile = newFile;
+          }
+        } else {
+          bookingFile = newFile;
+        }
+      } finally {
+        setUploadingFile(false);
+      }
+    }
     const newHotel = {
-      id: `n${Date.now()}`,
+      id: newId,
       title: newTitle.trim(),
       place: newPlace.trim(),
       time: "14:00",
@@ -229,6 +346,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
       ...(newCheckoutDate ? { checkoutDate: newCheckoutDate } : {}),
       ...(newBookingUrl.trim() ? { bookingUrl: newBookingUrl.trim() } : {}),
       ...(newCoords ? { lat: newCoords.lat, lng: newCoords.lng } : {}),
+      ...(bookingFile ? { bookingFile } : {}),
     };
     const updatedDays = trip.days.map((d) =>
       d.id === dayId ? { ...d, items: [...d.items, newHotel] } : d
@@ -240,6 +358,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setNewCheckinDate("");
     setNewCheckoutDate("");
     setNewBookingUrl("");
+    setNewFile(null);
     setShowAdd(false);
   }
 
@@ -338,6 +457,25 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
               placeholder="Enlace Booking / Airbnb (opcional)"
               className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
             />
+            {newFile ? (
+              <div className="flex items-center gap-1.5 bg-white rounded-xl px-3 py-2.5 border border-line">
+                <FileText size={14} className="text-slate shrink-0" />
+                <span className="flex-1 text-[12.5px] text-ink truncate">{newFile.name}</span>
+                <button onClick={() => setNewFile(null)} className="p-1 hover:bg-cloud rounded-lg shrink-0" title="Quitar archivo">
+                  <X size={13} className="text-slate" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                disabled={uploadingFile}
+                className="w-full h-14 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 text-slate hover:text-muted transition-colors disabled:opacity-60"
+              >
+                <FileText size={14} />
+                <span className="text-[12px]">{uploadingFile ? "Procesando..." : "Adjuntar PDF de la reserva (opcional)"}</span>
+              </button>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleNewFilePick} />
           </div>
           <div className="flex gap-2 mt-3">
             <button
@@ -596,11 +734,38 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                         <MapPin size={11} /> Editar dirección
                       </button>
                       <button
-                        onClick={() => startEditUrl(hotel)}
+                        onClick={() => setEditHotelId(hotel.id)}
                         className="p-1.5 rounded-lg hover:bg-cloud"
-                        title="Editar enlace"
+                        title="Editar hotel"
                       >
-                        <Pencil size={12} className="text-line" />
+                        <Pencil size={12} className="text-slate" />
+                      </button>
+                    </div>
+                  )}
+
+                  {hotel.bookingFile && (
+                    <div className="mt-2.5 flex items-center gap-1.5 bg-white rounded-xl px-2.5 py-2 border border-line">
+                      <button
+                        onClick={() => openBookingFile(hotel.bookingFile)}
+                        className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-cloud rounded-lg px-1.5 py-1 transition-colors"
+                      >
+                        <FileText size={13} className="text-slate shrink-0" />
+                        <span className="flex-1 text-[12px] text-ink truncate">{hotel.bookingFile.name}</span>
+                        <ExternalLink size={11} className="text-slate shrink-0" />
+                      </button>
+                      <button
+                        onClick={() => downloadBookingFile(hotel.bookingFile)}
+                        className="p-1.5 hover:bg-cloud rounded-lg shrink-0"
+                        title="Descargar"
+                      >
+                        <Download size={12} className="text-teal" />
+                      </button>
+                      <button
+                        onClick={() => handleUpdateHotel(hotel.id, { bookingFile: null })}
+                        className="p-1.5 hover:bg-cloud rounded-lg shrink-0"
+                        title="Quitar archivo"
+                      >
+                        <Trash2 size={11} className="text-coral" />
                       </button>
                     </div>
                   )}
@@ -610,6 +775,20 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
           </div>
         </>
       )}
+
+      {editHotelId && (() => {
+        const target = hotels.find((h) => h.id === editHotelId);
+        if (!target) return null;
+        return (
+          <HotelDetailSheet
+            hotel={target}
+            accentColor={accentColor}
+            onClose={() => setEditHotelId(null)}
+            onUpdate={(updates) => handleUpdateHotel(target.id, updates)}
+            onDelete={() => handleDeleteHotel(target.id)}
+          />
+        );
+      })()}
     </div>
   );
 }

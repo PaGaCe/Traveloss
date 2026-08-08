@@ -43,6 +43,29 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
     } catch {}
   }
 
+  async function handleShareWhatsApp() {
+    const url = `${window.location.origin}/trip/${tripId}?invite=true`;
+    const text = `¡Te invito a ver mi viaje en Traveloss! 🌍\n\n${url}`;
+
+    // En móvil/PWA la Web Share API abre el panel nativo de compartir
+    // (donde el usuario elige WhatsApp) y no la bloquea ningún navegador.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Traveloss", text, url });
+        return;
+      } catch (err) {
+        if (err.name === "AbortError") return; // el usuario canceló
+      }
+    }
+
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const win = window.open(waUrl, "_blank");
+    if (!win) {
+      // Popup bloqueado: navegamos directamente (vuelve al app al compartir).
+      window.location.href = waUrl;
+    }
+  }
+
   return (
     <div className="absolute inset-0 z-20 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -93,11 +116,7 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
             <div className="border-t border-line pt-4 mb-4">
               <p className="text-[12px] font-medium text-muted mb-2">O envía un enlace de invitación</p>
               <button
-                onClick={() => {
-                  const url = `${window.location.origin}/trip/${tripId}?invite=true`;
-                  const text = encodeURIComponent(`¡Te invito a ver mi viaje en Traveloss! 🌍\n\n${url}`);
-                  window.open(`https://wa.me/?text=${text}`, "_blank");
-                }}
+                onClick={handleShareWhatsApp}
                 className="w-full flex items-center justify-center gap-2 rounded-xl py-3 bg-[#25D366] text-white text-[14px] font-medium active:scale-[0.98] transition-transform"
               >
                 <MessageCircle size={18} />
