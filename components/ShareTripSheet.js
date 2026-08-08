@@ -37,10 +37,13 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
   }
 
   async function handleUnshare(uid) {
+    setError(null);
     try {
       await onUnshare(tripId, uid);
       setSharedUsers((prev) => prev.filter((u) => u.uid !== uid));
-    } catch {}
+    } catch (err) {
+      setError(err.message || "No se pudo quitar el acceso. Inténtalo de nuevo.");
+    }
   }
 
   async function handleShareWhatsApp() {
