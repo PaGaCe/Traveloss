@@ -44,7 +44,7 @@ export default function TripDetailPage() {
   const {
     getTrip, loaded, addDay, renameDay, addActivity, updateActivity, deleteActivity,
     updateTrip, deleteTrip, addDayPhoto, removeDayPhoto,
-    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, dismissTrip, usingFirebase,
+    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, dismissTrip, restoreTrip, usingFirebase,
   } = useTripsStore(userId, user?.email);
 
   const trip = getTrip(tripId);
@@ -75,7 +75,13 @@ export default function TripDetailPage() {
 
   useEffect(() => {
     if (!isInvite || !userId || !tripId || !usingFirebase) return;
-    joinSharedTrip(tripId).then((ok) => {
+    let cancelled = false;
+    (async () => {
+      // Si el viaje estaba descartado (quitar de mi lista), dejar de ocultarlo al reabrir la invitación.
+      // Se espera antes de joinSharedTrip para que el snapshot resultante ya lo muestre.
+      await restoreTrip(tripId);
+      const ok = await joinSharedTrip(tripId);
+      if (cancelled) return;
       if (ok) {
         const url = new URL(window.location.href);
         url.searchParams.delete("invite");
@@ -83,8 +89,9 @@ export default function TripDetailPage() {
       } else {
         setInvitePending(false);
       }
-    });
-  }, [isInvite, userId, tripId, usingFirebase, joinSharedTrip]);
+    })();
+    return () => { cancelled = true; };
+  }, [isInvite, userId, tripId, usingFirebase, joinSharedTrip, restoreTrip]);
 
   useEffect(() => {
     if (trip) setInvitePending(false);

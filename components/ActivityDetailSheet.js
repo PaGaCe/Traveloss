@@ -113,7 +113,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   }
 
   function handleSavePlace() {
-    const updates = { place: placeDraft.trim(), lat: null, lng: null };
+    const updates = { place: placeDraft.trim(), lat: null, lng: null, title: titleDraft, details, time, note };
     if (placeCoords) {
       updates.lat = placeCoords.lat;
       updates.lng = placeCoords.lng;
@@ -123,17 +123,23 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   }
 
   function handleClearPlace() {
-    onUpdate({ place: "", lat: null, lng: null });
+    onUpdate({ place: "", lat: null, lng: null, title: titleDraft, details, time, note });
     setEditingPlace(false);
     setPlaceDraft("");
     setPlaceCoords(null);
+  }
+
+  // Al cerrar el sheet se guardan los textos pendientes para no perder cambios
+  function handleClose() {
+    onUpdate({ title: titleDraft, details, time, note });
+    onClose();
   }
 
   const hasCoords = item.lat && item.lng;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
       <div
         className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -156,7 +162,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
               )}
             </div>
           </div>
-          <button onClick={onClose}>
+          <button onClick={handleClose}>
             <X size={20} className="text-slate" />
           </button>
         </div>
@@ -173,7 +179,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
 
         {/* Completed toggle */}
         <button
-          onClick={() => onUpdate({ completed: !item.completed })}
+          onClick={() => onUpdate({ completed: !item.completed, title: titleDraft, details, time, note })}
           className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3 mb-3 transition-colors border"
           style={{
             background: item.completed ? `${accentColor}12` : "white",

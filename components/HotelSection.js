@@ -20,7 +20,7 @@ function parseDateFromLabel(label) {
     const day = parseInt(parts[0], 10);
     const m = months[parts[1]];
     if (!isNaN(day) && m !== undefined) {
-      const d = new Date(2026, m, day);
+      const d = new Date(new Date().getFullYear(), m, day);
       return isNaN(d.getTime()) ? null : d;
     }
   }
@@ -277,6 +277,11 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
   async function handleNewFilePick(e) {
     const picked = e.target.files && e.target.files[0];
     if (!picked) return;
+    if (picked.size > 8 * 1024 * 1024) {
+      addToast("El archivo es demasiado grande (máx 8 MB)", "warning");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setUploadingFile(true);
     try {
       const dataUrl = await compressImage(picked, { maxWidth: 800, quality: 0.6 });

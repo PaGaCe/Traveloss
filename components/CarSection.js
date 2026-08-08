@@ -187,6 +187,10 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
     onUpdateDocs(updated);
   }
 
+  function isDataUrl(url) {
+    return typeof url === "string" && url.startsWith("data:");
+  }
+
   function dataUrlToBlob(dataUrl) {
     const [header, data] = dataUrl.split(",");
     const mime = header.match(/:(.*?);/)[1];
@@ -197,22 +201,37 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   }
 
   function openDoc(doc) {
-    const blob = dataUrlToBlob(doc.url);
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, "_blank");
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    if (!doc) return;
+    if (isDataUrl(doc.url)) {
+      const blob = dataUrlToBlob(doc.url);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      window.open(doc.url, "_blank");
+    }
   }
 
   function downloadDoc(doc) {
-    const blob = dataUrlToBlob(doc.url);
-    const blobUrl = URL.createObjectURL(blob);
+    if (!doc) return;
     const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = doc.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+    if (isDataUrl(doc.url)) {
+      const blob = dataUrlToBlob(doc.url);
+      const blobUrl = URL.createObjectURL(blob);
+      a.href = blobUrl;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+    } else {
+      a.href = doc.url;
+      a.download = doc.name;
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }
 
   function formatDateTime(date, time) {
