@@ -179,11 +179,11 @@ export default function HomePage() {
                           </p>
                         </div>
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
                             if (trip._isShared) {
                               if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
-                                dismissTrip(trip.id);
+                                await dismissTrip(trip.id);
                             } else {
                               if (confirm(`¿Eliminar "${trip.title}"?`))
                                 deleteTrip(trip.id);
@@ -222,17 +222,17 @@ export default function HomePage() {
                             </p>
                           </div>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (trip._isShared) {
-                                if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
-                                  dismissTrip(trip.id);
-                              } else {
-                                if (confirm(`¿Eliminar "${trip.title}"?`))
-                                  deleteTrip(trip.id);
-                              }
-                            }}
-                            className="text-line hover:text-coral transition-colors p-1"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (trip._isShared) {
+                              if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
+                                await dismissTrip(trip.id);
+                            } else {
+                              if (confirm(`¿Eliminar "${trip.title}"?`))
+                                deleteTrip(trip.id);
+                            }
+                          }}
+                          className="text-line hover:text-coral transition-colors p-1"
                           >
                             <Trash2 size={14} />
                           </button>

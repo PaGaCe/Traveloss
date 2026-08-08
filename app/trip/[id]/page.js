@@ -191,8 +191,10 @@ export default function TripDetailPage() {
     router.push("/");
   }
 
-  function handleDismissTrip() {
-    dismissTrip(tripId);
+  async function handleDismissTrip() {
+    // Esperar a que el dismiss se guarde en Firestore antes de volver al inicio,
+    // si no, la home puede releer el doc sin dismissedTrips y el viaje reaparece.
+    await dismissTrip(tripId);
     router.push("/");
   }
 
