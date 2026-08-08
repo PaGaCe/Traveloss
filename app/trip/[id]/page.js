@@ -318,7 +318,7 @@ export default function TripDetailPage() {
           <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverPick} />
           {uploadingCover && <p className="text-white/70 text-[11px] mb-1">Procesando foto...</p>}
 
-          {editingTitle && isOwner ? (
+          {editingTitle ? (
             <div className="flex items-center gap-1.5">
               <input
                 autoFocus
@@ -336,8 +336,8 @@ export default function TripDetailPage() {
             </div>
           ) : (
             <h1
-              onClick={() => { if (isOwner) { setTitleDraft(trip.title); setEditingTitle(true); } }}
-              className={`text-white text-[24px] font-semibold font-display ${isOwner ? "cursor-pointer hover:opacity-80" : ""}`}
+              onClick={() => { setTitleDraft(trip.title); setEditingTitle(true); }}
+              className="text-white text-[24px] font-semibold font-display cursor-pointer hover:opacity-80"
             >
               {trip.title}
             </h1>
@@ -348,7 +348,7 @@ export default function TripDetailPage() {
           </p>
 
           {/* Tricount */}
-          {editingTricount && isOwner ? (
+          {editingTricount ? (
             <div className="flex items-center gap-1.5 mt-2">
               <input
                 autoFocus
@@ -376,7 +376,7 @@ export default function TripDetailPage() {
               <TricountLogo size={20} />
               Tricount
             </a>
-          ) : isOwner ? (
+          ) : (
             <button
               onClick={() => { setTricountDraft(""); setEditingTricount(true); }}
               className="mt-2 inline-flex items-center gap-2 text-[13px] font-medium text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-xl px-4 py-2 transition-colors border border-dashed border-white/20"
@@ -384,7 +384,7 @@ export default function TripDetailPage() {
               <TricountLogo size={18} />
               Añadir Tricount
             </button>
-          ) : null}
+          )}
 
           <p className="text-white/50 text-[10px] mt-2">
             {usingFirebase ? "☁ Sincronizado" : "💾 Local"}
@@ -599,14 +599,12 @@ export default function TripDetailPage() {
                         className="w-full h-full object-cover rounded-lg cursor-pointer"
                         onClick={() => setLightboxImg(photo.url)}
                       />
-                      {isOwner && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={10} className="text-white" />
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={10} className="text-white" />
+                      </button>
                       {galleryScope === "all" && photo.dayLabel && (
                         <span className="absolute bottom-1 left-1 text-[9px] font-medium text-white bg-black/50 rounded px-1 py-0.5">
                           {photo.dayLabel}
