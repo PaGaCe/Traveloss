@@ -10,10 +10,13 @@ import {
   Trash2,
   LogOut,
   Users,
+  EyeOff,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "../lib/useAuth";
 import { useTripsStore } from "../lib/useTripsStore";
 import AddTripSheet from "../components/AddTripSheet";
+import { useToast } from "../components/Toast";
 
 function LoginScreen({ signInWithGoogle, error }) {
   return (
@@ -73,7 +76,7 @@ export default function HomePage() {
     authReady,
     error: authError,
   } = useAuth();
-  const { trips, loaded, addTrip, deleteTrip, dismissTrip, usingFirebase } = useTripsStore(
+  const { trips, loaded, addTrip, deleteTrip, dismissTrip, restoreTrip, dismissedTripsData, usingFirebase } = useTripsStore(
     userId,
     user?.email,
   );
@@ -225,7 +228,7 @@ export default function HomePage() {
                           onClick={async (e) => {
                             e.stopPropagation();
                             if (trip._isShared) {
-                              if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSolo se ocultará de tu vista.`))
+                              if (confirm(`¿Quitar "${trip.title}" de tu lista?\nSe guardará en "Ocultos" y podrás restaurarlo.`))
                                 await dismissTrip(trip.id);
                             } else {
                               if (confirm(`¿Eliminar "${trip.title}"?`))
@@ -234,7 +237,7 @@ export default function HomePage() {
                           }}
                           className="text-line hover:text-coral transition-colors p-1"
                           >
-                            <Trash2 size={14} />
+                            {trip._isShared ? <EyeOff size={14} /> : <Trash2 size={14} />}
                           </button>
                         </div>
                       </div>
@@ -246,6 +249,48 @@ export default function HomePage() {
           )}
         </div>
       </div>
+
+      {dismissedTripsData.length > 0 && (
+        <div className="px-5 pt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <EyeOff size={14} className="text-slate" />
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-slate">
+              Ocultos
+            </p>
+          </div>
+          <div className="space-y-2">
+            {dismissedTripsData.map((trip) => (
+              <div
+                key={trip.id}
+                className="flex items-center justify-between rounded-2xl border border-line bg-white px-4 py-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-[14px] text-ink font-display truncate">
+                      {trip.title}
+                    </p>
+                    {trip._isShared && <Users size={12} className="text-slate" />}
+                  </div>
+                  {trip.place && (
+                    <p className="text-[12px] flex items-center gap-1 mt-0.5 text-slate truncate">
+                      <MapPin size={11} /> {trip.place}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await restoreTrip(trip.id);
+                  }}
+                  className="ml-3 shrink-0 flex items-center gap-1 rounded-full border border-line bg-cloud px-3 py-1.5 text-[12.5px] font-semibold text-ink active:scale-95 transition-transform"
+                >
+                  <Eye size={13} /> Restaurar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* floating add button */}
       <button
