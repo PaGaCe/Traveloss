@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Bed, MapPin, X, ImagePlus, Trash2, FileText, Download, Check } from "lucide-react";
+import { Bed, MapPin, X, Trash2, FileText, Download, Check, ExternalLink, Paperclip } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
@@ -23,7 +23,7 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([array], { type: mime });
 }
 
-export default function HotelDetailSheet({ hotel, accentColor, onClose, onUpdate, onDelete }) {
+export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClose, onUpdate, onDelete }) {
   const [title, setTitle] = useState(hotel.title || "");
   const [place, setPlace] = useState(hotel.place || "");
   const [coords, setCoords] = useState(hotel.lat ? { lat: hotel.lat, lng: hotel.lng } : null);
@@ -81,7 +81,7 @@ export default function HotelDetailSheet({ hotel, accentColor, onClose, onUpdate
       if (firebaseReady) {
         try {
           url = await uploadImageToFirebase(dataUrl, `hotels/${hotel.id}-${Date.now()}-${picked.name}`);
-        } catch (storageErr) {
+        } catch {
           addToast("No se pudo subir el archivo a la nube, se guarda localmente", "warning");
         }
       }
@@ -152,67 +152,87 @@ export default function HotelDetailSheet({ hotel, accentColor, onClose, onUpdate
     updates.details = details.trim() || null;
     updates.bookingFile = file || null;
     onUpdate(updates);
-    addToast("Hotel actualizado", "success");
+    addToast("Hotel actualizado correctamente", "success");
     onClose();
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <div
-        className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl"
+        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accentColor}22` }}>
-              <Bed size={16} style={{ color: accentColor }} />
+        {/* Drag handle for mobile */}
+        <div className="w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+        {/* Header */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-line shrink-0">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs"
+              style={{ background: `${accentColor}18` }}
+            >
+              <Bed size={20} style={{ color: accentColor }} />
             </div>
-            <h2 className="text-[18px] font-semibold text-ink font-display">Editar hotel</h2>
+            <div>
+              <h2 className="text-[17px] font-bold text-ink font-display">Editar alojamiento</h2>
+              <p className="text-[12px] text-slate font-medium">Información y reservas de tu estancia</p>
+            </div>
           </div>
-          <button onClick={onClose}>
-            <X size={20} className="text-slate" />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate hover:text-ink hover:bg-cloud transition-colors"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Nombre del hotel"
-            className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
-          />
-
-          <div className="relative">
-            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-              <MapPin size={15} className="text-slate shrink-0" />
-              <input
-                value={place}
-                onChange={(e) => { setPlace(e.target.value); setCoords(null); }}
-                placeholder="Dirección o ciudad"
-                className="w-full bg-transparent text-[13px] outline-none text-ink"
-              />
-            </div>
-            {suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.place_id}
-                    onClick={() => pickSuggestion(s)}
-                    className="w-full text-left px-3 py-2 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0"
-                  >
-                    {s.display_name}
-                  </button>
-                ))}
-              </div>
-            )}
-            {searching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando lugar...</p>}
-            {coords && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+        {/* Scrollable Form Body */}
+        <div className="p-6 overflow-y-auto space-y-4 flex-1">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Nombre del hotel</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej. Hotel Gran Vía"
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+            />
           </div>
 
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-in</label>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Dirección o ciudad</label>
+            <div className="relative">
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                <MapPin size={16} className="text-slate shrink-0" />
+                <input
+                  value={place}
+                  onChange={(e) => { setPlace(e.target.value); setCoords(null); }}
+                  placeholder="Dirección o ciudad"
+                  className="w-full bg-transparent text-[14px] outline-none text-ink font-medium"
+                />
+              </div>
+              {suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.place_id}
+                      onClick={() => pickSuggestion(s)}
+                      className="w-full text-left px-4 py-2.5 text-[12.5px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
+                    >
+                      {s.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {searching && <p className="text-[11px] text-slate mt-1 ml-2">Buscando lugar...</p>}
+              {coords && <p className="text-[11px] text-teal font-semibold mt-1 ml-2">✓ Ubicación confirmada</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Check-in</label>
               <DatePicker
                 value={checkinDate}
                 onChange={setCheckinDate}
@@ -220,8 +240,8 @@ export default function HotelDetailSheet({ hotel, accentColor, onClose, onUpdate
                 placeholder="Entrada"
               />
             </div>
-            <div className="flex-1">
-              <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-out</label>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Check-out</label>
               <DatePicker
                 value={checkoutDate}
                 onChange={setCheckoutDate}
@@ -231,80 +251,86 @@ export default function HotelDetailSheet({ hotel, accentColor, onClose, onUpdate
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-            <input
-              value={bookingUrl}
-              onChange={(e) => setBookingUrl(e.target.value)}
-              placeholder="Enlace Booking / Airbnb (opcional)"
-              className="w-full bg-transparent text-[13px] outline-none text-ink"
-            />
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Enlace de reserva</label>
+            <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+              <ExternalLink size={16} className="text-slate shrink-0" />
+              <input
+                value={bookingUrl}
+                onChange={(e) => setBookingUrl(e.target.value)}
+                placeholder="https://booking.com/..."
+                className="w-full bg-transparent text-[13.5px] outline-none text-ink font-medium"
+              />
+            </div>
           </div>
 
           {/* Fichero de la reserva */}
           <div>
-            <label className="text-[10px] font-medium text-muted mb-1 block">PDF de la reserva</label>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">PDF o comprobante de la reserva</label>
             {file ? (
-              <div className="flex items-center gap-1.5 bg-white rounded-xl px-3 py-2.5 border border-line">
+              <div className="flex items-center gap-2 bg-cloud rounded-2xl px-4 py-3 border border-line">
                 <button
                   onClick={openFile}
-                  className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-cloud rounded-lg px-1.5 py-1 transition-colors"
+                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left hover:bg-white rounded-xl px-2 py-1 transition-colors"
                 >
-                  <FileText size={15} className="text-slate shrink-0" />
-                  <span className="flex-1 text-[12.5px] text-ink truncate">{file.name}</span>
+                  <FileText size={16} className="text-slate shrink-0" />
+                  <span className="flex-1 text-[13px] font-semibold text-ink truncate">{file.name}</span>
                 </button>
-                <button onClick={downloadFile} className="p-1.5 hover:bg-cloud rounded-lg shrink-0" title="Descargar">
-                  <Download size={13} className="text-teal" />
+                <button onClick={downloadFile} className="p-2 hover:bg-white rounded-xl shrink-0 text-teal transition-colors" title="Descargar">
+                  <Download size={15} />
                 </button>
                 <button
                   onClick={() => setFile(null)}
-                  className="p-1.5 hover:bg-cloud rounded-lg shrink-0"
+                  className="p-2 hover:bg-white rounded-xl shrink-0 text-coral transition-colors"
                   title="Eliminar archivo"
                 >
-                  <Trash2 size={13} className="text-coral" />
+                  <Trash2 size={15} />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                className="w-full h-16 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 text-slate hover:text-muted transition-colors"
+                disabled={uploading}
+                className="w-full h-16 rounded-2xl border-2 border-dashed border-line flex items-center justify-center gap-2 text-slate hover:text-ink hover:border-slate/40 transition-colors bg-cloud/50 font-medium"
               >
-                <ImagePlus size={15} />
-                <span className="text-[12px]">{uploading ? "Subiendo..." : "Adjuntar archivo (PDF, imagen...)"}</span>
+                <Paperclip size={16} />
+                <span className="text-[13px]">{uploading ? "Procesando comprobante..." : "Adjuntar PDF o voucher"}</span>
               </button>
             )}
             <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFilePick} />
           </div>
 
-          <label className="text-[10px] font-medium text-muted block">Nº de reserva / comentarios</label>
-          <textarea
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            placeholder="Escribe aquí cualquier detalle extra"
-            className="w-full rounded-xl px-4 py-3 text-[13px] outline-none min-h-[70px] bg-white text-ink border border-line"
-          />
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Nº de reserva / comentarios</label>
+            <textarea
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Código de confirmación, instrucciones de llegada o notas..."
+              rows={3}
+              className="w-full rounded-2xl p-4 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white resize-none font-medium"
+            />
+          </div>
         </div>
 
-        <div className="flex gap-2 mt-5">
+        {/* Footer actions */}
+        <div className="p-6 border-t border-line bg-cloud/40 flex items-center gap-3 shrink-0">
           {onDelete && (
             <button
               onClick={() => { onDelete(); onClose(); }}
-              className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-4 text-[13px] font-medium bg-coral text-white"
+              className="flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold bg-white text-coral border border-coral/30 hover:bg-coral/10 active:scale-95 transition-all shadow-xs"
             >
-              <Trash2 size={13} /> Eliminar
+              <Trash2 size={16} />
+              <span>Eliminar</span>
             </button>
           )}
           <button
             onClick={handleSave}
             disabled={!title.trim()}
-            className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-opacity flex items-center justify-center gap-1.5"
-            style={{ background: accentColor, opacity: title.trim() ? 1 : 0.5 }}
+            className="flex-1 rounded-2xl py-3.5 text-[14.5px] font-bold text-white shadow-soft active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            style={{ background: accentColor }}
           >
-            <Check size={14} /> Guardar
+            <Check size={16} />
+            <span>Guardar cambios</span>
           </button>
         </div>
       </div>

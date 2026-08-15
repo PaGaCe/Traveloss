@@ -1,7 +1,23 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2, CheckCircle2, Circle, Navigation, MapPin, FileText } from "lucide-react";
+import {
+  Utensils,
+  Camera,
+  Plane,
+  Bed,
+  Sparkles,
+  X,
+  ImagePlus,
+  Trash2,
+  CheckCircle2,
+  Circle,
+  Navigation,
+  MapPin,
+  FileText,
+  ExternalLink,
+  Pencil,
+} from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
@@ -40,7 +56,7 @@ function normalizeTicket(t) {
   return { url, name: "Entrada", type: isPdfUrl(url) ? "application/pdf" : "image/jpeg" };
 }
 
-export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor }) {
+export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor = "#0B0F19" }) {
   const [titleDraft, setTitleDraft] = useState(item.title || "");
   const [note, setNote] = useState(item.note || "");
   const [details, setDetails] = useState(item.details || "");
@@ -65,7 +81,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
       : []).map(normalizeTicket);
 
   const detailLabel =
-    item.type === "flight" ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas adicionales";
+    item.type === "flight" ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas y detalles";
 
   useEffect(() => {
     if (!editingPlace || placeDraft.trim().length < 3 || placeCoords) {
@@ -121,7 +137,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
       for (const file of files) {
         const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
         if (isPdf && file.size > MAX_PDF_SIZE) {
-          addToast(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
+          addToast?.(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
           continue;
         }
         const dataUrl = await compressImage(file);
@@ -195,100 +211,113 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const hasCoords = item.lat && item.lng;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={handleClose} />
       <div
-        className="relative rounded-3xl px-5 pt-5 pb-6 z-10 max-h-[85%] overflow-y-auto bg-cloud max-w-lg mx-4 w-full shadow-2xl"
+        className="relative rounded-3xl px-5 pt-4 pb-6 z-10 max-h-[88%] overflow-y-auto bg-white max-w-lg w-full shadow-2xl border border-line"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${accentColor}22` }}>
-              <Icon size={16} style={{ color: accentColor }} />
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-4 pb-3 border-b border-line">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
+              style={{ background: `${accentColor}18` }}
+            >
+              <Icon size={18} style={{ color: accentColor }} />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <input
                 value={titleDraft}
                 onChange={(e) => setTitleDraft(e.target.value)}
-                className={`font-semibold text-[16px] text-ink font-display bg-transparent outline-none border-b border-transparent focus:border-line w-full ${item.completed ? "line-through opacity-60" : ""}`}
+                placeholder="Nombre de la actividad"
+                className={`font-bold text-[17px] text-ink font-display bg-transparent outline-none border-b border-transparent focus:border-line w-full ${
+                  item.completed ? "line-through opacity-60" : ""
+                }`}
               />
               {!editingPlace && (
-                <p className="text-[12px] text-slate flex items-center gap-1">
-                  {item.place || "Sin ubicación"}
+                <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5 truncate">
+                  <MapPin size={12} className="shrink-0 text-slate/70" />
+                  <span>{item.place || "Sin ubicación fijada"}</span>
                 </p>
               )}
             </div>
           </div>
-          <button onClick={handleClose}>
-            <X size={20} className="text-slate" />
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full bg-cloud flex items-center justify-center text-slate hover:text-ink active:scale-95 transition-transform shrink-0"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 mb-3 bg-white border border-line">
-          <span className="text-gold text-[14px]">✦</span>
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Nota rápida (opcional)"
-            className="w-full bg-transparent text-[13px] outline-none text-ink italic"
-          />
-        </div>
-
-        {/* Completed toggle */}
+        {/* Completed status button */}
         <button
           onClick={() => onUpdate({ completed: !item.completed, title: titleDraft, details, time, note })}
-          className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3 mb-3 transition-colors border"
-          style={{
-            background: item.completed ? `${accentColor}12` : "white",
-            borderColor: item.completed ? accentColor : "#C5CAD6",
-          }}
+          className={`w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 transition-all border active:scale-[0.99] font-medium text-[13.5px] ${
+            item.completed
+              ? "bg-teal/10 border-teal/30 text-teal"
+              : "bg-cloud text-ink border-line hover:bg-slate-100"
+          }`}
         >
           {item.completed ? (
-            <CheckCircle2 size={18} style={{ color: accentColor }} />
+            <CheckCircle2 size={19} className="text-teal" />
           ) : (
-            <Circle size={18} className="text-slate" />
+            <Circle size={19} className="text-slate" />
           )}
-          <span className={`text-[13px] font-medium ${item.completed ? "text-ink" : "text-slate"}`}>
-            {item.completed ? "Actividad completada" : "Marcar como hecho"}
-          </span>
+          <span>{item.completed ? "Actividad completada" : "Marcar como realizada"}</span>
         </button>
 
-        {/* Google Maps */}
+        {/* Google Maps link if has coords */}
         {hasCoords && (
           <a
             href={`https://www.google.com/maps?q=${item.lat},${item.lng}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3 mb-3 bg-white border border-line text-left hover:bg-cloud transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line text-left hover:bg-slate-100 transition-colors active:scale-[0.99]"
           >
             <Navigation size={16} style={{ color: accentColor }} />
-            <span className="text-[13px] font-medium text-ink flex-1">Abrir en Google Maps</span>
-            <ExternalLink size={13} className="text-slate" />
+            <span className="text-[13px] font-semibold text-ink flex-1">Abrir en Google Maps</span>
+            <ExternalLink size={14} className="text-slate" />
           </a>
         )}
 
-        {/* Ubicación */}
-        <div className="mb-3">
+        {/* Quick note input */}
+        <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+          <span className="text-gold text-[15px]">✦</span>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Nota rápida (ej: entrada reservada para las 10:00)"
+            className="w-full bg-transparent text-[13px] outline-none text-ink italic font-medium"
+          />
+        </div>
+
+        {/* Location Section */}
+        <div className="mb-3.5">
           {editingPlace ? (
-            <div className="rounded-xl bg-white border border-line p-3">
+            <div className="rounded-2xl bg-white border border-line p-3 shadow-soft">
               <div className="relative">
-                <div className="flex items-center gap-1.5 rounded-lg px-3 py-2 bg-cloud border border-line">
-                  <MapPin size={13} className="text-slate shrink-0" />
+                <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
+                  <MapPin size={15} className="text-slate shrink-0" />
                   <input
                     ref={placeInputRef}
                     value={placeDraft}
                     onChange={(e) => { setPlaceDraft(e.target.value); setPlaceCoords(null); }}
-                    placeholder="Escribe un lugar..."
-                    className="w-full bg-transparent text-[13px] outline-none text-ink"
+                    placeholder="Escribe el nombre del lugar..."
+                    className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
                   />
                   {placeDraft && (
-                    <button onClick={() => { setPlaceDraft(""); setPlaceCoords(null); setPlaceSuggestions([]); }} className="shrink-0 text-slate">
-                      <X size={13} />
+                    <button
+                      onClick={() => { setPlaceDraft(""); setPlaceCoords(null); setPlaceSuggestions([]); }}
+                      className="shrink-0 text-slate hover:text-ink"
+                    >
+                      <X size={14} />
                     </button>
                   )}
                 </div>
                 {placeSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line max-h-[150px] overflow-y-auto">
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line max-h-[160px] overflow-y-auto">
                     {placeSuggestions.map((s) => (
                       <button
                         key={s.place_id}
@@ -298,7 +327,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                           setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
                           setPlaceSuggestions([]);
                         }}
-                        className="w-full text-left px-3 py-2 text-[11.5px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                        className="w-full text-left px-3.5 py-2.5 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium transition-colors"
                       >
                         {s.display_name}
                       </button>
@@ -306,22 +335,22 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                   </div>
                 )}
               </div>
-              {placeSearching && <p className="text-[10.5px] text-slate mt-1.5">Buscando...</p>}
-              {placeCoords && <p className="text-[10.5px] text-teal mt-1.5">✓ Ubicación fijada</p>}
-              <div className="flex gap-1.5 mt-2.5">
+              {placeSearching && <p className="text-[11px] text-slate mt-1.5 font-medium animate-pulse">Buscando coordenadas...</p>}
+              {placeCoords && <p className="text-[11px] text-teal mt-1.5 font-semibold">✓ Ubicación y coordenadas fijadas</p>}
+              <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleSavePlace}
-                  className="flex items-center gap-1 text-[12px] font-semibold text-white px-3 py-1.5 rounded-lg"
+                  className="flex items-center gap-1.5 text-[12px] font-semibold text-white px-3.5 py-2 rounded-xl active:scale-95 transition-transform"
                   style={{ background: accentColor }}
                 >
-                  <CheckCircle2 size={12} /> Guardar
+                  <CheckCircle2 size={13} /> Guardar lugar
                 </button>
                 {(item.place || item.lat) && (
                   <button
                     onClick={handleClearPlace}
-                    className="flex items-center gap-1 text-[12px] text-coral px-3 py-1.5 rounded-lg hover:bg-red-50"
+                    className="flex items-center gap-1.5 text-[12px] font-medium text-coral px-3 py-2 rounded-xl hover:bg-red-50 transition-colors"
                   >
-                    <Trash2 size={11} /> Borrar
+                    <Trash2 size={13} /> Borrar
                   </button>
                 )}
                 <button
@@ -331,7 +360,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                     setPlaceCoords(null);
                     setPlaceSuggestions([]);
                   }}
-                  className="text-[12px] text-slate px-3 py-1.5 rounded-lg hover:bg-cloud"
+                  className="text-[12px] font-medium text-slate px-3 py-2 rounded-xl hover:bg-cloud transition-colors"
                 >
                   Cancelar
                 </button>
@@ -345,153 +374,166 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                 setPlaceCoords(null);
                 setPlaceSuggestions([]);
               }}
-              className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3 bg-white border border-line text-left hover:bg-cloud transition-colors"
+              className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line text-left hover:bg-slate-100 transition-colors active:scale-[0.99]"
             >
-              <MapPin size={15} style={{ color: accentColor }} />
-              <span className={`text-[13px] font-medium flex-1 ${item.place ? "text-ink" : "text-slate"}`}>
-                {item.place || "Añadir ubicación"}
+              <MapPin size={16} style={{ color: accentColor }} />
+              <span className={`text-[13px] font-medium flex-1 ${item.place ? "text-ink font-semibold" : "text-slate"}`}>
+                {item.place || "Añadir o cambiar ubicación"}
               </span>
+              <Pencil size={13} className="text-slate" />
             </button>
           )}
         </div>
 
-        <div className="mb-3">
+        {/* Time Picker */}
+        <div className="mb-3.5">
+          <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+            Hora programada
+          </label>
           <TimePicker value={time} onChange={setTime} accentColor={accentColor} />
         </div>
 
-        {/* Foto de actividad */}
-        {item.image ? (
-          <div className="relative mb-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.image} alt=""
-              className="w-full h-40 object-cover rounded-xl cursor-pointer"
-              onClick={() => setLightboxImg(item.image)}
-            />
+        {/* Activity Photo */}
+        <div className="mb-3.5">
+          <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+            Foto de la actividad
+          </label>
+          {item.image ? (
+            <div className="relative rounded-2xl overflow-hidden shadow-soft border border-line">
+              <img
+                src={item.image}
+                alt=""
+                className="w-full h-44 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => setLightboxImg(item.image)}
+              />
+              <button
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                className="absolute bottom-2.5 right-2.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold text-white bg-black/60 backdrop-blur-xs hover:bg-black/80 transition-colors"
+              >
+                {uploading ? "Subiendo..." : "Cambiar foto"}
+              </button>
+            </div>
+          ) : (
             <button
               onClick={() => fileInputRef.current && fileInputRef.current.click()}
-              className="absolute bottom-2 right-2 rounded-full px-3 py-1.5 text-[12px] font-medium text-white bg-black/60"
+              className="w-full h-24 rounded-2xl border-2 border-dashed border-line hover:border-slate/40 bg-cloud/50 flex flex-col items-center justify-center gap-1 text-slate hover:text-ink active:scale-[0.99] transition-all"
             >
-              {uploading ? "Subiendo..." : "Cambiar foto"}
+              <ImagePlus size={20} className="text-slate/70" />
+              <span className="text-[12px] font-medium">
+                {uploading ? "Subiendo..." : "Añadir foto desde tu dispositivo"}
+              </span>
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            className="w-full h-24 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 mb-3 text-slate"
-          >
-            <ImagePlus size={18} />
-            <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir foto desde tu dispositivo"}</span>
-          </button>
-        )}
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
+        </div>
 
-        {/* Entradas / Tickets — disponible para todos los tipos de actividad */}
-        {ticketImages.length > 0 ? (
-          <div className="mb-3">
-            <label className="text-[12px] font-medium mb-1.5 block text-muted">Entradas / tickets</label>
-            <div className="flex flex-wrap gap-2">
+        {/* Tickets / Attachments Section */}
+        <div className="mb-3.5">
+          <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1.5 block">
+            Entradas / tickets / documentos
+          </label>
+          {ticketImages.length > 0 ? (
+            <div className="flex flex-wrap gap-2.5">
               {ticketImages.map((ticket, idx) =>
                 ticket.type === "application/pdf" ? (
-                  <div key={idx} className="relative w-36 rounded-xl border border-line bg-white p-2.5">
+                  <div key={idx} className="relative w-36 rounded-2xl border border-line bg-cloud p-3 flex flex-col items-center justify-center text-center shadow-xs">
                     <button onClick={() => openTicket(ticket)} className="w-full flex flex-col items-center gap-1.5" title="Abrir PDF">
-                      <FileText size={22} className="text-coral" />
-                      <span className="text-[10.5px] text-ink truncate w-full text-center">{ticket.name}</span>
+                      <div className="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center text-coral">
+                        <FileText size={20} />
+                      </div>
+                      <span className="text-[11px] font-semibold text-ink truncate w-full">{ticket.name}</span>
                     </button>
                     <button
                       onClick={() => handleRemoveTicket(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
+                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center"
                     >
-                      <X size={10} className="text-white" />
+                      <X size={11} />
                     </button>
                   </div>
                 ) : (
-                  <div key={idx} className="relative w-28 h-28 rounded-xl overflow-hidden border border-line bg-white">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-line bg-white shadow-xs">
                     <img
-                      src={ticket.url} alt={`Ticket ${idx + 1}`}
-                      className="w-full h-full object-cover cursor-pointer"
+                      src={ticket.url}
+                      alt={`Ticket ${idx + 1}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                       onClick={() => setLightboxImg(ticket.url)}
                     />
                     <button
                       onClick={() => handleRemoveTicket(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
+                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center"
                     >
-                      <X size={10} className="text-white" />
+                      <X size={11} />
                     </button>
                   </div>
                 )
               )}
               <button
                 onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
-                className="w-28 h-28 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-slate hover:text-muted transition-colors"
+                className="w-24 h-24 rounded-2xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-slate hover:text-ink active:scale-95 transition-all bg-cloud/50"
               >
-                <ImagePlus size={16} />
-                <span className="text-[10px] text-center">Añadir otro</span>
+                <ImagePlus size={18} />
+                <span className="text-[10.5px] font-medium">+ Añadir</span>
               </button>
             </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
-            className="w-full h-20 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 mb-3 text-slate hover:text-muted transition-colors"
-          >
-            <ImagePlus size={16} />
-            <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir entrada / ticket"}</span>
-          </button>
-        )}
-        <input ref={ticketInputRef} type="file" accept="image/*,application/pdf,.pdf" multiple className="hidden" onChange={handleTicketPick} />
+          ) : (
+            <button
+              onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
+              className="w-full h-20 rounded-2xl border-2 border-dashed border-line flex items-center justify-center gap-2 text-slate hover:text-ink active:scale-[0.99] transition-all bg-cloud/50"
+            >
+              <ImagePlus size={18} />
+              <span className="text-[12.5px] font-medium">
+                {uploading ? "Subiendo..." : "Añadir entrada, PDF o reserva"}
+              </span>
+            </button>
+          )}
+          <input ref={ticketInputRef} type="file" accept="image/*,application/pdf,.pdf" multiple className="hidden" onChange={handleTicketPick} />
+        </div>
 
-        <label className="text-[12px] font-medium mb-1 block text-muted">{detailLabel}</label>
-        <textarea
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          placeholder={item.type === "flight" ? "Nº de reserva, aerolínea, asiento..." : "Escribe aquí cualquier detalle extra"}
-          className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none min-h-[90px] bg-cloud text-ink"
-        />
+        {/* Detailed Notes */}
+        <div className="mb-4">
+          <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+            {detailLabel}
+          </label>
+          <textarea
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            placeholder={item.type === "flight" ? "Nº de vuelo, localizador, terminal..." : "Detalles, indicaciones, notas..."}
+            className="w-full rounded-2xl p-3.5 text-[13.5px] outline-none min-h-[90px] bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-normal"
+          />
+        </div>
 
-        <div className="flex gap-2 mt-4">
+        {/* Action Buttons */}
+        <div className="flex gap-2.5 pt-2">
           {onDelete && (
             <button
               onClick={() => { onDelete(); onClose(); }}
-              className="flex items-center justify-center gap-1.5 rounded-xl py-3.5 px-4 text-[13px] font-medium bg-coral text-white"
+              className="flex items-center justify-center gap-1.5 rounded-2xl py-3.5 px-4 text-[13px] font-semibold bg-coral/10 text-coral hover:bg-coral hover:text-white transition-colors active:scale-95"
             >
-              <Trash2 size={13} /> Eliminar
+              <Trash2 size={15} /> <span>Eliminar</span>
             </button>
           )}
           <button
             onClick={() => { onUpdate({ title: titleDraft, details, time, note }); onClose(); }}
-            className="flex-1 rounded-xl py-3.5 text-[15px] font-semibold text-white"
+            className="flex-1 rounded-2xl py-3.5 text-[15px] font-bold text-white shadow-card active:scale-[0.98] transition-all"
             style={{ background: accentColor }}
           >
-            Guardar
+            Guardar cambios
           </button>
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox Modal */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setLightboxImg(null)}>
           <button
             onClick={() => setLightboxImg(null)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
           >
-            <X size={18} className="text-white" />
+            <X size={20} />
           </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>
-  );
-}
-
-function ExternalLink({ size, className }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" />
-      <line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
   );
 }

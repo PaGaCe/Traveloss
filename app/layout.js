@@ -7,12 +7,15 @@ export const metadata = {
     apple: "/logo.png",
   },
   manifest: "/manifest.json",
-  themeColor: "#010615",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Traveloss",
   },
+};
+
+export const viewport = {
+  themeColor: "#010615",
 };
 
 export default function RootLayout({ children }) {

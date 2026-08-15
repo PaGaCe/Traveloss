@@ -1,97 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
-import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import "leaflet/dist/leaflet.css";
 
-function numberIcon(number, color) {
-  return L.divIcon({
-    html: `<div style="background:${color};color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${number}</div>`,
-    className: "",
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-  });
-}
+export default function DayMap({ items = [], color = "#0B0F19" }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
 
-export default function DayMap({ items, color }) {
   const points = items.filter((i) => typeof i.lat === "number" && typeof i.lng === "number");
-  const [routeCoords, setRouteCoords] = useState([]);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !containerRef.current || points.length === 0) return;
     let cancelled = false;
 
-    async function fetchRoute() {
-      if (points.length < 2) {
-        setRouteCoords([]);
-        return;
-      }
-      // OSRM demo server público: calcula la ruta real punto a punto en orden.
-      const coordsParam = points.map((p) => `${p.lng},${p.lat}`).join(";");
-      try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson`
-        );
-        const data = await res.json();
-        if (!cancelled && data.routes && data.routes[0]) {
-          const latlngs = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-          setRouteCoords(latlngs);
-        }
-      } catch (err) {
-        console.error("No se pudo calcular la ruta:", err);
-        if (!cancelled) setRouteCoords([]);
-      }
-    }
+    import("leaflet").then((L) => {
+      if (cancelled || !containerRef.current) return;
 
-    fetchRoute();
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+
+      const center = [points[0].lat, points[0].lng];
+      const map = L.map(containerRef.current, { scrollWheelZoom: false }).setView(center, 13);
+      mapRef.current = map;
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+
+      points.forEach((p, i) => {
+        const icon = L.divIcon({
+          html: `<div style="background:${color || '#0B0F19'};color:white;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);">${i + 1}</div>`,
+          className: "",
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+        });
+        L.marker([p.lat, p.lng], { icon })
+          .bindPopup(`<b>${p.title || "Lugar"}</b>${p.place ? `<br/><span style="font-size:11px;color:#64748B">${p.place}</span>` : ""}`)
+          .addTo(map);
+      });
+
+      if (points.length > 1) {
+        const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng]));
+        map.fitBounds(bounds, { padding: [36, 36] });
+
+        const coordsParam = points.map((p) => `${p.lng},${p.lat}`).join(";");
+        fetch(`https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!cancelled && mapRef.current && data?.routes?.[0]) {
+              const latlngs = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+              L.polyline(latlngs, { color: color || "#0B0F19", weight: 4, opacity: 0.85, dashArray: "2 6" }).addTo(mapRef.current);
+            }
+          })
+          .catch(() => {});
+      }
+    });
+
     return () => {
       cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(points.map((p) => [p.lat, p.lng]))]);
+  }, [mounted, JSON.stringify(points.map((p) => [p.lat, p.lng])), color]);
 
   if (points.length === 0) {
     return (
-      <p className="text-center text-[13px] mt-10 text-slate">
-        Añade coordenadas a las actividades de este día para verlas en el mapa.
-      </p>
+      <div className="p-8 text-center bg-white rounded-3xl border border-line shadow-soft">
+        <p className="text-[13px] text-slate">
+          Añade coordenadas o busca ubicación en las actividades de este día para verlas en el mapa interactivo.
+        </p>
+      </div>
     );
   }
 
-  const center = [points[0].lat, points[0].lng];
-
   return (
-    <div className="rounded-2xl overflow-hidden shadow-sm bg-cloud mb-3">
-      <MapContainer center={center} zoom={12} scrollWheelZoom={false} style={{ height: 280, width: "100%" }}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {routeCoords.length > 0 && (
-          <Polyline positions={routeCoords} pathOptions={{ color, weight: 4, opacity: 0.8, dashArray: "1 8" }} />
-        )}
+    <div className="rounded-3xl overflow-hidden shadow-soft bg-white border border-line mb-4">
+      <div ref={containerRef} className="w-full h-[280px] bg-slate/10 relative z-0" />
+      <div className="p-4 flex flex-col gap-2 border-t border-line">
         {points.map((p, i) => (
-          <Marker key={p.id} position={[p.lat, p.lng]} icon={numberIcon(i + 1, color)}>
-            <Popup>{p.title}</Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-      <div className="p-3 flex flex-col gap-1.5">
-        {points.map((p, i) => (
-          <div key={p.id} className="flex items-center gap-2 text-[12px] text-muted">
+          <div key={p.id || i} className="flex items-center gap-2.5 text-[13px] text-ink font-medium">
             <span
-              className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-              style={{ background: color }}
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 shadow-xs"
+              style={{ background: color || "#0B0F19" }}
             >
               {i + 1}
             </span>
-            {p.title}
+            <span className="truncate">{p.title}</span>
+            {p.place && (
+              <span className="text-[11px] text-slate truncate ml-auto">{p.place}</span>
+            )}
           </div>
         ))}
       </div>
-      <p className="px-3 pb-3 text-[10.5px] text-slate">
-        Ruta calculada con OpenStreetMap/OSRM (servidor de demo público — para tráfico alto en producción,
-        conviene alojar tu propio OSRM o usar un servicio de pago).
-      </p>
+      <div className="px-4 pb-3 flex items-center justify-between text-[11px] text-slate">
+        <span>Ruta punto a punto calculada con OpenStreetMap</span>
+      </div>
     </div>
   );
 }

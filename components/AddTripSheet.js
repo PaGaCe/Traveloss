@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, MapPin, Calendar, ImagePlus } from "lucide-react";
+import { X, MapPin, Calendar, ImagePlus, Sparkles } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
 
-const COLORS = ["#FBA006", "#FDC509", "#E56508", "#010615", "#2A9D8F", "#FF6B4A", "#4A90D9", "#9B59B6"];
+const COLORS = [
+  "#F59E0B", // Gold / Amber
+  "#EA580C", // Coral / Orange
+  "#0D9488", // Teal / Emerald
+  "#3B82F6", // Blue
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#0B0F19", // Midnight Dark
+  "#10B981", // Mint
+];
 
 export default function AddTripSheet({ onClose, onSave }) {
   const [title, setTitle] = useState("");
@@ -22,7 +31,7 @@ export default function AddTripSheet({ onClose, onSave }) {
     if (!file) return;
     setUploading(true);
     try {
-      const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.6 });
+      const dataUrl = await compressImage(file, { maxWidth: 800, quality: 0.65 });
       if (firebaseReady) {
         try {
           const url = await uploadImageToFirebase(dataUrl, `trips/${Date.now()}-${file.name}`);
@@ -56,73 +65,104 @@ export default function AddTripSheet({ onClose, onSave }) {
   }
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-cloud max-h-[88%] overflow-y-auto max-w-lg mx-auto w-full">
-        <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[18px] font-semibold text-ink font-display">Nuevo viaje</h2>
-          <button onClick={onClose}>
-            <X size={20} className="text-slate" />
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div className="relative rounded-t-[32px] px-6 pt-3 pb-8 z-10 bg-white max-h-[90%] overflow-y-auto max-w-lg mx-auto w-full shadow-2xl border-t border-line">
+        {/* Drag handle */}
+        <div className="w-12 h-1.5 rounded-full bg-slate/20 mx-auto mb-4" />
+
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-teal/10 flex items-center justify-center text-teal">
+              <Sparkles size={16} />
+            </div>
+            <h2 className="text-[19px] font-bold text-ink font-display">Nuevo viaje</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-cloud flex items-center justify-center text-slate hover:text-ink active:scale-95 transition-transform"
+          >
+            <X size={18} />
           </button>
         </div>
 
         {/* cover image */}
         {image ? (
-          <div className="relative mb-4">
-            <img src={image} alt="" className="w-full h-36 object-cover rounded-xl" />
+          <div className="relative mb-4 rounded-2xl overflow-hidden shadow-soft border border-line">
+            <img src={image} alt="" className="w-full h-36 object-cover" />
             <button
               onClick={() => setImage(null)}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center"
+              className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-xs transition-colors"
             >
-              <X size={14} className="text-white" />
+              <X size={14} />
             </button>
           </div>
         ) : (
           <button
             onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            className="w-full h-20 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-2 mb-4 text-slate"
+            className="w-full h-24 rounded-2xl border-2 border-dashed border-line hover:border-slate/40 bg-cloud/50 flex flex-col items-center justify-center gap-1.5 mb-4 text-slate hover:text-ink active:scale-[0.99] transition-all"
           >
-            <ImagePlus size={16} />
-            <span className="text-[12.5px]">{uploading ? "Procesando..." : "Añadir foto de portada"}</span>
+            <ImagePlus size={20} className="text-slate/70" />
+            <span className="text-[12.5px] font-medium">
+              {uploading ? "Procesando imagen..." : "Añadir foto de portada"}
+            </span>
           </button>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImagePick} />
 
         <div className="flex flex-col gap-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Nombre del viaje (ej: Japón 2027)"
-            className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink"
-          />
-          <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud">
-            <MapPin size={15} className="text-slate" />
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+              Nombre del viaje
+            </label>
             <input
-              value={place}
-              onChange={(e) => setPlace(e.target.value)}
-              placeholder="Destino (ej: Tokio → Kioto)"
-              className="w-full bg-transparent text-[14px] outline-none text-ink"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej: Japón Sakura 2027"
+              className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
             />
           </div>
-          <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud">
-            <Calendar size={15} className="text-slate" />
-            <input
-              value={dateLabel}
-              onChange={(e) => setDateLabel(e.target.value)}
-              placeholder="Fechas (ej: 15 – 25 Mar)"
-              className="w-full bg-transparent text-[14px] outline-none text-ink"
-            />
+
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+              Destino
+            </label>
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+              <MapPin size={16} className="text-slate/70 shrink-0" />
+              <input
+                value={place}
+                onChange={(e) => setPlace(e.target.value)}
+                placeholder="Ej: Tokio → Kioto → Osaka"
+                className="w-full bg-transparent text-[14px] outline-none text-ink font-medium"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
+              Fechas aproximadas
+            </label>
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+              <Calendar size={16} className="text-slate/70 shrink-0" />
+              <input
+                value={dateLabel}
+                onChange={(e) => setDateLabel(e.target.value)}
+                placeholder="Ej: 15 – 28 Mar 2027"
+                className="w-full bg-transparent text-[14px] outline-none text-ink font-medium"
+              />
+            </div>
           </div>
         </div>
 
-        <p className="text-[12px] font-medium mt-4 mb-2 text-muted">Color del viaje</p>
+        <p className="text-[11.5px] font-bold uppercase tracking-wider mt-5 mb-2.5 text-slate">
+          Color temático del viaje
+        </p>
         <div className="flex gap-2.5 flex-wrap">
           {COLORS.map((c) => (
             <button
               key={c}
               onClick={() => setColor(c)}
-              className="w-8 h-8 rounded-full transition-all"
+              className="w-9 h-9 rounded-full transition-all active:scale-95"
               style={{
                 background: c,
                 transform: color === c ? "scale(1.15)" : "scale(1)",
@@ -135,7 +175,7 @@ export default function AddTripSheet({ onClose, onSave }) {
         <button
           disabled={!title.trim()}
           onClick={handleSave}
-          className="w-full mt-6 rounded-xl py-3.5 text-[15px] font-semibold text-white transition-opacity"
+          className="w-full mt-6 rounded-2xl py-3.5 text-[15px] font-bold text-white shadow-card active:scale-[0.98] transition-all"
           style={{ background: color, opacity: title.trim() ? 1 : 0.5 }}
         >
           Crear viaje

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus, FileText, Download, Trash2 } from "lucide-react";
+import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus, FileText, Download, Trash2, ChevronRight } from "lucide-react";
 import DatePicker from "./DatePicker";
 import HotelDetailSheet from "./HotelDetailSheet";
 import { compressImage } from "../lib/compressImage";
@@ -45,7 +45,7 @@ function formatStayDates(hotel) {
   return null;
 }
 
-export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
+export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTrip }) {
   const [editingUrl, setEditingUrl] = useState(null);
   const [urlDraft, setUrlDraft] = useState("");
   const [editingDates, setEditingDates] = useState(null);
@@ -127,7 +127,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
   }
 
   const hotels = [];
-  for (const d of trip.days) {
+  for (const d of trip.days || []) {
     for (const item of (d.items || [])) {
       if (item.type === "stay") {
         hotels.push({ ...item, dayLabel: d.label, dayDate: d.date, dayId: d.id });
@@ -157,6 +157,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     onUpdateTrip({ days: updatedDays });
     setEditingUrl(null);
     setUrlDraft("");
+    addToast("Enlace de reserva guardado", "success");
   }
 
   function startEditUrl(hotel) {
@@ -192,6 +193,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setEditingPlace(null);
     setPlaceDraft("");
     setPlaceCoords(null);
+    addToast("Ubicación actualizada", "success");
   }
 
   function handleSaveDates(hotel) {
@@ -206,6 +208,7 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     }));
     onUpdateTrip({ days: updatedDays });
     setEditingDates(null);
+    addToast("Fechas actualizadas", "success");
   }
 
   function handleUpdateHotel(hotelId, updates) {
@@ -365,80 +368,100 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
     setNewBookingUrl("");
     setNewFile(null);
     setShowAdd(false);
+    addToast("Hotel guardado correctamente", "success");
   }
 
   function renderHotelDates(hotel) {
     const formatted = formatStayDates(hotel);
     if (formatted) {
       return (
-        <p className="text-[11px] text-muted flex items-center gap-1 mt-1">
-          <Calendar size={10} /> {formatted}
-        </p>
+        <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-slate bg-cloud px-2.5 py-1 rounded-lg border border-line">
+          <Calendar size={12} className="text-slate" /> {formatted}
+        </span>
       );
     }
     return (
-      <p className="text-[11px] text-muted flex items-center gap-1 mt-1">
-        <Calendar size={10} /> {hotel.dayLabel} · {hotel.dayDate}
-      </p>
+      <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-slate bg-cloud px-2.5 py-1 rounded-lg border border-line">
+        <Calendar size={12} className="text-slate" /> {hotel.dayLabel} · {hotel.dayDate}
+      </span>
     );
   }
 
   return (
-    <div className="px-1 py-2">
-      <div className="flex items-center justify-between mb-4">
-        <div />
+    <div className="space-y-5">
+      {/* Header bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-[17px] font-bold text-ink font-display">Alojamientos</h3>
+          <p className="text-[12px] text-slate font-medium">Hoteles y estancias registradas</p>
+        </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-1.5 text-[12px] font-semibold px-3.5 py-2 rounded-xl text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 text-[13px] font-bold px-4 py-2.5 rounded-2xl text-white shadow-soft transition-all active:scale-95"
           style={{ background: accentColor }}
         >
-          <Plus size={14} />
-          Añadir hotel
+          <Plus size={16} />
+          <span>Añadir hotel</span>
         </button>
       </div>
 
+      {/* Add Hotel Card */}
       {showAdd && (
-        <div className="bg-cloud rounded-2xl border border-line p-4 mb-4">
-          <p className="text-[14px] font-semibold text-ink font-display mb-3">Nuevo hotel</p>
-          <div className="flex flex-col gap-2.5">
-            <input
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Nombre del hotel"
-              className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
-            />
-            <div className="relative">
-              <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-                <MapPin size={15} className="text-slate shrink-0" />
-                <input
-                  value={newPlace}
-                  onChange={(e) => {
-                    setNewPlace(e.target.value);
-                    setNewCoords(null);
-                  }}
-                  placeholder="Dirección o ciudad"
-                  className="w-full bg-transparent text-[13px] outline-none text-ink"
-                />
-              </div>
-              {suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
-                  {suggestions.map((s) => (
-                    <button
-                      key={s.place_id}
-                      onClick={() => pickSuggestion(s)}
-                      className="w-full text-left px-3 py-2 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0"
-                    >
-                      {s.display_name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {searching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando lugar...</p>}
-              {newCoords && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+        <div className="bg-white rounded-3xl border border-line p-5 shadow-card animate-fade-in space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-line">
+            <p className="text-[15px] font-bold text-ink font-display">Nuevo alojamiento</p>
+            <button onClick={() => setShowAdd(false)} className="p-1 rounded-full hover:bg-cloud text-slate">
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Nombre del hotel</label>
+              <input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Ej. Hotel Gran Vía"
+                className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+              />
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-in</label>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Dirección o ciudad</label>
+              <div className="relative">
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                  <MapPin size={16} className="text-slate shrink-0" />
+                  <input
+                    value={newPlace}
+                    onChange={(e) => {
+                      setNewPlace(e.target.value);
+                      setNewCoords(null);
+                    }}
+                    placeholder="Buscar ubicación..."
+                    className="w-full bg-transparent text-[14px] outline-none text-ink font-medium"
+                  />
+                </div>
+                {suggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s.place_id}
+                        onClick={() => pickSuggestion(s)}
+                        className="w-full text-left px-4 py-2.5 text-[12.5px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
+                      >
+                        {s.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searching && <p className="text-[11px] text-slate mt-1 ml-2">Buscando dirección...</p>}
+                {newCoords && <p className="text-[11px] text-teal font-semibold mt-1 ml-2">✓ Ubicación confirmada</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Check-in</label>
                 <DatePicker
                   value={newCheckinDate}
                   onChange={setNewCheckinDate}
@@ -446,8 +469,8 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                   placeholder="Entrada"
                 />
               </div>
-              <div className="flex-1">
-                <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-out</label>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Check-out</label>
                 <DatePicker
                   value={newCheckoutDate}
                   onChange={setNewCheckoutDate}
@@ -456,172 +479,232 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                 />
               </div>
             </div>
-            <input
-              value={newBookingUrl}
-              onChange={(e) => setNewBookingUrl(e.target.value)}
-              placeholder="Enlace Booking / Airbnb (opcional)"
-              className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
-            />
-            {newFile ? (
-              <div className="flex items-center gap-1.5 bg-white rounded-xl px-3 py-2.5 border border-line">
-                <FileText size={14} className="text-slate shrink-0" />
-                <span className="flex-1 text-[12.5px] text-ink truncate">{newFile.name}</span>
-                <button onClick={() => setNewFile(null)} className="p-1 hover:bg-cloud rounded-lg shrink-0" title="Quitar archivo">
-                  <X size={13} className="text-slate" />
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Enlace de reserva</label>
+              <input
+                value={newBookingUrl}
+                onChange={(e) => setNewBookingUrl(e.target.value)}
+                placeholder="https://booking.com/..."
+                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Documento de reserva (PDF)</label>
+              {newFile ? (
+                <div className="flex items-center gap-2 bg-cloud rounded-2xl px-4 py-3 border border-line">
+                  <FileText size={16} className="text-slate shrink-0" />
+                  <span className="flex-1 text-[13px] font-semibold text-ink truncate">{newFile.name}</span>
+                  <button onClick={() => setNewFile(null)} className="p-1 hover:bg-white rounded-lg shrink-0" title="Quitar archivo">
+                    <X size={15} className="text-slate" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                  disabled={uploadingFile}
+                  className="w-full h-16 rounded-2xl border-2 border-dashed border-line flex items-center justify-center gap-2 text-slate hover:text-ink hover:border-slate/40 transition-colors disabled:opacity-60 bg-cloud/50 font-medium"
+                >
+                  <FileText size={16} />
+                  <span className="text-[12.5px]">{uploadingFile ? "Procesando archivo..." : "Adjuntar PDF o voucher de la reserva"}</span>
                 </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                disabled={uploadingFile}
-                className="w-full h-14 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 text-slate hover:text-muted transition-colors disabled:opacity-60"
-              >
-                <FileText size={14} />
-                <span className="text-[12px]">{uploadingFile ? "Procesando..." : "Adjuntar PDF de la reserva (opcional)"}</span>
-              </button>
-            )}
-            <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleNewFilePick} />
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleNewFilePick} />
+            </div>
           </div>
-          <div className="flex gap-2 mt-3">
+
+          <div className="flex gap-2.5 pt-2">
             <button
               onClick={() => setShowAdd(false)}
-              className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-slate border border-line"
+              className="flex-1 rounded-2xl py-3 text-[14px] font-bold bg-cloud text-slate hover:text-ink border border-line transition-all"
             >
               Cancelar
             </button>
             <button
               onClick={handleAddHotel}
               disabled={!newTitle.trim()}
-              className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-opacity"
-              style={{ background: accentColor, opacity: newTitle.trim() ? 1 : 0.5 }}
+              className="flex-1 rounded-2xl py-3 text-[14px] font-bold text-white shadow-soft transition-all disabled:opacity-50"
+              style={{ background: accentColor }}
             >
-              Guardar
+              Guardar hotel
             </button>
           </div>
         </div>
       )}
 
+      {/* Empty State */}
       {hotels.length === 0 && !showAdd && (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div className="bg-white rounded-3xl border border-line p-8 flex flex-col items-center justify-center text-center shadow-card">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ background: `${accentColor}18` }}
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-xs"
+            style={{ background: `${accentColor}15` }}
           >
             <Bed size={28} style={{ color: accentColor }} />
           </div>
-          <p className="text-[14px] text-slate text-center">
-            Añade hoteles en tu itinerario o pulsa &ldquo;Añadir hotel&rdquo;
+          <h4 className="text-[16px] font-bold text-ink font-display">Sin hoteles registrados</h4>
+          <p className="text-[13px] text-slate mt-1 max-w-xs">
+            Añade las reservas de tus estancias para tener a mano check-in, ubicación y documentos.
           </p>
-        </div>
-      )}
-
-      {currentHotel && (
-        <div className="mb-4">
-          <p className="text-[11px] font-medium text-muted mb-2 uppercase tracking-wide">Hotel actual</p>
           <button
-            onClick={() => currentHotel.bookingUrl && openBookingLink(currentHotel.bookingUrl)}
-            className="w-full rounded-2xl p-4 border-2 text-left transition-all active:scale-[0.98]"
-            style={{
-              borderColor: accentColor,
-              background: `${accentColor}0A`,
-            }}
+            onClick={() => setShowAdd(true)}
+            className="mt-4 px-4 py-2.5 rounded-2xl text-[13px] font-bold text-white shadow-soft"
+            style={{ background: accentColor }}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${accentColor}20` }}>
-                <Navigation size={18} style={{ color: accentColor }} />
-              </div>
-              <div className="flex-1">
-                <p className="text-[15px] font-semibold text-ink">{currentHotel.title}</p>
-                <p className="text-[12px] text-slate flex items-center gap-1">
-                  <MapPin size={11} /> {currentHotel.place}
-                </p>
-              </div>
-              {currentHotel.lat && currentHotel.lng && (
-                <a
-                  href={`https://www.google.com/maps?q=${currentHotel.lat},${currentHotel.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-1.5 rounded-lg hover:bg-white/60"
-                  title="Google Maps"
-                >
-                  <Navigation size={16} style={{ color: accentColor }} />
-                </a>
-              )}
-              {currentHotel.bookingUrl && (
-                <ExternalLink size={16} style={{ color: accentColor }} />
-              )}
-            </div>
-            {renderHotelDates(currentHotel)}
-            {currentHotel.bookingUrl && (
-              <p className="text-[11px] mt-1.5 font-medium" style={{ color: accentColor }}>
-                Toca para abrir en Booking/Airbnb →
-              </p>
-            )}
+            + Añadir primer hotel
           </button>
         </div>
       )}
 
-      {hotels.length > 0 && (
-        <>
-          <p className="text-[11px] font-medium text-muted mb-2 uppercase tracking-wide">
-            Todos los hoteles ({hotels.length})
-          </p>
+      {/* Current Hotel banner */}
+      {currentHotel && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 px-1">
+            <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
+            <span className="text-[11.5px] font-bold uppercase tracking-wider text-teal">Alojamiento actual</span>
+          </div>
 
-          <div className="flex flex-col gap-2">
+          <div
+            className="rounded-3xl p-5 border-2 text-left shadow-card relative overflow-hidden bg-white"
+            style={{ borderColor: accentColor }}
+          >
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
+                  style={{ background: `${accentColor}18` }}
+                >
+                  <Bed size={22} style={{ color: accentColor }} />
+                </div>
+                <div>
+                  <h4 className="text-[16px] font-bold text-ink font-display">{currentHotel.title}</h4>
+                  <p className="text-[12.5px] text-slate font-medium flex items-center gap-1 mt-0.5">
+                    <MapPin size={12} /> {currentHotel.place || "Sin dirección fijada"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {currentHotel.lat && currentHotel.lng && (
+                  <a
+                    href={`https://www.google.com/maps?q=${currentHotel.lat},${currentHotel.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-slate-100 text-slate hover:text-ink transition-all shadow-xs"
+                    title="Abrir en Google Maps"
+                  >
+                    <Navigation size={15} style={{ color: accentColor }} />
+                  </a>
+                )}
+                {currentHotel.bookingUrl && (
+                  <button
+                    onClick={() => openBookingLink(currentHotel.bookingUrl)}
+                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-slate-100 text-slate hover:text-ink transition-all shadow-xs"
+                    title="Abrir reserva"
+                  >
+                    <ExternalLink size={15} style={{ color: accentColor }} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {renderHotelDates(currentHotel)}
+            </div>
+
+            {currentHotel.bookingUrl && (
+              <button
+                onClick={() => openBookingLink(currentHotel.bookingUrl)}
+                className="mt-3.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold bg-cloud hover:bg-slate-100 transition-all border border-line"
+                style={{ color: accentColor }}
+              >
+                <span>Ver reserva online en Booking/Airbnb</span>
+                <ChevronRight size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* All Hotels List */}
+      {hotels.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11.5px] font-bold uppercase tracking-wider text-slate">
+              Lista de estancias ({hotels.length})
+            </span>
+          </div>
+
+          <div className="space-y-3">
             {hotels.map((hotel) => {
               const isCurrent = currentHotel && hotel.id === currentHotel.id;
               const isEditingDates = editingDates === hotel.id;
+              const isEditingPlc = editingPlace === hotel.id;
+              const isEditingLink = editingUrl === hotel.id;
+
               return (
                 <div
                   key={hotel.id}
-                  className="bg-cloud rounded-2xl border border-line p-3.5"
-                  style={isCurrent ? { borderColor: accentColor, borderWidth: 1.5 } : {}}
+                  className={`bg-white rounded-3xl border ${isCurrent ? 'border-ink shadow-card' : 'border-line shadow-soft'} p-4.5 transition-all`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3.5">
                     <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: isCurrent ? `${accentColor}20` : "#F4F4F7" }}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 shadow-xs"
+                      style={{ background: isCurrent ? `${accentColor}18` : "#F4F4F7" }}
                     >
-                      <Bed size={15} style={{ color: isCurrent ? accentColor : "#8A90A0" }} />
+                      <Bed size={18} style={{ color: isCurrent ? accentColor : "#64748B" }} />
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-semibold text-ink">{hotel.title}</p>
-                      <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
-                        <MapPin size={10} /> {hotel.place}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-[15px] font-bold text-ink font-display">{hotel.title}</h4>
+                        {isCurrent && (
+                          <span
+                            className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            style={{ background: `${accentColor}18`, color: accentColor }}
+                          >
+                            Actual
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[12.5px] text-slate font-medium flex items-center gap-1 mt-0.5">
+                        <MapPin size={12} /> {hotel.place || "Sin dirección"}
                       </p>
-                      {renderHotelDates(hotel)}
+
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        {renderHotelDates(hotel)}
+                      </div>
                     </div>
+
                     <div className="flex items-center gap-1 shrink-0">
                       {hotel.lat && hotel.lng && (
                         <a
                           href={`https://www.google.com/maps?q=${hotel.lat},${hotel.lng}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1.5 rounded-lg hover:bg-white/60"
+                          className="p-2 rounded-xl bg-cloud hover:bg-slate-100 text-slate hover:text-ink transition-all"
                           title="Google Maps"
                         >
-                          <Navigation size={13} style={{ color: accentColor }} />
+                          <Navigation size={14} style={{ color: accentColor }} />
                         </a>
                       )}
-                      {isCurrent && (
-                        <span
-                          className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                          style={{ background: `${accentColor}20`, color: accentColor }}
-                        >
-                          Actual
-                        </span>
-                      )}
+                      <button
+                        onClick={() => setEditHotelId(hotel.id)}
+                        className="p-2 rounded-xl bg-cloud hover:bg-slate-100 text-slate hover:text-ink transition-all"
+                        title="Editar hotel completo"
+                      >
+                        <Pencil size={14} />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Date editing */}
+                  {/* Inline Editing Modules */}
                   {isEditingDates ? (
-                    <div className="mt-3 flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-in</label>
+                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate mb-1 block">Check-in</label>
                           <DatePicker
                             value={checkinDraft}
                             onChange={setCheckinDraft}
@@ -629,8 +712,8 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                             placeholder="Entrada"
                           />
                         </div>
-                        <div className="flex-1">
-                          <label className="text-[10px] font-medium text-muted mb-0.5 block">Check-out</label>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate mb-1 block">Check-out</label>
                           <DatePicker
                             value={checkoutDraft}
                             onChange={setCheckoutDraft}
@@ -642,24 +725,24 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSaveDates(hotel)}
-                          className="flex-1 rounded-xl py-2 text-[12px] font-semibold text-white flex items-center justify-center gap-1"
+                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
                           style={{ background: accentColor }}
                         >
-                          <Check size={12} /> Guardar fechas
+                          <Check size={14} /> Guardar fechas
                         </button>
                         <button
                           onClick={() => setEditingDates(null)}
-                          className="rounded-xl py-2 px-3 text-[12px] font-medium bg-cloud text-slate border border-line"
+                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
                         >
-                          <X size={12} />
+                          <X size={14} />
                         </button>
                       </div>
                     </div>
-                  ) : editingPlace === hotel.id ? (
-                    <div className="mt-3 flex flex-col gap-2">
+                  ) : isEditingPlc ? (
+                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
                       <div className="relative">
-                        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
-                          <MapPin size={13} className="text-slate shrink-0" />
+                        <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
+                          <MapPin size={14} className="text-slate shrink-0" />
                           <input
                             autoFocus
                             value={placeDraft}
@@ -667,8 +750,8 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                               setPlaceDraft(e.target.value);
                               setPlaceCoords(null);
                             }}
-                            placeholder="Dirección o ciudad"
-                            className="w-full bg-transparent text-[12px] outline-none text-ink"
+                            placeholder="Dirección o ciudad..."
+                            className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
                           />
                         </div>
                         {placeSuggestions.length > 0 && (
@@ -681,96 +764,118 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
                                   setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
                                   setPlaceSuggestions([]);
                                 }}
-                                className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                                className="w-full text-left px-3 py-2 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
                               >
                                 {s.display_name}
                               </button>
                             ))}
                           </div>
                         )}
-                        {placeSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
-                        {placeCoords && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+                        {placeSearching && <p className="text-[11px] text-slate mt-1 ml-1">Buscando...</p>}
+                        {placeCoords && <p className="text-[11px] text-teal font-semibold mt-1 ml-1">✓ Ubicación confirmada</p>}
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSavePlace(hotel)}
-                          className="flex-1 rounded-xl py-2 text-[12px] font-semibold text-white flex items-center justify-center gap-1"
+                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
                           style={{ background: accentColor }}
                         >
-                          <Check size={12} /> Guardar dirección
+                          <Check size={14} /> Guardar dirección
                         </button>
                         <button
                           onClick={() => { setEditingPlace(null); setPlaceCoords(null); }}
-                          className="rounded-xl py-2 px-3 text-[12px] font-medium bg-cloud text-slate border border-line"
+                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
                         >
-                          <X size={12} />
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : isEditingLink ? (
+                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
+                      <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
+                        <ExternalLink size={14} className="text-slate shrink-0" />
+                        <input
+                          autoFocus
+                          value={urlDraft}
+                          onChange={(e) => setUrlDraft(e.target.value)}
+                          placeholder="https://..."
+                          className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveUrl(hotel)}
+                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
+                          style={{ background: accentColor }}
+                        >
+                          <Check size={14} /> Guardar enlace
+                        </button>
+                        <button
+                          onClick={() => setEditingUrl(null)}
+                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
+                        >
+                          <X size={14} />
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+                    <div className="mt-3 pt-3 border-t border-line flex items-center gap-2 flex-wrap">
                       {hotel.bookingUrl ? (
                         <button
                           onClick={() => openBookingLink(hotel.bookingUrl)}
-                          className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg transition-all active:scale-95"
-                          style={{ background: `${accentColor}15`, color: accentColor }}
+                          className="flex items-center gap-1.5 text-[12px] font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95 bg-cloud hover:bg-slate-100"
+                          style={{ color: accentColor }}
                         >
-                          <ExternalLink size={12} />
-                          Abrir reserva
+                          <ExternalLink size={13} />
+                          <span>Abrir reserva</span>
                         </button>
                       ) : (
                         <button
                           onClick={() => startEditUrl(hotel)}
-                          className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
+                          className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-dashed border-line"
                         >
-                          <ExternalLink size={11} /> Añadir enlace
+                          <ExternalLink size={12} /> + Enlace
                         </button>
                       )}
                       <button
                         onClick={() => startEditDates(hotel)}
-                        className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
+                        className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-line"
                       >
-                        <Calendar size={11} /> Editar fechas
+                        <Calendar size={12} /> Fechas
                       </button>
                       <button
                         onClick={() => startEditPlace(hotel)}
-                        className="flex items-center gap-1 text-[11.5px] text-slate hover:text-muted px-2 py-1 rounded-lg border border-dashed border-line"
+                        className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-line"
                       >
-                        <MapPin size={11} /> Editar dirección
-                      </button>
-                      <button
-                        onClick={() => setEditHotelId(hotel.id)}
-                        className="p-1.5 rounded-lg hover:bg-cloud"
-                        title="Editar hotel"
-                      >
-                        <Pencil size={12} className="text-slate" />
+                        <MapPin size={12} /> Ubicación
                       </button>
                     </div>
                   )}
 
+                  {/* Attached Document */}
                   {hotel.bookingFile && (
-                    <div className="mt-2.5 flex items-center gap-1.5 bg-white rounded-xl px-2.5 py-2 border border-line">
+                    <div className="mt-3 flex items-center gap-2 bg-cloud rounded-2xl px-3 py-2 border border-line">
                       <button
                         onClick={() => openBookingFile(hotel.bookingFile)}
-                        className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-cloud rounded-lg px-1.5 py-1 transition-colors"
+                        className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white rounded-xl px-2 py-1 transition-colors"
                       >
-                        <FileText size={13} className="text-slate shrink-0" />
-                        <span className="flex-1 text-[12px] text-ink truncate">{hotel.bookingFile.name}</span>
-                        <ExternalLink size={11} className="text-slate shrink-0" />
+                        <FileText size={14} className="text-slate shrink-0" />
+                        <span className="flex-1 text-[12.5px] font-semibold text-ink truncate">{hotel.bookingFile.name}</span>
+                        <ExternalLink size={12} className="text-slate shrink-0" />
                       </button>
                       <button
                         onClick={() => downloadBookingFile(hotel.bookingFile)}
-                        className="p-1.5 hover:bg-cloud rounded-lg shrink-0"
-                        title="Descargar"
+                        className="p-1.5 hover:bg-white rounded-xl shrink-0 text-teal transition-colors"
+                        title="Descargar voucher"
                       >
-                        <Download size={12} className="text-teal" />
+                        <Download size={14} />
                       </button>
                       <button
                         onClick={() => handleUpdateHotel(hotel.id, { bookingFile: null })}
-                        className="p-1.5 hover:bg-cloud rounded-lg shrink-0"
-                        title="Quitar archivo"
+                        className="p-1.5 hover:bg-white rounded-xl shrink-0 text-coral transition-colors"
+                        title="Eliminar voucher"
                       >
-                        <Trash2 size={11} className="text-coral" />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   )}
@@ -778,9 +883,10 @@ export default function HotelSection({ trip, accentColor, onUpdateTrip }) {
               );
             })}
           </div>
-        </>
+        </div>
       )}
 
+      {/* Edit Hotel Sheet */}
       {editHotelId && (() => {
         const target = hotels.find((h) => h.id === editHotelId);
         if (!target) return null;

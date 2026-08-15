@@ -58,19 +58,12 @@ export function ToastProvider({ children }) {
           );
         })}
       </div>
-      <style jsx global>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        .animate-slide-in { animation: slideIn 0.25s ease-out; }
-      `}</style>
     </ToastContext.Provider>
   );
 }
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  if (!ctx) return () => {};
   return ctx;
 }

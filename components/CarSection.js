@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Car, Fuel, Users, MapPin, FileText, Upload, X, Check, Pencil,
-  Settings, Trash2, ExternalLink, Download, Navigation,
+  Settings, Trash2, ExternalLink, Download, Navigation, Sparkles
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
@@ -39,7 +39,7 @@ const EMPTY_CAR = {
   reservationRef: "",
 };
 
-export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, onUpdateDocs }) {
+export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", onUpdateCar, onUpdateDocs }) {
   const [editing, setEditing] = useState(!car);
   const [draft, setDraft] = useState(car || { ...EMPTY_CAR });
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -121,7 +121,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
   function handleSave() {
     onUpdateCar(draft);
     setEditing(false);
-    addToast("Coche guardado correctamente", "success");
+    addToast?.("Coche guardado correctamente", "success");
   }
 
   function handleFieldChange(field, value) {
@@ -140,7 +140,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
         let dataUrl;
         if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
           if (file.size > MAX_PDF_SIZE) {
-            addToast(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
+            addToast?.(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
             continue;
           }
           dataUrl = await new Promise((resolve, reject) => {
@@ -151,7 +151,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           });
         } else {
           if (file.size > 10 * 1024 * 1024) {
-            addToast(`"${file.name}" es demasiado grande (máx 10 MB)`, "warning");
+            addToast?.(`"${file.name}" es demasiado grande (máx 10 MB)`, "warning");
             continue;
           }
           dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
@@ -161,7 +161,7 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           try {
             url = await uploadImageToFirebase(dataUrl, `cars/${Date.now()}-${file.name}`);
           } catch (uploadErr) {
-            addToast(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
+            addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
           }
         }
         newDocs.push({
@@ -171,12 +171,12 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           addedAt: Date.now(),
         });
       } catch (err) {
-        addToast(`Error al subir "${file.name}": ${err.message || "Error desconocido"}`, "error");
+        addToast?.(`Error al subir "${file.name}": ${err.message || "Error desconocido"}`, "error");
       }
     }
     onUpdateDocs(newDocs);
     if (newDocs.length > (rentalDocs || []).length) {
-      addToast("Documento subido correctamente", "success");
+      addToast?.("Documento subido correctamente", "success");
     }
     setUploadingDoc(false);
     if (docInputRef.current) docInputRef.current.value = "";
@@ -243,22 +243,23 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
 
   if (!car && !editing) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4">
+      <div className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl bg-white border border-line shadow-soft text-center">
         <div
-          className="w-16 h-16 rounded-full flex items-center justify-center"
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xs"
           style={{ background: `${accentColor}18` }}
         >
-          <Car size={28} style={{ color: accentColor }} />
+          <Car size={32} style={{ color: accentColor }} />
         </div>
-        <p className="text-[14px] text-slate text-center">
-          Añade el coche de alquiler para tener toda la info en un sitio
+        <h4 className="text-[17px] font-bold text-ink mb-1 font-display">Coche de alquiler</h4>
+        <p className="text-[13px] text-slate max-w-xs mb-5">
+          Guarda la información de tu vehículo, puntos de recogida, horarios y contratos de alquiler en un solo lugar.
         </p>
         <button
           onClick={() => { setDraft({ ...EMPTY_CAR }); setEditing(true); }}
-          className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-white"
+          className="px-6 py-3 rounded-2xl text-[14px] font-bold text-white shadow-card active:scale-95 transition-all"
           style={{ background: accentColor }}
         >
-          Añadir coche
+          Añadir coche de alquiler
         </button>
       </div>
     );
@@ -266,46 +267,67 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
 
   if (editing) {
     return (
-      <div className="px-1 py-2">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[15px] font-semibold text-ink font-display flex items-center gap-2">
-            <Car size={16} style={{ color: accentColor }} />
-            Coche de alquiler
-          </h3>
+      <div className="bg-white rounded-3xl p-5 border border-line shadow-card">
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-line">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-xs"
+              style={{ background: `${accentColor}18` }}
+            >
+              <Car size={18} style={{ color: accentColor }} />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-bold text-ink font-display">
+                {car ? "Editar coche de alquiler" : "Nuevo coche de alquiler"}
+              </h3>
+              <p className="text-[11.5px] text-slate font-medium">Completa los datos de la reserva</p>
+            </div>
+          </div>
           {car && (
-            <button onClick={() => { setDraft(car); setEditing(false); }} className="text-[12px] text-slate">
+            <button
+              onClick={() => { setDraft(car); setEditing(false); }}
+              className="text-[12.5px] font-medium text-slate hover:text-ink px-3 py-1.5 rounded-xl hover:bg-cloud transition-colors"
+            >
               Cancelar
             </button>
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <input
-            value={draft.model}
-            onChange={(e) => handleFieldChange("model", e.target.value)}
-            placeholder="Modelo del coche"
-            className="w-full rounded-xl px-4 py-3.5 text-[14px] outline-none bg-cloud text-ink border border-line"
-          />
-          <input
-            value={draft.company}
-            onChange={(e) => handleFieldChange("company", e.target.value)}
-            placeholder="Compañía de alquiler (opcional)"
-            className="w-full rounded-xl px-4 py-3.5 text-[14px] outline-none bg-cloud text-ink border border-line"
-          />
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">Modelo del coche</label>
+            <input
+              value={draft.model}
+              onChange={(e) => handleFieldChange("model", e.target.value)}
+              placeholder="Ej: Fiat 500, Nissan Qashqai, Toyota Yaris..."
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+            />
+          </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block">Transmisión</label>
-              <div className="flex gap-1.5">
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">Compañía de alquiler</label>
+            <input
+              value={draft.company}
+              onChange={(e) => handleFieldChange("company", e.target.value)}
+              placeholder="Ej: Sixt, Hertz, Europcar, Centauro..."
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Transmisión</label>
+              <div className="flex gap-2">
                 {TRANSMISSION_OPTIONS.map((t) => (
                   <button
                     key={t.key}
+                    type="button"
                     onClick={() => handleFieldChange("transmission", t.key)}
-                    className="flex-1 px-2 py-2 rounded-lg text-[12px] font-medium transition-colors border"
+                    className="flex-1 px-3 py-2.5 rounded-xl text-[12.5px] font-semibold transition-all border"
                     style={{
                       background: draft.transmission === t.key ? accentColor : "#F4F4F7",
-                      color: draft.transmission === t.key ? "white" : "#5A6478",
-                      borderColor: draft.transmission === t.key ? accentColor : "#C5CAD6",
+                      color: draft.transmission === t.key ? "white" : "#4B5565",
+                      borderColor: draft.transmission === t.key ? accentColor : "#E2E4E9",
                     }}
                   >
                     {t.label}
@@ -313,18 +335,20 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
                 ))}
               </div>
             </div>
-            <div className="flex-1">
-              <label className="text-[11px] font-medium text-muted mb-1 block">Combustible</label>
-              <div className="flex flex-wrap gap-1.5">
+
+            <div>
+              <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Combustible</label>
+              <div className="grid grid-cols-2 gap-1.5">
                 {FUEL_OPTIONS.map((f) => (
                   <button
                     key={f.key}
+                    type="button"
                     onClick={() => handleFieldChange("fuel", f.key)}
-                    className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors border"
+                    className="px-2.5 py-2 rounded-xl text-[11.5px] font-semibold transition-all border text-center"
                     style={{
                       background: draft.fuel === f.key ? accentColor : "#F4F4F7",
-                      color: draft.fuel === f.key ? "white" : "#5A6478",
-                      borderColor: draft.fuel === f.key ? accentColor : "#C5CAD6",
+                      color: draft.fuel === f.key ? "white" : "#4B5565",
+                      borderColor: draft.fuel === f.key ? accentColor : "#E2E4E9",
                     }}
                   >
                     {f.label}
@@ -335,274 +359,312 @@ export default function CarSection({ car, rentalDocs, accentColor, onUpdateCar, 
           </div>
 
           <div>
-            <label className="text-[11px] font-medium text-muted mb-1 block">Ocupantes</label>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Número de plazas</label>
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={() => handleFieldChange("occupants", Math.max(1, (draft.occupants || 2) - 1))}
-                className="w-9 h-9 rounded-full border border-line flex items-center justify-center text-ink font-medium text-[16px]"
+                className="w-10 h-10 rounded-xl bg-cloud border border-line flex items-center justify-center text-ink font-bold text-[18px] hover:bg-slate-200 active:scale-95 transition-all"
               >
                 −
               </button>
-              <span className="text-[18px] font-semibold text-ink w-8 text-center">{draft.occupants || 2}</span>
+              <div className="flex items-center gap-1.5 bg-cloud px-4 py-2 rounded-xl border border-line">
+                <Users size={15} className="text-slate" />
+                <span className="text-[16px] font-bold text-ink w-6 text-center">{draft.occupants || 2}</span>
+                <span className="text-[12px] text-slate font-medium">plazas</span>
+              </div>
               <button
+                type="button"
                 onClick={() => handleFieldChange("occupants", (draft.occupants || 2) + 1)}
-                className="w-9 h-9 rounded-full border border-line flex items-center justify-center text-ink font-medium text-[16px]"
+                className="w-10 h-10 rounded-xl bg-cloud border border-line flex items-center justify-center text-ink font-bold text-[18px] hover:bg-slate-200 active:scale-95 transition-all"
               >
                 +
               </button>
-              <Users size={14} className="text-slate ml-1" />
             </div>
           </div>
 
           {/* Recogida */}
-          <div>
-            <label className="text-[11px] font-medium text-muted mb-1.5 block flex items-center gap-1">
-              <MapPin size={10} /> Recogida
+          <div className="p-3.5 rounded-2xl bg-cloud border border-line">
+            <label className="text-[12px] font-bold text-ink mb-2.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-teal" />
+              Punto de recogida
             </label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <DatePicker
-                  value={draft.pickupDate}
-                  onChange={(val) => handleFieldChange("pickupDate", val)}
-                  accentColor={accentColor}
-                  placeholder="Fecha"
-                />
-              </div>
-              <div className="w-28">
-                <TimePicker
-                  value={draft.pickupTime}
-                  onChange={(val) => handleFieldChange("pickupTime", val)}
-                  accentColor={accentColor}
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+              <DatePicker
+                value={draft.pickupDate}
+                onChange={(val) => handleFieldChange("pickupDate", val)}
+                accentColor={accentColor}
+                placeholder="Fecha recogida"
+              />
+              <TimePicker
+                value={draft.pickupTime}
+                onChange={(val) => handleFieldChange("pickupTime", val)}
+                accentColor={accentColor}
+              />
             </div>
-            <div className="relative mt-1.5">
+            <div className="relative mt-2">
               <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
-                <MapPin size={13} className="text-slate shrink-0" />
+                <MapPin size={15} className="text-slate shrink-0" />
                 <input
                   value={draft.pickupLocation}
                   onChange={(e) => {
                     setDraft((prev) => ({ ...prev, pickupLocation: e.target.value, pickupLat: undefined, pickupLng: undefined }));
                   }}
-                  placeholder="Lugar recogida"
-                  className="w-full bg-transparent text-[12px] outline-none text-ink"
+                  placeholder="Aeropuerto, oficina o dirección..."
+                  className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
                 />
               </div>
               {pickupSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line">
                   {pickupSuggestions.map((s) => (
                     <button
                       key={s.place_id}
+                      type="button"
                       onClick={() => pickPickupSuggestion(s)}
-                      className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                      className="w-full text-left px-3.5 py-2.5 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
                     >
                       {s.display_name}
                     </button>
                   ))}
                 </div>
               )}
-              {pickupSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
-              {draft.pickupLat && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+              {pickupSearching && <p className="text-[11px] text-slate mt-1 ml-1 animate-pulse">Buscando...</p>}
+              {draft.pickupLat && <p className="text-[11px] text-teal font-semibold mt-1 ml-1">✓ Ubicación fijada</p>}
             </div>
           </div>
 
           {/* Entrega */}
-          <div>
-            <label className="text-[11px] font-medium text-muted mb-1.5 block flex items-center gap-1">
-              <MapPin size={10} /> Entrega
+          <div className="p-3.5 rounded-2xl bg-cloud border border-line">
+            <label className="text-[12px] font-bold text-ink mb-2.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-coral" />
+              Punto de devolución
             </label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <DatePicker
-                  value={draft.dropoffDate}
-                  onChange={(val) => handleFieldChange("dropoffDate", val)}
-                  accentColor={accentColor}
-                  placeholder="Fecha"
-                />
-              </div>
-              <div className="w-28">
-                <TimePicker
-                  value={draft.dropoffTime}
-                  onChange={(val) => handleFieldChange("dropoffTime", val)}
-                  accentColor={accentColor}
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+              <DatePicker
+                value={draft.dropoffDate}
+                onChange={(val) => handleFieldChange("dropoffDate", val)}
+                accentColor={accentColor}
+                placeholder="Fecha entrega"
+              />
+              <TimePicker
+                value={draft.dropoffTime}
+                onChange={(val) => handleFieldChange("dropoffTime", val)}
+                accentColor={accentColor}
+              />
             </div>
-            <div className="relative mt-1.5">
+            <div className="relative mt-2">
               <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
-                <MapPin size={13} className="text-slate shrink-0" />
+                <MapPin size={15} className="text-slate shrink-0" />
                 <input
                   value={draft.dropoffLocation}
                   onChange={(e) => {
                     setDraft((prev) => ({ ...prev, dropoffLocation: e.target.value, dropoffLat: undefined, dropoffLng: undefined }));
                   }}
-                  placeholder="Lugar entrega"
-                  className="w-full bg-transparent text-[12px] outline-none text-ink"
+                  placeholder="Aeropuerto, oficina o dirección..."
+                  className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
                 />
               </div>
               {dropoffSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line">
                   {dropoffSuggestions.map((s) => (
                     <button
                       key={s.place_id}
+                      type="button"
                       onClick={() => pickDropoffSuggestion(s)}
-                      className="w-full text-left px-3 py-2 text-[11px] text-ink hover:bg-cloud border-b border-line last:border-0"
+                      className="w-full text-left px-3.5 py-2.5 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
                     >
                       {s.display_name}
                     </button>
                   ))}
                 </div>
               )}
-              {dropoffSearching && <p className="text-[10px] text-slate mt-0.5 ml-1">Buscando...</p>}
-              {draft.dropoffLat && <p className="text-[10px] text-teal mt-0.5 ml-1">✓ Ubicación fijada</p>}
+              {dropoffSearching && <p className="text-[11px] text-slate mt-1 ml-1 animate-pulse">Buscando...</p>}
+              {draft.dropoffLat && <p className="text-[11px] text-teal font-semibold mt-1 ml-1">✓ Ubicación fijada</p>}
             </div>
           </div>
 
-          <input
-            value={draft.reservationRef}
-            onChange={(e) => handleFieldChange("reservationRef", e.target.value)}
-            placeholder="Nº de reserva (opcional)"
-            className="w-full rounded-xl px-4 py-3 text-[13px] outline-none bg-cloud text-ink border border-line"
-          />
+          <div>
+            <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">Número de confirmación / reserva</label>
+            <input
+              value={draft.reservationRef}
+              onChange={(e) => handleFieldChange("reservationRef", e.target.value)}
+              placeholder="Ej: RENT-892344-ES"
+              className="w-full rounded-2xl px-4 py-3 text-[13.5px] font-mono outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all"
+            />
+          </div>
         </div>
 
         <button
           onClick={handleSave}
-          className="w-full mt-5 rounded-xl py-3.5 text-[14px] font-semibold text-white flex items-center justify-center gap-2"
+          className="w-full mt-6 rounded-2xl py-3.5 text-[15px] font-bold text-white flex items-center justify-center gap-2 shadow-card active:scale-[0.98] transition-all"
           style={{ background: accentColor }}
         >
-          <Check size={16} /> Guardar coche
+          <Check size={18} /> Guardar datos del coche
         </button>
       </div>
     );
   }
 
   return (
-    <div className="px-1 py-2">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-semibold text-ink font-display flex items-center gap-2">
-          <Car size={16} style={{ color: accentColor }} />
-          {car.model || "Coche de alquiler"}
-        </h3>
-        <button onClick={() => { setDraft(car); setEditing(true); }} className="p-1.5 rounded-lg hover:bg-cloud">
-          <Pencil size={14} className="text-slate" />
-        </button>
-      </div>
-
-      <div className="bg-cloud rounded-2xl border border-line p-4 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: `${accentColor}18` }}>
-            <Car size={18} style={{ color: accentColor }} />
+    <div className="space-y-4">
+      {/* Car Overview Card */}
+      <div className="bg-white rounded-3xl border border-line p-5 shadow-card">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xs shrink-0"
+              style={{ background: `${accentColor}18` }}
+            >
+              <Car size={24} style={{ color: accentColor }} />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-bold text-ink font-display">{car.model || "Coche de alquiler"}</h3>
+              {car.company && <p className="text-[13px] text-slate font-medium">{car.company}</p>}
+            </div>
           </div>
-          <div>
-            <p className="text-[15px] font-semibold text-ink">{car.model}</p>
-            <p className="text-[12px] text-slate capitalize">{car.transmission} · {car.fuel}</p>
-            {car.company && <p className="text-[12px] text-muted mt-0.5">{car.company}</p>}
-          </div>
+          <button
+            onClick={() => { setDraft(car); setEditing(true); }}
+            className="w-9 h-9 rounded-2xl bg-cloud flex items-center justify-center text-slate hover:text-ink hover:bg-slate-200 active:scale-95 transition-all"
+            title="Editar coche"
+          >
+            <Pencil size={15} />
+          </button>
         </div>
 
-        <div className="flex items-center gap-4 text-[12.5px] text-muted">
-          <span className="flex items-center gap-1"><Users size={12} /> {car.occupants} ocupantes</span>
-          <span className="flex items-center gap-1"><Settings size={12} /> {car.transmission}</span>
+        {/* Feature Badges */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cloud border border-line text-[12px] font-semibold text-ink capitalize">
+            <Settings size={13} className="text-slate" /> {car.transmission}
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cloud border border-line text-[12px] font-semibold text-ink capitalize">
+            <Fuel size={13} className="text-slate" /> {car.fuel}
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cloud border border-line text-[12px] font-semibold text-ink">
+            <Users size={13} className="text-slate" /> {car.occupants} ocupantes
+          </span>
         </div>
 
-        <div className="border-t border-line pt-3 flex flex-col gap-2">
-          <div className="flex items-start gap-2 text-[12.5px]">
-            <MapPin size={13} className="text-teal shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-muted">Recogida: <span className="text-ink font-medium">{formatDateTime(car.pickupDate, car.pickupTime)}</span></p>
-              <p className="text-slate text-[11.5px]">{car.pickupLocation || "Sin ubicación"}</p>
+        {/* Pickup and Dropoff Itinerary Blocks */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-line">
+          <div className="p-3 rounded-2xl bg-cloud/70 border border-line">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-teal" /> Recogida
+              </span>
+              {car.pickupLat && car.pickupLng && (
+                <a
+                  href={`https://www.google.com/maps?q=${car.pickupLat},${car.pickupLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 rounded-lg text-teal hover:bg-teal/10 transition-colors"
+                >
+                  <Navigation size={13} />
+                </a>
+              )}
             </div>
-            {car.pickupLat && car.pickupLng && (
-              <a
-                href={`https://www.google.com/maps?q=${car.pickupLat},${car.pickupLng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 p-1.5 rounded-lg hover:bg-cloud"
-              >
-                <Navigation size={13} style={{ color: accentColor }} />
-              </a>
-            )}
+            <p className="text-[13.5px] font-bold text-ink">{formatDateTime(car.pickupDate, car.pickupTime)}</p>
+            <p className="text-[12px] text-slate truncate mt-0.5">{car.pickupLocation || "Sin ubicación fijada"}</p>
           </div>
-          <div className="flex items-start gap-2 text-[12.5px]">
-            <MapPin size={13} className="text-coral shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-muted">Entrega: <span className="text-ink font-medium">{formatDateTime(car.dropoffDate, car.dropoffTime)}</span></p>
-              <p className="text-slate text-[11.5px]">{car.dropoffLocation || "Sin ubicación"}</p>
+
+          <div className="p-3 rounded-2xl bg-cloud/70 border border-line">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-coral flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-coral" /> Devolución
+              </span>
+              {car.dropoffLat && car.dropoffLng && (
+                <a
+                  href={`https://www.google.com/maps?q=${car.dropoffLat},${car.dropoffLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 rounded-lg text-coral hover:bg-coral/10 transition-colors"
+                >
+                  <Navigation size={13} />
+                </a>
+              )}
             </div>
-            {car.dropoffLat && car.dropoffLng && (
-              <a
-                href={`https://www.google.com/maps?q=${car.dropoffLat},${car.dropoffLng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 p-1.5 rounded-lg hover:bg-cloud"
-              >
-                <Navigation size={13} style={{ color: accentColor }} />
-              </a>
-            )}
+            <p className="text-[13.5px] font-bold text-ink">{formatDateTime(car.dropoffDate, car.dropoffTime)}</p>
+            <p className="text-[12px] text-slate truncate mt-0.5">{car.dropoffLocation || "Sin ubicación fijada"}</p>
           </div>
         </div>
 
         {car.reservationRef && (
-          <div className="border-t border-line pt-3">
-            <p className="text-[11.5px] text-muted">Reserva: <span className="text-ink font-medium font-mono">{car.reservationRef}</span></p>
+          <div className="mt-3 pt-3 border-t border-line flex items-center justify-between">
+            <span className="text-[12px] text-slate font-medium">Nº Reserva:</span>
+            <span className="text-[13px] font-bold text-ink font-mono bg-cloud px-2.5 py-1 rounded-lg border border-line">
+              {car.reservationRef}
+            </span>
           </div>
         )}
       </div>
 
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[13px] font-medium text-ink flex items-center gap-1.5">
-            <FileText size={13} /> Documentos
-          </p>
+      {/* Documents Section */}
+      <div className="bg-white rounded-3xl border border-line p-5 shadow-card">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-cloud flex items-center justify-center text-ink">
+              <FileText size={16} />
+            </div>
+            <h4 className="text-[15px] font-bold text-ink font-display">Documentos y contratos</h4>
+          </div>
           <button
             onClick={() => docInputRef.current?.click()}
             disabled={uploadingDoc}
-            className="flex items-center gap-1 text-[11.5px] font-medium px-3 py-1.5 rounded-lg text-white"
+            className="flex items-center gap-1.5 text-[12px] font-bold px-3.5 py-2 rounded-xl text-white shadow-xs active:scale-95 transition-all"
             style={{ background: accentColor, opacity: uploadingDoc ? 0.6 : 1 }}
           >
-            <Upload size={11} />
-            {uploadingDoc ? "Subiendo..." : "Subir"}
+            <Upload size={13} />
+            {uploadingDoc ? "Subiendo..." : "Subir archivo"}
           </button>
         </div>
         <input ref={docInputRef} type="file" accept="image/*,.pdf" multiple className="hidden" onChange={handleDocUpload} />
 
         {(rentalDocs || []).length > 0 ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {rentalDocs.map((doc, idx) => (
               <div
                 key={doc.addedAt || idx}
-                className="flex items-center gap-1 bg-cloud rounded-xl px-2.5 py-2 border border-line"
+                className="flex items-center justify-between gap-2 bg-cloud rounded-2xl p-3 border border-line hover:border-slate/30 transition-all shadow-xs"
               >
                 <button
                   onClick={() => openDoc(doc)}
-                  className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white/60 rounded-lg px-1.5 py-1 transition-colors"
+                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
                 >
-                  <FileText size={14} className="text-slate shrink-0" />
-                  <span className="flex-1 text-[12.5px] text-ink truncate">{doc.name}</span>
-                  <ExternalLink size={12} className="text-slate shrink-0" />
+                  <div className="w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink shrink-0">
+                    <FileText size={16} className={doc.type?.includes("pdf") ? "text-coral" : "text-teal"} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12.5px] font-bold text-ink truncate">{doc.name}</p>
+                    <p className="text-[11px] text-slate flex items-center gap-1">
+                      <span>Ver archivo</span>
+                      <ExternalLink size={10} />
+                    </p>
+                  </div>
                 </button>
-                <button
-                  onClick={() => downloadDoc(doc)}
-                  className="p-1.5 hover:bg-white/60 rounded-lg shrink-0"
-                  title="Descargar"
-                >
-                  <Download size={13} className="text-teal" />
-                </button>
-                <button
-                  onClick={() => handleRemoveDoc(idx)}
-                  className="p-1.5 hover:bg-white/60 rounded-lg shrink-0"
-                  title="Eliminar"
-                >
-                  <Trash2 size={12} className="text-coral" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => downloadDoc(doc)}
+                    className="w-8 h-8 rounded-xl bg-white border border-line flex items-center justify-center text-slate hover:text-teal active:scale-95 transition-colors"
+                    title="Descargar"
+                  >
+                    <Download size={13} />
+                  </button>
+                  <button
+                    onClick={() => handleRemoveDoc(idx)}
+                    className="w-8 h-8 rounded-xl bg-white border border-line flex items-center justify-center text-slate hover:text-coral active:scale-95 transition-colors"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[12px] text-slate text-center py-4 border border-dashed border-line rounded-xl">
-            Sin documentos subidos
-          </p>
+          <div className="text-center py-6 border-2 border-dashed border-line rounded-2xl bg-cloud/40">
+            <FileText size={24} className="text-slate mx-auto mb-1.5 opacity-60" />
+            <p className="text-[13px] font-medium text-slate">No hay documentos adjuntos</p>
+            <p className="text-[11.5px] text-slate/70 mt-0.5">Sube confirmaciones en PDF o fotos del contrato</p>
+          </div>
         )}
       </div>
     </div>

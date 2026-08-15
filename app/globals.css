@@ -6,11 +6,54 @@
 
 html,
 body {
-  background: #C5CAD6;
+  background: #F8F9FC;
+  color: #0B0F19;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
+}
+
+/* Custom scrollbar styling for modern horizontal carousels */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.4);
 }
 
 /* Perforated ticket divider used in ActivityTicket */
 .ticket-divider {
-  background-image: repeating-linear-gradient(to bottom, #D0D5DF 0, #D0D5DF 6px, transparent 6px, transparent 12px);
+  background-image: repeating-linear-gradient(to bottom, #E2E8F0 0, #E2E8F0 6px, transparent 6px, transparent 12px);
   width: 2px;
+}
+
+/* Safe area padding utilities for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 16px);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out;
 }

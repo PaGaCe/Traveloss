@@ -42,9 +42,30 @@ export default function TripDetailPage() {
   const tripId = params.id;
   const { user, userId, loading: authLoading, signInWithGoogle, authReady } = useAuth();
   const {
-    getTrip, loaded, addDay, renameDay, addActivity, updateActivity, deleteActivity,
-    updateTrip, deleteTrip, addDayPhoto, removeDayPhoto,
-    shareTrip, unshareTrip, getSharedUsers, joinSharedTrip, dismissTrip, restoreTrip, usingFirebase,
+    getTrip,
+    trips,
+    loaded,
+    updateTrip,
+    deleteTrip,
+    leaveSharedTrip,
+    dismissTrip,
+    restoreTrip,
+    addActivity,
+    updateActivity,
+    deleteActivity,
+    addDay,
+    deleteDay,
+    updateDay,
+    renameDay,
+    addDayPhoto,
+    removeDayPhoto,
+    addPhotoToGallery,
+    deletePhotoFromGallery,
+    shareTrip,
+    unshareTrip,
+    getSharedUsers,
+    joinSharedTrip,
+    usingFirebase,
   } = useTripsStore(userId, user?.email);
 
   const trip = getTrip(tripId);
@@ -54,22 +75,30 @@ export default function TripDetailPage() {
   const [activeTab, setActiveTab] = useState("itinerary");
   const [showAdd, setShowAdd] = useState(false);
   const [detailItemId, setDetailItemId] = useState(null);
+  const [showShare, setShowShare] = useState(false);
+  
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [lightboxImg, setLightboxImg] = useState(null);
+  const [galleryScope, setGalleryScope] = useState("day"); // 'day' | 'all'
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDismissConfirm, setShowDismissConfirm] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
+
+  // Edición inline de cabecera
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [editingDest, setEditingDest] = useState(false);
+  const [destDraft, setDestDraft] = useState("");
+  const [editingDates, setEditingDates] = useState(false);
+  const [editingDayDate, setEditingDayDate] = useState(false);
+  const [editingTricount, setEditingTricount] = useState(false);
+  const [tricountDraft, setTricountDraft] = useState("");
+  const [invitePending, setInvitePending] = useState(false);
+  
   const coverInputRef = useRef(null);
   const searchParams = useSearchParams();
   const isInvite = searchParams.get("invite") === "true";
-
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState("");
-  const [editingTricount, setEditingTricount] = useState(false);
-  const [tricountDraft, setTricountDraft] = useState("");
-  const [galleryUploading, setGalleryUploading] = useState(false);
-  const [lightboxImg, setLightboxImg] = useState(null);
-  const [galleryScope, setGalleryScope] = useState("day");
-  const [invitePending, setInvitePending] = useState(isInvite);
+  
   const addToast = useToast();
   const galleryInputRef = useRef(null);
 

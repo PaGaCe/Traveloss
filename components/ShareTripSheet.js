@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Mail, UserMinus, Users, MessageCircle } from "lucide-react";
+import { X, Mail, UserMinus, Users, MessageCircle, Send, CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
 
 export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, onShare, onUnshare, getSharedUsers }) {
   const [email, setEmail] = useState("");
@@ -27,12 +27,12 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
     setSuccess(null);
     try {
       await onShare(tripId, email.trim().toLowerCase());
-      setSuccess(`Compartido con ${email.trim()}`);
+      setSuccess(`Viaje compartido con ${email.trim()}`);
       setEmail("");
       const updated = await getSharedUsers(tripId);
       setSharedUsers(updated);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "No se pudo compartir el viaje");
     }
   }
 
@@ -50,121 +50,178 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
     const url = `${window.location.origin}/trip/${tripId}?invite=true`;
     const text = `¡Te invito a ver mi viaje en Traveloss! 🌍\n\n${url}`;
 
-    // En móvil/PWA la Web Share API abre el panel nativo de compartir
-    // (donde el usuario elige WhatsApp) y no la bloquea ningún navegador.
     if (navigator.share) {
       try {
         await navigator.share({ title: "Traveloss", text, url });
         return;
       } catch (err) {
-        if (err.name === "AbortError") return; // el usuario canceló
+        if (err.name === "AbortError") return;
       }
     }
 
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     const win = window.open(waUrl, "_blank");
     if (!win) {
-      // Popup bloqueado: navegamos directamente (vuelve al app al compartir).
       window.location.href = waUrl;
     }
   }
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative rounded-t-3xl px-5 pt-4 pb-8 z-10 bg-cloud max-h-[88%] overflow-y-auto max-w-lg mx-auto w-full">
-        <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto mb-4" />
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[18px] font-semibold text-ink font-display flex items-center gap-2">
-            <Users size={18} /> Compartir viaje
-          </h2>
-          <button onClick={onClose}>
-            <X size={20} className="text-slate" />
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div
+        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Drag handle for mobile */}
+        <div className="w-12 h-1.5 bg-line rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+        {/* Header */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-line shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-ink/5 flex items-center justify-center text-ink shadow-xs">
+              <Users size={20} />
+            </div>
+            <div>
+              <h2 className="text-[17px] font-bold text-ink font-display">Compartir viaje</h2>
+              <p className="text-[12px] text-slate font-medium">Invita a tus compañeros de ruta</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate hover:text-ink hover:bg-cloud transition-colors"
+          >
+            <X size={18} />
           </button>
         </div>
 
-        {isOwner && (
-          <>
-            <div className="flex gap-2 mb-3">
-              <div className="flex-1 flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud">
-                <Mail size={15} className="text-slate" />
-                <input
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && handleShare()}
-                  placeholder="Email del usuario"
-                  type="email"
-                  className="w-full bg-transparent text-[14px] outline-none text-ink"
-                />
+        {/* Scrollable content */}
+        <div className="p-6 overflow-y-auto space-y-5 flex-1">
+          {isOwner && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">
+                  Invitar por correo electrónico
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+                    <Mail size={16} className="text-slate shrink-0" />
+                    <input
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setError(null);
+                        setSuccess(null);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleShare()}
+                      placeholder="ejemplo@gmail.com"
+                      type="email"
+                      className="w-full bg-transparent text-[13.5px] outline-none text-ink font-medium"
+                    />
+                  </div>
+                  <button
+                    onClick={handleShare}
+                    disabled={!email.trim()}
+                    className="h-12 px-5 rounded-2xl text-[13.5px] font-bold text-white shadow-soft active:scale-95 transition-all bg-ink disabled:opacity-40 flex items-center gap-1.5 shrink-0"
+                  >
+                    <Send size={15} />
+                    <span className="hidden sm:inline">Invitar</span>
+                  </button>
+                </div>
+                <p className="text-[11.5px] text-slate mt-1.5 font-medium">
+                  El usuario debe haber iniciado sesión con Google para acceder al itinerario.
+                </p>
               </div>
-              <button
-                onClick={handleShare}
-                disabled={!email.trim()}
-                className="px-5 rounded-xl text-[13px] font-semibold text-white transition-opacity bg-ink"
-                style={{ opacity: email.trim() ? 1 : 0.5 }}
-              >
-                Compartir
-              </button>
-            </div>
-            {error && <p className="text-coral text-[12px] mb-2">{error}</p>}
-            {success && <p className="text-teal text-[12px] mb-2">{success}</p>}
-            <p className="text-[11px] text-slate mb-4">
-              El otro usuario debe haber iniciado sesión al menos una vez con Google para poder compartir.
-            </p>
 
-            <div className="border-t border-line pt-4 mb-4">
-              <p className="text-[12px] font-medium text-muted mb-2">O envía un enlace de invitación</p>
-              <button
-                onClick={handleShareWhatsApp}
-                className="w-full flex items-center justify-center gap-2 rounded-xl py-3 bg-[#25D366] text-white text-[14px] font-medium active:scale-[0.98] transition-transform"
-              >
-                <MessageCircle size={18} />
-                Compartir por WhatsApp
-              </button>
-            </div>
-          </>
-        )}
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-coral/10 text-coral rounded-2xl border border-coral/20 text-[12.5px] font-medium">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-        {sharedUsers.length > 0 && (
-          <div>
-            <p className="text-[12px] font-medium text-muted mb-2">Personas con acceso</p>
-            <div className="flex flex-col gap-2">
+              {success && (
+                <div className="flex items-center gap-2 p-3 bg-teal/10 text-teal rounded-2xl border border-teal/20 text-[12.5px] font-medium">
+                  <CheckCircle2 size={16} className="shrink-0" />
+                  <span>{success}</span>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-line">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-2 block">
+                  Enlace directo de invitación
+                </label>
+                <button
+                  onClick={handleShareWhatsApp}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-2xl py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-[14px] font-bold shadow-soft active:scale-[0.98] transition-all"
+                >
+                  <MessageCircle size={19} />
+                  <span>Compartir por WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Shared members list */}
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-2.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate block">
+                Personas con acceso ({sharedUsers.length + (isOwner ? 1 : 0)})
+              </label>
+              {loading && <span className="text-[11px] text-slate">Cargando...</span>}
+            </div>
+
+            <div className="space-y-2">
+              {/* Current user */}
+              <div className="flex items-center gap-3 rounded-2xl p-3 bg-cloud/60 border border-line">
+                <div className="w-9 h-9 rounded-2xl bg-ink text-white flex items-center justify-center font-bold text-[13px] shadow-xs">
+                  Tú
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13.5px] font-bold text-ink truncate">
+                    {isOwner ? "Propietario del viaje" : "Colaborador"}
+                  </p>
+                  <p className="text-[11.5px] text-slate font-medium">Acceso activo</p>
+                </div>
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-white text-slate border border-line rounded-xl">
+                  {isOwner ? "Owner" : "Miembro"}
+                </span>
+              </div>
+
               {sharedUsers.map((u) => (
-                <div key={u.uid} className="flex items-center gap-3 rounded-xl px-4 py-2.5 bg-cloud">
+                <div key={u.uid} className="flex items-center gap-3 rounded-2xl p-3 bg-white border border-line shadow-xs">
                   {u.photoURL ? (
-                    <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full" />
+                    <img src={u.photoURL} alt="" className="w-9 h-9 rounded-2xl object-cover border border-line" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-line flex items-center justify-center text-[12px] text-slate font-medium">
+                    <div className="w-9 h-9 rounded-2xl bg-teal/15 text-teal flex items-center justify-center text-[13px] font-bold">
                       {(u.displayName || u.email || "?")[0].toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-ink truncate">{u.displayName || "Sin nombre"}</p>
-                    <p className="text-[11.5px] text-slate truncate">{u.email}</p>
+                    <p className="text-[13.5px] font-bold text-ink truncate">{u.displayName || "Usuario de Traveloss"}</p>
+                    <p className="text-[11.5px] text-slate font-medium truncate">{u.email}</p>
                   </div>
                   {isOwner && u.uid !== userId && (
                     <button
                       onClick={() => handleUnshare(u.uid)}
-                      className="text-line hover:text-coral transition-colors p-1"
+                      className="w-8 h-8 rounded-xl bg-cloud hover:bg-coral/10 text-slate hover:text-coral flex items-center justify-center transition-colors border border-line hover:border-coral/30"
                       title="Quitar acceso"
                     >
                       <UserMinus size={14} />
                     </button>
                   )}
-                  {u.uid === userId && <span className="text-[10px] text-slate">Tú</span>}
                 </div>
               ))}
             </div>
           </div>
-        )}
 
-        {!isOwner && sharedUsers.length === 0 && !loading && (
-          <p className="text-[13px] text-slate text-center mt-4">Solo el propietario puede gestionar los accesos.</p>
-        )}
+          {!isOwner && sharedUsers.length === 0 && !loading && (
+            <div className="p-4 rounded-2xl bg-cloud text-center">
+              <UserCheck size={24} className="mx-auto text-slate mb-1" />
+              <p className="text-[13px] text-slate font-medium">Solo el creador del viaje puede gestionar los accesos.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

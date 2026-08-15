@@ -34,7 +34,7 @@ function isoToDisplay(iso) {
   return `${d} ${MONTH_SHORT[month]}`;
 }
 
-export default function DatePicker({ value, onChange, accentColor, placeholder = "Seleccionar fecha" }) {
+export default function DatePicker({ value, onChange, accentColor, placeholder = "Seleccionar fecha", compact = false }) {
   const inputRef = useRef(null);
 
   function handleChange(e) {
@@ -59,10 +59,14 @@ export default function DatePicker({ value, onChange, accentColor, placeholder =
         type="button"
         onClick={handleClick}
         aria-label={value || placeholder}
-        className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3.5 bg-white border border-line text-left min-h-[48px]"
+        className={`w-full flex items-center text-left transition-colors ${
+          compact
+            ? "gap-1.5 rounded-xl px-2.5 py-1 bg-cloud hover:bg-slate-100 border border-line text-[12px]"
+            : "gap-2.5 rounded-xl px-4 py-3.5 bg-white border border-line min-h-[48px]"
+        }`}
       >
-        <Calendar size={18} className="text-slate shrink-0" />
-        <span className={`text-[15px] font-medium flex-1 ${value ? "text-ink" : "text-slate"}`}>
+        <Calendar size={compact ? 13 : 18} className="text-slate shrink-0" />
+        <span className={`font-medium flex-1 truncate ${compact ? "text-[12px]" : "text-[15px]"} ${value ? "text-ink" : "text-slate"}`}>
           {value || placeholder}
         </span>
       </button>

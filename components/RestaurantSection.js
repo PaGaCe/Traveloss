@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal, Pencil } from "lucide-react";
+import { Utensils, MapPin, Star, X, ImagePlus, Trash2, ExternalLink, MoreHorizontal, Plus, ChevronDown, Check, Globe } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
@@ -28,9 +28,9 @@ const CATEGORIES = [
 
 const PRICES = ["€", "€€", "€€€", "€€€€"];
 
-function StarRating({ value, onChange, size = 14 }) {
+function StarRating({ value, onChange, size = 15 }) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((s) => (
         <button
           key={s}
@@ -40,8 +40,8 @@ function StarRating({ value, onChange, size = 14 }) {
         >
           <Star
             size={size}
-            fill={s <= value ? "#FBA006" : "none"}
-            className={s <= value ? "text-gold" : "text-line"}
+            fill={s <= value ? "#F59E0B" : "none"}
+            className={s <= value ? "text-amber-500" : "text-line"}
           />
         </button>
       ))}
@@ -91,91 +91,89 @@ function RestaurantCard({ rest, accentColor, openGoogleMaps, setEditingRestauran
   return (
     <div
       onClick={() => setEditingRestaurant(rest)}
-      className="bg-cloud rounded-2xl border border-line p-3.5 flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+      className="bg-white rounded-3xl border border-line p-4 flex items-center gap-3.5 cursor-pointer shadow-soft hover:shadow-card active:scale-[0.99] transition-all group"
     >
       {rest.image ? (
         <img
           src={rest.image}
           alt=""
-          className="w-14 h-14 rounded-xl object-cover shrink-0 cursor-pointer"
+          className="w-16 h-16 rounded-2xl object-cover shrink-0 cursor-pointer shadow-xs border border-line"
           onClick={(e) => { e.stopPropagation(); setLightboxImg(rest.image); }}
         />
       ) : (
-        <div className="w-14 h-14 rounded-xl bg-white border border-line flex items-center justify-center shrink-0">
-          <Utensils size={18} className="text-slate" />
+        <div
+          className="w-16 h-16 rounded-2xl border border-line flex items-center justify-center shrink-0 shadow-xs"
+          style={{ background: `${accentColor}0D` }}
+        >
+          <CategoryIcon category={rest.category} size={28} />
         </div>
       )}
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-[14px] font-semibold text-ink">{rest.name}</p>
+          <p className="text-[14.5px] font-bold text-ink truncate group-hover:text-teal transition-colors">{rest.name}</p>
           {rest.website && (
             <a
               href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="text-slate hover:text-teal transition-colors"
+              className="text-slate hover:text-teal transition-colors p-1"
               title="Abrir web del restaurante"
             >
-              <ExternalLink size={11} />
+              <ExternalLink size={12} />
             </a>
           )}
         </div>
+
         {rest.place && (
-          <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5">
-            <MapPin size={10} /> {rest.place}
+          <p className="text-[12px] text-slate flex items-center gap-1 mt-0.5 truncate font-medium">
+            <MapPin size={12} className="shrink-0 text-slate" /> {rest.place}
           </p>
         )}
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
+
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
           <span
-            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-            style={{ background: `${accentColor}18`, color: accentColor }}
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full"
+            style={{ background: `${accentColor}14`, color: accentColor }}
           >
-            <CategoryIcon category={rest.category} size={22} />
+            <CategoryIcon category={rest.category} size={14} />
             {rest.category}
           </span>
           {rest.zone && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/60 text-muted border border-line">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-cloud text-slate border border-line">
+              <Globe size={11} />
               {rest.zone}
             </span>
           )}
           {rest.price && (
-            <span className="text-[11px] font-medium text-muted">
+            <span className="text-[11.5px] font-bold text-ink px-1.5 py-0.5 bg-cloud rounded-lg">
               {formatPrice(rest.price)}
             </span>
           )}
           {rest.rating > 0 && (
-            <StarRating value={rest.rating} size={10} />
+            <div className="flex items-center gap-1 ml-auto sm:ml-0">
+              <Star size={12} fill="#F59E0B" className="text-amber-500" />
+              <span className="text-[11.5px] font-bold text-ink">{rest.rating}/5</span>
+            </div>
           )}
         </div>
       </div>
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        {rest.website && (
-          <a
-            href={rest.website.startsWith("http") ? rest.website : `https://${rest.website}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-            title="Abrir web"
-          >
-            <ExternalLink size={13} />
-          </a>
-        )}
+
+      <div className="flex flex-col items-center gap-1 shrink-0 ml-1">
         <button
           onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
-          className="p-1.5 rounded-lg hover:bg-white/60 text-slate hover:text-teal transition-colors"
-          title="Buscar en Google Maps"
+          className="w-8 h-8 rounded-xl bg-cloud hover:bg-white text-slate hover:text-teal flex items-center justify-center transition-colors border border-line"
+          title="Ver en Google Maps"
         >
-          <MapPin size={13} />
+          <MapPin size={14} />
         </button>
       </div>
     </div>
   );
 }
 
-export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
+export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpdateTrip }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState(null);
   const [filter, setFilter] = useState("");
@@ -288,162 +286,211 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
   }
 
   return (
-    <div className="px-1 py-2">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div />
+    <div className="space-y-5">
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-[17px] font-bold text-ink font-display">Gastronomía y Restaurantes</h2>
+          <p className="text-[12.5px] text-slate font-medium">Lugares recomendados, cafeterías y bares</p>
+        </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-1.5 text-[12px] font-semibold px-3.5 py-2 rounded-xl text-white transition-all active:scale-95"
+          className="flex items-center gap-1.5 text-[13px] font-bold px-4 py-2.5 rounded-2xl text-white shadow-soft hover:shadow-card active:scale-95 transition-all"
           style={{ background: accentColor }}
         >
-          <Utensils size={14} />
-          Añadir restaurante
+          <Plus size={15} />
+          <span>Añadir</span>
         </button>
       </div>
 
-      {/* Add form */}
+      {/* Add form card */}
       {showAdd && (
-        <div className="bg-cloud rounded-2xl border border-line p-4 mb-4">
-          <p className="text-[14px] font-semibold text-ink font-display mb-3">Nuevo restaurante</p>
-          <div className="flex flex-col gap-2.5">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre"
-              className="w-full rounded-xl px-4 py-2.5 text-[13px] outline-none bg-white text-ink border border-line"
-            />
-            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-              <MapPin size={15} className="text-slate shrink-0" />
+        <div className="bg-white rounded-3xl border border-line p-5 shadow-card animate-slide-up space-y-4">
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <p className="text-[15px] font-bold text-ink font-display">Nuevo restaurante o café</p>
+            <button onClick={resetForm} className="text-slate hover:text-ink p-1">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="space-y-3.5">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Nombre</label>
               <input
-                value={place}
-                onChange={(e) => setPlace(e.target.value)}
-                placeholder="Dirección o ubicación"
-                className="w-full bg-transparent text-[13px] outline-none text-ink"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ej. Osteria Francescana"
+                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
               />
             </div>
-            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-              <input
-                value={zone}
-                onChange={(e) => setZone(e.target.value)}
-                placeholder="Zona (ej: Liubliana, Bled...)"
-                className="w-full bg-transparent text-[13px] outline-none text-ink"
-              />
-            </div>
-            {/* Price selector */}
-            <div className="flex gap-1.5">
-              {PRICES.map((p, i) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPrice(price === i + 1 ? 0 : i + 1)}
-                  className="px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all"
-                  style={{
-                    background: price === i + 1 ? accentColor : "#F4F4F7",
-                    color: price === i + 1 ? "white" : "#5A6478",
-                  }}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            {/* Rating selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-medium text-muted">Valoración:</span>
-              <StarRating value={rating} onChange={setRating} />
-              {rating > 0 && (
-                <span className="text-[12px] text-muted">{rating}/5</span>
-              )}
-            </div>
-            {/* Website URL */}
-            <div className="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-white border border-line">
-              <ExternalLink size={14} className="text-slate shrink-0" />
-              <input
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="Web del restaurante (opcional)"
-                className="w-full bg-transparent text-[13px] outline-none text-ink"
-              />
-            </div>
-            {/* Image picker */}
-            {image ? (
-              <div className="relative w-full h-28 rounded-xl overflow-hidden bg-white border border-line">
-                <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
-                <button
-                  onClick={() => setImage(null)}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center"
-                >
-                  <X size={12} className="text-white" />
-                </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Ubicación</label>
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                  <MapPin size={16} className="text-slate shrink-0" />
+                  <input
+                    value={place}
+                    onChange={(e) => setPlace(e.target.value)}
+                    placeholder="Dirección o calle"
+                    className="w-full bg-transparent text-[13.5px] outline-none text-ink font-medium"
+                  />
+                </div>
               </div>
-            ) : (
-              <button
-                onClick={() => document.getElementById("rest-image-input").click()}
-                className="w-full h-20 rounded-xl border-2 border-dashed border-line flex items-center justify-center gap-1.5 text-slate hover:text-muted transition-colors"
-              >
-                <ImagePlus size={16} />
-                <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir foto"}</span>
-              </button>
-            )}
-            <input
-              id="rest-image-input"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImagePick}
-            />
-            {/* Category selector */}
-            <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map((cat) => (
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Zona / Barrio</label>
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                  <Globe size={16} className="text-slate shrink-0" />
+                  <input
+                    value={zone}
+                    onChange={(e) => setZone(e.target.value)}
+                    placeholder="Ej. Centro, Trastevere..."
+                    className="w-full bg-transparent text-[13.5px] outline-none text-ink font-medium"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Nivel de precio</label>
+                <div className="flex gap-2">
+                  {PRICES.map((p, i) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPrice(price === i + 1 ? 0 : i + 1)}
+                      className={`flex-1 py-2.5 rounded-2xl text-[13px] font-bold transition-all border ${
+                        price === i + 1 ? "border-transparent text-white shadow-xs" : "bg-cloud text-slate border-line hover:border-slate/30"
+                      }`}
+                      style={{
+                        background: price === i + 1 ? accentColor : undefined,
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Valoración</label>
+                <div className="flex items-center gap-3 bg-cloud rounded-2xl px-4 py-2.5 border border-line">
+                  <StarRating value={rating} onChange={setRating} size={18} />
+                  {rating > 0 ? (
+                    <span className="text-[13px] font-bold text-ink">{rating}/5</span>
+                  ) : (
+                    <span className="text-[12px] text-slate">Sin puntuar</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Website URL */}
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Sitio Web</label>
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                <ExternalLink size={16} className="text-slate shrink-0" />
+                <input
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-transparent text-[13.5px] outline-none text-ink font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Image picker */}
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Foto o menú</label>
+              {image ? (
+                <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-cloud border border-line shadow-xs">
+                  <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
+                  <button
+                    onClick={() => setImage(null)}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-ink/70 backdrop-blur-xs text-white flex items-center justify-center hover:bg-ink transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setCategory(cat === category ? "" : cat)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-                  style={{
-                    background: category === cat ? accentColor : "#F4F4F7",
-                    color: category === cat ? "white" : "#5A6478",
-                  }}
+                  onClick={() => document.getElementById("rest-image-input").click()}
+                  className="w-full h-20 rounded-2xl border-2 border-dashed border-line flex items-center justify-center gap-2 text-slate hover:text-ink hover:border-slate/40 transition-colors bg-cloud/50 font-medium"
                 >
-                  <CategoryIcon category={cat} size={26} />
-                  {cat}
+                  <ImagePlus size={18} />
+                  <span className="text-[13px]">{uploading ? "Subiendo foto..." : "Subir fotografía del local o platos"}</span>
                 </button>
-              ))}
+              )}
+              <input
+                id="rest-image-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImagePick}
+              />
+            </div>
+
+            {/* Category selector */}
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Categoría de comida</label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat === category ? "" : cat)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[12px] font-bold transition-all border ${
+                      category === cat
+                        ? "border-transparent text-white shadow-xs"
+                        : "bg-cloud text-slate border-line hover:border-slate/30"
+                    }`}
+                    style={{
+                      background: category === cat ? accentColor : undefined,
+                    }}
+                  >
+                    <CategoryIcon category={cat} size={18} />
+                    <span>{cat}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
+
+          <div className="flex gap-3 pt-3 border-t border-line">
             <button
               onClick={resetForm}
-              className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-cloud text-slate border border-line"
+              className="flex-1 rounded-2xl py-3 text-[13.5px] font-bold bg-cloud text-slate border border-line hover:bg-line/40 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleAdd}
               disabled={!name.trim() || !category}
-              className="flex-1 rounded-xl py-2.5 text-[13px] font-semibold text-white transition-opacity"
-              style={{ background: accentColor, opacity: name.trim() && category ? 1 : 0.5 }}
+              className="flex-1 rounded-2xl py-3 text-[13.5px] font-bold text-white shadow-soft active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{ background: accentColor }}
             >
-              Guardar
+              <Check size={16} />
+              <span>Guardar restaurante</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Category filter */}
+      {/* Category filter scroll */}
       {restaurants.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           <button
             onClick={() => setFilter("")}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-bold transition-all whitespace-nowrap border ${
+              !filter ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
+            }`}
             style={{
-              background: !filter ? accentColor : "#F4F4F7",
-              color: !filter ? "white" : "#5A6478",
+              background: !filter ? accentColor : undefined,
             }}
           >
-            <MoreHorizontal size={13} />
-            Todos
+            <MoreHorizontal size={14} />
+            <span>Todos</span>
           </button>
           {CATEGORIES.map((cat) => {
             const count = restaurants.filter((r) => r.category === cat).length;
@@ -452,99 +499,114 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
               <button
                 key={cat}
                 onClick={() => setFilter(filter === cat ? "" : cat)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-bold transition-all whitespace-nowrap border ${
+                  filter === cat ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
+                }`}
                 style={{
-                  background: filter === cat ? accentColor : "#F4F4F7",
-                  color: filter === cat ? "white" : "#5A6478",
+                  background: filter === cat ? accentColor : undefined,
                 }}
               >
-                <CategoryIcon category={cat} size={36} />
+                <CategoryIcon category={cat} size={18} />
+                <span>{cat}</span>
+                <span className="text-[10px] opacity-70 ml-0.5 font-normal">({count})</span>
               </button>
             );
           })}
         </div>
       )}
 
-      {/* Zone filter */}
-      {zones.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          <button
-            onClick={() => setZoneFilter("")}
-            className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-            style={{
-              background: !zoneFilter ? accentColor : "#F4F4F7",
-              color: !zoneFilter ? "white" : "#5A6478",
-            }}
-          >
-            Todas las zonas
-          </button>
-          {zones.map((z) => {
-            const count = restaurants.filter((r) => r.zone === z).length;
-            return (
-              <button
-                key={z}
-                onClick={() => setZoneFilter(zoneFilter === z ? "" : z)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-                style={{
-                  background: zoneFilter === z ? accentColor : "#F4F4F7",
-                  color: zoneFilter === z ? "white" : "#5A6478",
-                }}
-              >
-                {z}
-                <span className="text-[10px] opacity-70">({count})</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Sort options */}
+      {/* Zone filter & Sort Bar */}
       {restaurants.length > 1 && (
-        <div className="flex items-center gap-1.5 mb-4 text-[11px]">
-          <span className="text-muted font-medium">Ordenar:</span>
-          {[
-            { key: "default", label: "Por defecto" },
-            { key: "price_desc", label: "Precio ↑" },
-            { key: "price_asc", label: "Precio ↓" },
-            { key: "rating_desc", label: "Valoración ↑" },
-            { key: "rating_asc", label: "Valoración ↓" },
-          ].map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setSortBy(opt.key)}
-              className="px-2 py-1 rounded-lg font-medium transition-all"
-              style={{
-                background: sortBy === opt.key ? accentColor : "#F4F4F7",
-                color: sortBy === opt.key ? "white" : "#5A6478",
-              }}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+          {/* Zone filter */}
+          {zones.length > 0 ? (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+              <button
+                onClick={() => setZoneFilter("")}
+                className={`px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all whitespace-nowrap border ${
+                  !zoneFilter ? "bg-ink text-white border-ink" : "bg-white text-slate border-line"
+                }`}
+              >
+                Todas las zonas
+              </button>
+              {zones.map((z) => {
+                const count = restaurants.filter((r) => r.zone === z).length;
+                return (
+                  <button
+                    key={z}
+                    onClick={() => setZoneFilter(zoneFilter === z ? "" : z)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all whitespace-nowrap border ${
+                      zoneFilter === z ? "bg-ink text-white border-ink" : "bg-white text-slate border-line"
+                    }`}
+                  >
+                    <span>{z}</span>
+                    <span className="text-[10px] opacity-70">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : <div />}
+
+          {/* Sort selector */}
+          <div className="flex items-center gap-1.5 text-[11.5px] shrink-0 self-end sm:self-auto">
+            <span className="text-slate font-medium">Ordenar:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-white border border-line rounded-xl px-2.5 py-1.5 text-[12px] font-semibold text-ink outline-none cursor-pointer"
             >
-              {opt.label}
-            </button>
-          ))}
+              <option value="default">Por defecto</option>
+              <option value="rating_desc">Mayor valoración ★</option>
+              <option value="rating_asc">Menor valoración ★</option>
+              <option value="price_asc">Menor precio €</option>
+              <option value="price_desc">Mayor precio €</option>
+            </select>
+          </div>
         </div>
       )}
 
       {/* Empty state */}
       {restaurants.length === 0 && !showAdd && (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <div className="bg-white rounded-3xl border border-line p-10 text-center shadow-soft flex flex-col items-center justify-center">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ background: `${accentColor}18` }}
+            className="w-16 h-16 rounded-3xl flex items-center justify-center mb-3 shadow-xs"
+            style={{ background: `${accentColor}14` }}
           >
             <Utensils size={28} style={{ color: accentColor }} />
           </div>
-          <p className="text-[14px] text-slate text-center">
-            Añade restaurantes, bares y cafeterías para organizar tus comidas
+          <h3 className="text-[16px] font-bold text-ink font-display mb-1">Sin restaurantes guardados</h3>
+          <p className="text-[13px] text-slate max-w-sm mb-5">
+            Añade tus cafeterías, bares de tapas o restaurantes favoritos para tenerlos siempre a mano en el mapa.
           </p>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl text-[13.5px] font-bold text-white shadow-soft hover:shadow-card active:scale-95 transition-all"
+            style={{ background: accentColor }}
+          >
+            <Plus size={16} />
+            <span>Añadir primer restaurante</span>
+          </button>
         </div>
       )}
 
       {/* Restaurant list */}
       {sorted.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="space-y-4">
           {zoneFilter ? (
             /* Single zone view */
-            sorted.map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {sorted.map((rest) => (
+                <RestaurantCard
+                  key={rest.id}
+                  rest={rest}
+                  accentColor={accentColor}
+                  openGoogleMaps={openGoogleMaps}
+                  setEditingRestaurant={setEditingRestaurant}
+                  setLightboxImg={setLightboxImg}
+                  formatPrice={formatPrice}
+                />
+              ))}
+            </div>
           ) : (
             /* Grouped by zone */
             (() => {
@@ -560,31 +622,55 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
               }
               const zoneNames = Object.keys(grouped).sort();
               return (
-                <>
+                <div className="space-y-6">
                   {zoneNames.map((z) => (
-                    <div key={z}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-                        <span className="text-[13px] font-semibold text-ink">{z}</span>
-                        <span className="text-[11px] text-muted">({grouped[z].length})</span>
+                    <div key={z} className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <Globe size={15} style={{ color: accentColor }} />
+                        <span className="text-[14px] font-bold text-ink font-display">{z}</span>
+                        <span className="text-[11.5px] font-semibold text-slate bg-cloud px-2 py-0.5 rounded-full border border-line">
+                          {grouped[z].length}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {grouped[z].map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {grouped[z].map((rest) => (
+                          <RestaurantCard
+                            key={rest.id}
+                            rest={rest}
+                            accentColor={accentColor}
+                            openGoogleMaps={openGoogleMaps}
+                            setEditingRestaurant={setEditingRestaurant}
+                            setLightboxImg={setLightboxImg}
+                            formatPrice={formatPrice}
+                          />
+                        ))}
                       </div>
                     </div>
                   ))}
                   {noZone.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[13px] font-semibold text-muted">Sin zona</span>
-                        <span className="text-[11px] text-muted">({noZone.length})</span>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[14px] font-bold text-slate font-display">Otros lugares</span>
+                        <span className="text-[11.5px] font-semibold text-slate bg-cloud px-2 py-0.5 rounded-full border border-line">
+                          {noZone.length}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {noZone.map((rest) => <RestaurantCard key={rest.id} rest={rest} accentColor={accentColor} openGoogleMaps={openGoogleMaps} setEditingRestaurant={setEditingRestaurant} setLightboxImg={setLightboxImg} formatPrice={formatPrice} />)}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {noZone.map((rest) => (
+                          <RestaurantCard
+                            key={rest.id}
+                            rest={rest}
+                            accentColor={accentColor}
+                            openGoogleMaps={openGoogleMaps}
+                            setEditingRestaurant={setEditingRestaurant}
+                            setLightboxImg={setLightboxImg}
+                            formatPrice={formatPrice}
+                          />
+                        ))}
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               );
             })()
           )}
@@ -603,14 +689,14 @@ export default function RestaurantSection({ trip, accentColor, onUpdateTrip }) {
 
       {/* Lightbox */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/90 backdrop-blur-md p-4 animate-fade-in" onClick={() => setLightboxImg(null)}>
           <button
             onClick={() => setLightboxImg(null)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
           >
-            <X size={18} className="text-white" />
+            <X size={20} />
           </button>
-          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          <img src={lightboxImg} alt="" className="max-w-[92vw] max-h-[85vh] object-contain rounded-3xl shadow-sheet" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>
