@@ -1,13 +1,44 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2, CheckCircle2, Circle, Navigation, MapPin } from "lucide-react";
+import { Utensils, Camera, Plane, Bed, Sparkles, X, ImagePlus, Trash2, CheckCircle2, Circle, Navigation, MapPin, FileText } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
 import { uploadImageToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
 import TimePicker from "./TimePicker";
+import { useToast } from "./Toast";
 
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
+
+const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5 MB
+
+function isDataUrl(url) {
+  return typeof url === "string" && url.startsWith("data:");
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, data] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+  return new Blob([array], { type: mime });
+}
+
+function isPdfUrl(url) {
+  if (typeof url !== "string") return false;
+  if (url.startsWith("data:application/pdf")) return true;
+  return url.toLowerCase().endsWith(".pdf");
+}
+
+// Normaliza cada entrada/ticket (URL string o {url, name, type}) a {url, name, type}
+function normalizeTicket(t) {
+  if (t && typeof t === "object") {
+    return { url: t.url, name: t.name || "Entrada", type: t.type || "application/pdf" };
+  }
+  const url = String(t || "");
+  return { url, name: "Entrada", type: isPdfUrl(url) ? "application/pdf" : "image/jpeg" };
+}
 
 export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete, accentColor }) {
   const [titleDraft, setTitleDraft] = useState(item.title || "");
@@ -26,12 +57,12 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
   const placeInputRef = useRef(null);
   const Icon = ICONS[item.type] || Sparkles;
 
-  // ticketImages: array de URLs (backward compat: si ticketImage es string, lo tratamos como array de 1)
-  const ticketImages = Array.isArray(item.ticketImages)
+  // ticketImages: array de entradas (backward compat: si ticketImage es string, lo tratamos como array de 1)
+  const ticketImages = (Array.isArray(item.ticketImages)
     ? item.ticketImages
     : item.ticketImage
       ? [item.ticketImage]
-      : [];
+      : []).map(normalizeTicket);
 
   const detailLabel =
     item.type === "flight" ? "Billete / reserva" : item.type === "stay" ? "Reserva de alojamiento" : "Notas adicionales";
@@ -79,6 +110,8 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     }
   }
 
+  const addToast = useToast();
+
   async function handleTicketPick(e) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -86,12 +119,25 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     try {
       const newTickets = [...ticketImages];
       for (const file of files) {
+        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+        if (isPdf && file.size > MAX_PDF_SIZE) {
+          addToast(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
+          continue;
+        }
         const dataUrl = await compressImage(file);
         if (firebaseReady) {
-          const url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}.jpg`);
-          newTickets.push(url);
+          const url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${file.name}`);
+          if (isPdf) {
+            newTickets.push({ url, name: file.name, type: "application/pdf" });
+          } else {
+            newTickets.push(url);
+          }
         } else {
-          newTickets.push(dataUrl);
+          if (isPdf) {
+            newTickets.push({ url: dataUrl, name: file.name, type: "application/pdf" });
+          } else {
+            newTickets.push(dataUrl);
+          }
         }
       }
       onUpdate({ ticketImages: newTickets, ticketImage: undefined });
@@ -109,6 +155,17 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
       onUpdate({ ticketImages: [], ticketImage: undefined });
     } else {
       onUpdate({ ticketImages: newTickets, ticketImage: undefined });
+    }
+  }
+
+  function openTicket(ticket) {
+    if (isDataUrl(ticket.url)) {
+      const blob = dataUrlToBlob(ticket.url);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      window.open(ticket.url, "_blank");
     }
   }
 
@@ -334,22 +391,37 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
           <div className="mb-3">
             <label className="text-[12px] font-medium mb-1.5 block text-muted">Entradas / tickets</label>
             <div className="flex flex-wrap gap-2">
-              {ticketImages.map((ticketUrl, idx) => (
-                <div key={idx} className="relative w-28 h-28 rounded-xl overflow-hidden border border-line bg-white">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ticketUrl} alt={`Ticket ${idx + 1}`}
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => setLightboxImg(ticketUrl)}
-                  />
-                  <button
-                    onClick={() => handleRemoveTicket(idx)}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
-                  >
-                    <X size={10} className="text-white" />
-                  </button>
-                </div>
-              ))}
+              {ticketImages.map((ticket, idx) =>
+                ticket.type === "application/pdf" ? (
+                  <div key={idx} className="relative w-36 rounded-xl border border-line bg-white p-2.5">
+                    <button onClick={() => openTicket(ticket)} className="w-full flex flex-col items-center gap-1.5" title="Abrir PDF">
+                      <FileText size={22} className="text-coral" />
+                      <span className="text-[10.5px] text-ink truncate w-full text-center">{ticket.name}</span>
+                    </button>
+                    <button
+                      onClick={() => handleRemoveTicket(idx)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
+                    >
+                      <X size={10} className="text-white" />
+                    </button>
+                  </div>
+                ) : (
+                  <div key={idx} className="relative w-28 h-28 rounded-xl overflow-hidden border border-line bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ticket.url} alt={`Ticket ${idx + 1}`}
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => setLightboxImg(ticket.url)}
+                    />
+                    <button
+                      onClick={() => handleRemoveTicket(idx)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center"
+                    >
+                      <X size={10} className="text-white" />
+                    </button>
+                  </div>
+                )
+              )}
               <button
                 onClick={() => ticketInputRef.current && ticketInputRef.current.click()}
                 className="w-28 h-28 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-slate hover:text-muted transition-colors"
@@ -368,7 +440,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             <span className="text-[12px]">{uploading ? "Subiendo..." : "Añadir entrada / ticket"}</span>
           </button>
         )}
-        <input ref={ticketInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleTicketPick} />
+        <input ref={ticketInputRef} type="file" accept="image/*,application/pdf,.pdf" multiple className="hidden" onChange={handleTicketPick} />
 
         <label className="text-[12px] font-medium mb-1 block text-muted">{detailLabel}</label>
         <textarea

@@ -1,20 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils, Camera, Plane, Bed, Sparkles, MapPin, ChevronRight, Navigation, CheckCircle2, Circle, X } from "lucide-react";
+import { Utensils, Camera, Plane, Bed, Sparkles, MapPin, ChevronRight, Navigation, CheckCircle2, Circle, X, FileText } from "lucide-react";
 
 const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activity: Sparkles };
+
+function isDataUrl(url) {
+  return typeof url === "string" && url.startsWith("data:");
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [header, data] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+  return new Blob([array], { type: mime });
+}
+
+function isPdfUrl(url) {
+  if (typeof url !== "string") return false;
+  if (url.startsWith("data:application/pdf")) return true;
+  return url.toLowerCase().endsWith(".pdf");
+}
+
+function normalizeTicket(t) {
+  if (t && typeof t === "object") {
+    return { url: t.url, name: t.name || "Entrada", type: t.type || "application/pdf" };
+  }
+  const url = String(t || "");
+  return { url, name: "Entrada", type: isPdfUrl(url) ? "application/pdf" : "image/jpeg" };
+}
 
 export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
   const [lightboxImg, setLightboxImg] = useState(null);
   const Icon = ICONS[item.type] || Sparkles;
   const hasCoords = item.lat && item.lng;
 
-  const ticketImages = Array.isArray(item.ticketImages)
+  const ticketImages = (Array.isArray(item.ticketImages)
     ? item.ticketImages
     : item.ticketImage
       ? [item.ticketImage]
-      : [];
+      : []).map(normalizeTicket);
+
+  function openTicket(ticket) {
+    if (isDataUrl(ticket.url)) {
+      const blob = dataUrlToBlob(ticket.url);
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      window.open(ticket.url, "_blank");
+    }
+  }
 
   return (
     <div className="mb-3">
@@ -67,12 +105,23 @@ export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
               />
             )}
             {ticketImages.length > 0 && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={ticketImages[0]} alt="Ticket"
-                className="w-11 h-11 rounded-lg object-cover shrink-0 cursor-pointer border border-gold/30"
-                onClick={(e) => { e.stopPropagation(); setLightboxImg(ticketImages[0]); }}
-              />
+              ticketImages[0].type === "application/pdf" ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); openTicket(ticketImages[0]); }}
+                  className="w-11 h-11 rounded-lg bg-coral/10 border border-coral/30 flex items-center justify-center shrink-0 cursor-pointer"
+                  title={ticketImages[0].name}
+                  aria-label="Abrir PDF de la entrada"
+                >
+                  <FileText size={16} className="text-coral" />
+                </button>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={ticketImages[0].url} alt="Ticket"
+                  className="w-11 h-11 rounded-lg object-cover shrink-0 cursor-pointer border border-gold/30"
+                  onClick={(e) => { e.stopPropagation(); setLightboxImg(ticketImages[0].url); }}
+                />
+              )
             )}
             {ticketImages.length > 1 && (
               <span className="text-[10px] font-bold text-gold shrink-0">+{ticketImages.length - 1}</span>
