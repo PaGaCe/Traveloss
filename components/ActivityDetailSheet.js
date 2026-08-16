@@ -28,6 +28,12 @@ const ICONS = { food: Utensils, sight: Camera, flight: Plane, stay: Bed, activit
 
 const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5 MB
 
+// Quita caracteres que Firebase Storage rechaza en el nombre del archivo
+function sanitizeFileName(name) {
+  const cleaned = String(name || "archivo").replace(/[\[\]#%?&/\\:*?"<>|\x00-\x1f]/g, "_");
+  return cleaned || "archivo";
+}
+
 function isDataUrl(url) {
   return typeof url === "string" && url.startsWith("data:");
 }
@@ -134,31 +140,39 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     setUploading(true);
     try {
       const newTickets = [...ticketImages];
+      let added = 0;
       for (const file of files) {
-        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-        if (isPdf && file.size > MAX_PDF_SIZE) {
-          addToast?.(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
-          continue;
-        }
-        const dataUrl = await compressImage(file);
-        if (firebaseReady) {
-          const url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${file.name}`);
+        try {
+          const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+          if (isPdf && file.size > MAX_PDF_SIZE) {
+            addToast?.(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
+            continue;
+          }
+          const dataUrl = await compressImage(file);
+          let url = dataUrl;
+          if (firebaseReady) {
+            try {
+              url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
+            } catch (uploadErr) {
+              console.error("No se pudo subir a la nube:", uploadErr);
+              addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
+            }
+          }
           if (isPdf) {
             newTickets.push({ url, name: file.name, type: "application/pdf" });
           } else {
             newTickets.push(url);
           }
-        } else {
-          if (isPdf) {
-            newTickets.push({ url: dataUrl, name: file.name, type: "application/pdf" });
-          } else {
-            newTickets.push(dataUrl);
-          }
+          added++;
+        } catch (err) {
+          console.error(err);
+          addToast?.(`Error al subir "${file.name}": ${err.message || "Error desconocido"}`, "error");
         }
       }
-      onUpdate({ ticketImages: newTickets, ticketImage: undefined });
-    } catch (err) {
-      console.error(err);
+      if (added > 0) {
+        onUpdate({ ticketImages: newTickets, ticketImage: undefined });
+        addToast?.(added === 1 ? "Documento añadido correctamente" : `${added} documentos añadidos correctamente`, "success");
+      }
     } finally {
       setUploading(false);
       if (ticketInputRef.current) ticketInputRef.current.value = "";
