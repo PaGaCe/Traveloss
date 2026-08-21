@@ -71,7 +71,7 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
     const picked = e.target.files && e.target.files[0];
     if (!picked) return;
     if (picked.size > MAX_FILE_SIZE) {
-      addToast("El archivo es demasiado grande (máx 8 MB)", "warning");
+      addToast("El archivo es demasiado grande (máx 10 MB)", "warning");
       return;
     }
     setUploading(true);
@@ -158,9 +158,9 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <div
-        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
+        className="relative bg-surface w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle for mobile */}
@@ -196,14 +196,14 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej. Hotel Gran Vía"
-              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface font-medium"
             />
           </div>
 
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Dirección o ciudad</label>
             <div className="relative">
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                 <MapPin size={16} className="text-slate shrink-0" />
                 <input
                   value={place}
@@ -213,7 +213,7 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
                 />
               </div>
               {suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
                   {suggestions.map((s) => (
                     <button
                       key={s.place_id}
@@ -253,7 +253,7 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
 
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Enlace de reserva</label>
-            <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+            <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
               <ExternalLink size={16} className="text-slate shrink-0" />
               <input
                 value={bookingUrl}
@@ -271,17 +271,17 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
               <div className="flex items-center gap-2 bg-cloud rounded-2xl px-4 py-3 border border-line">
                 <button
                   onClick={openFile}
-                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left hover:bg-white rounded-xl px-2 py-1 transition-colors"
+                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left hover:bg-surface rounded-xl px-2 py-1 transition-colors"
                 >
                   <FileText size={16} className="text-slate shrink-0" />
                   <span className="flex-1 text-[13px] font-semibold text-ink truncate">{file.name}</span>
                 </button>
-                <button onClick={downloadFile} className="p-2 hover:bg-white rounded-xl shrink-0 text-teal transition-colors" title="Descargar">
+                <button onClick={downloadFile} className="p-2 hover:bg-surface rounded-xl shrink-0 text-teal transition-colors" title="Descargar">
                   <Download size={15} />
                 </button>
                 <button
                   onClick={() => setFile(null)}
-                  className="p-2 hover:bg-white rounded-xl shrink-0 text-coral transition-colors"
+                  className="p-2 hover:bg-surface rounded-xl shrink-0 text-coral transition-colors"
                   title="Eliminar archivo"
                 >
                   <Trash2 size={15} />
@@ -307,7 +307,7 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Código de confirmación, instrucciones de llegada o notas..."
               rows={3}
-              className="w-full rounded-2xl p-4 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white resize-none font-medium"
+              className="w-full rounded-2xl p-4 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface resize-none font-medium"
             />
           </div>
         </div>
@@ -317,7 +317,7 @@ export default function HotelDetailSheet({ hotel, accentColor = "#0B0F19", onClo
           {onDelete && (
             <button
               onClick={() => { onDelete(); onClose(); }}
-              className="flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold bg-white text-coral border border-coral/30 hover:bg-coral/10 active:scale-95 transition-all shadow-xs"
+              className="flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold bg-surface text-coral border border-coral/30 hover:bg-coral/10 active:scale-95 transition-all shadow-xs"
             >
               <Trash2 size={16} />
               <span>Eliminar</span>

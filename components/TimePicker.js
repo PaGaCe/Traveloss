@@ -23,7 +23,7 @@ export default function TimePicker({ value, onChange, accentColor }) {
         type="button"
         onClick={handleClick}
         aria-label={value || "Seleccionar hora"}
-        className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3.5 bg-white border border-line text-left min-h-[48px]"
+        className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3.5 bg-surface border border-line text-left min-h-[48px]"
       >
         <Clock size={18} className="text-slate shrink-0" />
         <span className={`text-[15px] font-medium flex-1 ${value ? "text-ink" : "text-slate"}`}>

@@ -16,7 +16,7 @@ export default function BottomNav({ active, onChange, activeTab, onChangeTab, ac
   const handleChange = onChange || onChangeTab || (() => {});
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-ink/95 backdrop-blur-xl border-t border-white/10 shadow-2xl transition-all duration-200"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-[#0B0F19]/95 backdrop-blur-xl border-t border-white/10 shadow-2xl transition-all duration-200"
       style={{
         paddingBottom: "max(env(safe-area-inset-bottom, 8px), 8px)",
       }}

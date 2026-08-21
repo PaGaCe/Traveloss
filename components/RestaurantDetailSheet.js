@@ -103,9 +103,9 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <div
-        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
+        className="relative bg-surface w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle for mobile */}
@@ -141,14 +141,14 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nombre del restaurante"
-              className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+              className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface font-medium"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Ubicación / Dirección</label>
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                 <MapPin size={16} className="text-slate shrink-0" />
                 <input
                   value={place}
@@ -160,7 +160,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
             </div>
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Zona / Barrio</label>
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                 <Globe size={16} className="text-slate shrink-0" />
                 <input
                   value={zone}
@@ -225,7 +225,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
           {/* Website */}
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Sitio Web</label>
-            <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+            <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
               <ExternalLink size={16} className="text-slate shrink-0" />
               <input
                 value={website}
@@ -244,13 +244,13 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
                 <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
                 <button
                   onClick={() => setImage(null)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-ink/70 backdrop-blur-xs text-white flex items-center justify-center hover:bg-ink transition-colors"
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#0B0F19]/70 backdrop-blur-xs text-white flex items-center justify-center hover:bg-[#0B0F19] transition-colors"
                 >
                   <X size={14} />
                 </button>
                 <button
                   onClick={() => document.getElementById("rest-edit-image-input").click()}
-                  className="absolute bottom-2 right-2 rounded-xl px-3 py-1.5 text-[11.5px] font-bold text-white bg-ink/80 backdrop-blur-xs shadow-xs"
+                  className="absolute bottom-2 right-2 rounded-xl px-3 py-1.5 text-[11.5px] font-bold text-white bg-[#0B0F19]/80 backdrop-blur-xs shadow-xs"
                 >
                   {uploading ? "Subiendo..." : "Cambiar foto"}
                 </button>
@@ -297,7 +297,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
         <div className="p-6 border-t border-line bg-cloud/40 flex items-center gap-3 shrink-0">
           <button
             onClick={() => { onDelete(restaurant.id); onClose(); }}
-            className="flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold bg-white text-coral border border-coral/30 hover:bg-coral/10 active:scale-95 transition-all shadow-xs"
+            className="flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold bg-surface text-coral border border-coral/30 hover:bg-coral/10 active:scale-95 transition-all shadow-xs"
           >
             <Trash2 size={16} />
             <span>Eliminar</span>
@@ -316,7 +316,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, onUpdate, o
 
       {/* Lightbox */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/90 backdrop-blur-md p-4 animate-fade-in" onClick={() => setLightboxImg(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/90 backdrop-blur-md p-4 animate-fade-in" onClick={() => setLightboxImg(null)}>
           <button
             onClick={() => setLightboxImg(null)}
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"

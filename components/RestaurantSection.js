@@ -91,7 +91,7 @@ function RestaurantCard({ rest, accentColor, openGoogleMaps, setEditingRestauran
   return (
     <div
       onClick={() => setEditingRestaurant(rest)}
-      className="bg-white rounded-3xl border border-line p-4 flex items-center gap-3.5 cursor-pointer shadow-soft hover:shadow-card active:scale-[0.99] transition-all group"
+      className="bg-surface rounded-3xl border border-line p-4 flex items-center gap-3.5 cursor-pointer shadow-soft hover:shadow-card active:scale-[0.99] transition-all group"
     >
       {rest.image ? (
         <img
@@ -163,7 +163,7 @@ function RestaurantCard({ rest, accentColor, openGoogleMaps, setEditingRestauran
       <div className="flex flex-col items-center gap-1 shrink-0 ml-1">
         <button
           onClick={(e) => { e.stopPropagation(); openGoogleMaps(rest.name, rest.place); }}
-          className="w-8 h-8 rounded-xl bg-cloud hover:bg-white text-slate hover:text-teal flex items-center justify-center transition-colors border border-line"
+          className="w-8 h-8 rounded-xl bg-cloud hover:bg-surface text-slate hover:text-teal flex items-center justify-center transition-colors border border-line"
           title="Ver en Google Maps"
         >
           <MapPin size={14} />
@@ -310,7 +310,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
 
       {/* Add form card */}
       {showAdd && (
-        <div className="bg-white rounded-3xl border border-line p-5 shadow-card animate-slide-up space-y-4">
+        <div className="bg-surface rounded-3xl border border-line p-5 shadow-card animate-slide-up space-y-4">
           <div className="flex items-center justify-between border-b border-line pb-3">
             <p className="text-[15px] font-bold text-ink font-display">Nuevo restaurante o café</p>
             <button onClick={resetForm} className="text-slate hover:text-ink p-1">
@@ -325,14 +325,14 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ej. Osteria Francescana"
-                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface font-medium"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Ubicación</label>
-                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                   <MapPin size={16} className="text-slate shrink-0" />
                   <input
                     value={place}
@@ -344,7 +344,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
               </div>
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Zona / Barrio</label>
-                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                   <Globe size={16} className="text-slate shrink-0" />
                   <input
                     value={zone}
@@ -394,7 +394,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
             {/* Website URL */}
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Sitio Web</label>
-              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+              <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                 <ExternalLink size={16} className="text-slate shrink-0" />
                 <input
                   value={website}
@@ -413,7 +413,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                   <img src={image} alt="" className="w-full h-full object-cover cursor-pointer" onClick={() => setLightboxImg(image)} />
                   <button
                     onClick={() => setImage(null)}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-ink/70 backdrop-blur-xs text-white flex items-center justify-center hover:bg-ink transition-colors"
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#0B0F19]/70 backdrop-blur-xs text-white flex items-center justify-center hover:bg-[#0B0F19] transition-colors"
                   >
                     <X size={14} />
                   </button>
@@ -451,7 +451,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                       aria-label={`Categoría ${cat}`}
                       className="flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all active:scale-95"
                       style={{
-                        borderColor: isSelected ? accentColor : "#E2E8F0",
+                        borderColor: isSelected ? accentColor : "rgb(var(--c-line))",
                         background: isSelected ? `${accentColor}14` : "#F8F9FC",
                       }}
                     >
@@ -491,7 +491,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
           <button
             onClick={() => setFilter("")}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-bold transition-all whitespace-nowrap border ${
-              !filter ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
+              !filter ? "border-transparent text-white shadow-xs" : "bg-surface text-slate border-line hover:border-slate/30"
             }`}
             style={{
               background: !filter ? accentColor : undefined,
@@ -512,8 +512,8 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                 aria-label={`Filtrar por ${cat}`}
                 className="flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all shrink-0 active:scale-95"
                 style={{
-                  borderColor: isSelected ? accentColor : "#E2E8F0",
-                  background: isSelected ? `${accentColor}14` : "#ffffff",
+                  borderColor: isSelected ? accentColor : "rgb(var(--c-line))",
+                  background: isSelected ? `${accentColor}14` : "rgb(var(--c-surface))",
                 }}
               >
                 {/* Disco blanco: el glifo del icono siempre sobre fondo claro
@@ -536,7 +536,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
               <button
                 onClick={() => setZoneFilter("")}
                 className={`px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all whitespace-nowrap border ${
-                  !zoneFilter ? "bg-ink text-white border-ink" : "bg-white text-slate border-line"
+                  !zoneFilter ? "bg-btn text-btnText border-btn" : "bg-surface text-slate border-line"
                 }`}
               >
                 Todas las zonas
@@ -548,7 +548,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                     key={z}
                     onClick={() => setZoneFilter(zoneFilter === z ? "" : z)}
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all whitespace-nowrap border ${
-                      zoneFilter === z ? "bg-ink text-white border-ink" : "bg-white text-slate border-line"
+                      zoneFilter === z ? "bg-btn text-btnText border-btn" : "bg-surface text-slate border-line"
                     }`}
                   >
                     <span>{z}</span>
@@ -565,7 +565,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-white border border-line rounded-xl px-2.5 py-1.5 text-[12px] font-semibold text-ink outline-none cursor-pointer"
+              className="bg-surface border border-line rounded-xl px-2.5 py-1.5 text-[12px] font-semibold text-ink outline-none cursor-pointer"
             >
               <option value="default">Por defecto</option>
               <option value="rating_desc">Mayor valoración ★</option>
@@ -579,7 +579,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
 
       {/* Empty state */}
       {restaurants.length === 0 && !showAdd && (
-        <div className="bg-white rounded-3xl border border-line p-10 text-center shadow-soft flex flex-col items-center justify-center">
+        <div className="bg-surface rounded-3xl border border-line p-10 text-center shadow-soft flex flex-col items-center justify-center">
           <div
             className="w-16 h-16 rounded-3xl flex items-center justify-center mb-3 shadow-xs"
             style={{ background: `${accentColor}14` }}
@@ -701,7 +701,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
 
       {/* Lightbox */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/90 backdrop-blur-md p-4 animate-fade-in" onClick={() => setLightboxImg(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/90 backdrop-blur-md p-4 animate-fade-in" onClick={() => setLightboxImg(null)}>
           <button
             onClick={() => setLightboxImg(null)}
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"

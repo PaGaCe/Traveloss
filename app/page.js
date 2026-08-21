@@ -21,10 +21,11 @@ import {
 import { useAuth } from "../lib/useAuth";
 import { useTripsStore } from "../lib/useTripsStore";
 import AddTripSheet from "../components/AddTripSheet";
+import ThemeToggle from "../components/ThemeToggle";
 
 function LoginScreen({ signInWithGoogle, error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-ink">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-[#0B0F19]">
       <div className="w-full max-w-sm bg-white/10 backdrop-blur-2xl border border-white/15 rounded-3xl overflow-hidden flex flex-col items-center justify-center px-8 py-14 shadow-2xl">
         <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-3 mb-4 shadow-inner">
           <img
@@ -43,7 +44,7 @@ function LoginScreen({ signInWithGoogle, error }) {
 
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 rounded-2xl py-3.5 bg-white text-ink text-[15px] font-semibold shadow-md active:scale-[0.98] transition-all hover:bg-slate-50"
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-3.5 bg-surface text-ink text-[15px] font-semibold shadow-md active:scale-[0.98] transition-all hover:bg-slate-50"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path
@@ -128,7 +129,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-cloud pb-safe">
       {/* Header with gradient backdrop */}
-      <header className="px-5 pt-7 pb-6 bg-gradient-to-b from-ink via-ink to-inkLight text-white shadow-card">
+      <header className="px-5 pt-7 pb-6 bg-gradient-to-b from-[#0B0F19] via-[#0B0F19] to-[#1E293B] text-white shadow-card">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
@@ -146,6 +147,8 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <ThemeToggle className="bg-white/10 hover:bg-white/20 text-white/70 hover:text-white" />
+
               <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-[11px] font-medium text-white/80 border border-white/10">
                 <span className={`w-1.5 h-1.5 rounded-full ${usingFirebase ? "bg-teal animate-pulse" : "bg-gold"}`} />
                 {usingFirebase ? "Nube" : "Local"}
@@ -198,7 +201,7 @@ export default function HomePage() {
               onClick={() => setFilterTab("all")}
               className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all shrink-0 active:scale-95 ${
                 filterTab === "all"
-                  ? "bg-white text-ink shadow-sm"
+                  ? "bg-surface text-ink shadow-sm"
                   : "bg-white/10 text-white/75 hover:bg-white/15 border border-white/10"
               }`}
             >
@@ -208,7 +211,7 @@ export default function HomePage() {
               onClick={() => setFilterTab("shared")}
               className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 filterTab === "shared"
-                  ? "bg-white text-ink shadow-sm"
+                  ? "bg-surface text-ink shadow-sm"
                   : "bg-white/10 text-white/75 hover:bg-white/15 border border-white/10"
               }`}
             >
@@ -235,7 +238,7 @@ export default function HomePage() {
               </p>
               <button
                 onClick={() => setShowAdd(true)}
-                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-ink text-white text-[14px] font-semibold shadow-card hover:bg-inkLight active:scale-95 transition-all"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-btn text-btnText text-[14px] font-semibold shadow-card hover:bg-btnHover active:scale-95 transition-all"
               >
                 <Plus size={16} /> Crear mi primer viaje
               </button>
@@ -259,7 +262,7 @@ export default function HomePage() {
                 <div
                   key={trip.id}
                   onClick={() => router.push(`/trip/${trip.id}`)}
-                  className="group relative w-full text-left rounded-3xl overflow-hidden shadow-soft hover:shadow-card bg-white border border-line cursor-pointer active:scale-[0.99] transition-all"
+                  className="group relative w-full text-left rounded-3xl overflow-hidden shadow-soft hover:shadow-card bg-surface border border-line cursor-pointer active:scale-[0.99] transition-all"
                 >
                   {trip.image ? (
                     <div className="relative h-44 w-full overflow-hidden">
@@ -325,7 +328,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-stretch bg-white">
+                    <div className="flex items-stretch bg-surface">
                       <div
                         className="w-2.5 shrink-0"
                         style={{ background: trip.stampColor || "#0B0F19" }}
@@ -420,7 +423,7 @@ export default function HomePage() {
                         e.stopPropagation();
                         await restoreTrip(trip.id);
                       }}
-                      className="shrink-0 flex items-center gap-1.5 rounded-xl border border-line bg-cloud px-3 py-1.5 text-[12px] font-semibold text-ink hover:bg-slate-100 active:scale-95 transition-transform"
+                      className="shrink-0 flex items-center gap-1.5 rounded-xl border border-line bg-cloud px-3 py-1.5 text-[12px] font-semibold text-ink hover:bg-cloud active:scale-95 transition-transform"
                     >
                       <Eye size={13} /> Restaurar
                     </button>
@@ -435,7 +438,7 @@ export default function HomePage() {
       {/* Floating Add Trip Button */}
       <button
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-7 right-6 z-30 w-14 h-14 rounded-2xl flex items-center justify-center shadow-card active:scale-90 transition-all bg-ink hover:bg-inkLight text-white group"
+        className="fixed bottom-7 right-6 z-30 w-14 h-14 rounded-2xl flex items-center justify-center shadow-card active:scale-90 transition-all bg-btn hover:bg-btnHover text-btnText group"
         aria-label="Nuevo viaje"
       >
         <Plus size={24} className="group-hover:rotate-90 transition-transform duration-200" />

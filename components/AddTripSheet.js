@@ -67,7 +67,7 @@ export default function AddTripSheet({ onClose, onSave }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
-      <div className="relative rounded-t-[32px] px-6 pt-3 pb-8 z-10 bg-white max-h-[90%] overflow-y-auto max-w-lg mx-auto w-full shadow-2xl border-t border-line">
+      <div className="relative rounded-t-[32px] px-6 pt-3 pb-8 z-10 bg-surface max-h-[90%] overflow-y-auto max-w-lg mx-auto w-full shadow-2xl border-t border-line">
         {/* Drag handle */}
         <div className="w-12 h-1.5 rounded-full bg-slate/20 mx-auto mb-4" />
 
@@ -119,7 +119,7 @@ export default function AddTripSheet({ onClose, onSave }) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej: Japón Sakura 2027"
-              className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+              className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all font-medium"
             />
           </div>
 
@@ -127,7 +127,7 @@ export default function AddTripSheet({ onClose, onSave }) {
             <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
               Destino
             </label>
-            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface transition-all">
               <MapPin size={16} className="text-slate/70 shrink-0" />
               <input
                 value={place}
@@ -142,7 +142,7 @@ export default function AddTripSheet({ onClose, onSave }) {
             <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
               Fechas aproximadas
             </label>
-            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+            <div className="flex items-center gap-2 rounded-xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface transition-all">
               <Calendar size={16} className="text-slate/70 shrink-0" />
               <input
                 value={dateLabel}

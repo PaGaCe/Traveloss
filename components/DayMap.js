@@ -42,7 +42,7 @@ export default function DayMap({ items = [], color = "#0B0F19" }) {
           iconAnchor: [13, 13],
         });
         L.marker([p.lat, p.lng], { icon })
-          .bindPopup(`<b>${p.title || "Lugar"}</b>${p.place ? `<br/><span style="font-size:11px;color:#64748B">${p.place}</span>` : ""}`)
+          .bindPopup(`<b>${p.title || "Lugar"}</b>${p.place ? `<br/><span style="font-size:11px;color:rgb(100 116 139)">${p.place}</span>` : ""}`)
           .addTo(map);
       });
 
@@ -75,7 +75,7 @@ export default function DayMap({ items = [], color = "#0B0F19" }) {
 
   if (points.length === 0) {
     return (
-      <div className="p-8 text-center bg-white rounded-3xl border border-line shadow-soft">
+      <div className="p-8 text-center bg-surface rounded-3xl border border-line shadow-soft">
         <p className="text-[13px] text-slate">
           Añade coordenadas o busca ubicación en las actividades de este día para verlas en el mapa interactivo.
         </p>
@@ -84,7 +84,7 @@ export default function DayMap({ items = [], color = "#0B0F19" }) {
   }
 
   return (
-    <div className="rounded-3xl overflow-hidden shadow-soft bg-white border border-line mb-4">
+    <div className="rounded-3xl overflow-hidden shadow-soft bg-surface border border-line mb-4">
       <div ref={containerRef} className="w-full h-[280px] bg-slate/10 relative z-0" />
       <div className="p-4 flex flex-col gap-2 border-t border-line">
         {points.map((p, i) => (

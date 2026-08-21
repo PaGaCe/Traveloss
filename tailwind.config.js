@@ -7,15 +7,24 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#0B0F19",
-        cloud: "#F8F9FC",
+        // Tokens neutrales basados en variables CSS: cambian con el tema
+        // (claro por defecto, .dark en <html> para el oscuro)
+        ink: "rgb(var(--c-ink) / <alpha-value>)",
+        inkLight: "rgb(var(--c-ink-light) / <alpha-value>)",
+        cloud: "rgb(var(--c-cloud) / <alpha-value>)",
+        slate: "rgb(var(--c-slate) / <alpha-value>)",
+        line: "rgb(var(--c-line) / <alpha-value>)",
+        muted: "rgb(var(--c-muted) / <alpha-value>)",
+        surface: "rgb(var(--c-surface) / <alpha-value>)",
+        btn: "rgb(var(--c-btn) / <alpha-value>)",
+        btnHover: "rgb(var(--c-btn-hover) / <alpha-value>)",
+        btnText: "rgb(var(--c-btn-text) / <alpha-value>)",
+        // Fijo para velos sobre fotos/overlays: siempre oscuro
+        scrim: "#020617",
+        // Acentos fijos en ambos temas
         coral: "#EA580C",
         gold: "#F59E0B",
         teal: "#0D9488",
-        slate: "#64748B",
-        line: "#E2E8F0",
-        muted: "#475569",
-        inkLight: "#1E293B",
       },
       fontFamily: {
         display: ["Georgia", "'Times New Roman'", "serif"],

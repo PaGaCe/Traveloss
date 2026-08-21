@@ -258,7 +258,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={handleClose} />
       <div
-        className="relative rounded-3xl px-5 pt-4 pb-6 z-10 max-h-[88%] overflow-y-auto bg-white max-w-lg w-full shadow-2xl border border-line"
+        className="relative rounded-3xl px-5 pt-4 pb-6 z-10 max-h-[88%] overflow-y-auto bg-surface max-w-lg w-full shadow-2xl border border-line"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -301,7 +301,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
           className={`w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 transition-all border active:scale-[0.99] font-medium text-[13.5px] ${
             item.completed
               ? "bg-teal/10 border-teal/30 text-teal"
-              : "bg-cloud text-ink border-line hover:bg-slate-100"
+              : "bg-cloud text-ink border-line hover:bg-cloud"
           }`}
         >
           {item.completed ? (
@@ -318,7 +318,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             href={`https://www.google.com/maps?q=${item.lat},${item.lng}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line text-left hover:bg-slate-100 transition-colors active:scale-[0.99]"
+            className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line text-left hover:bg-cloud transition-colors active:scale-[0.99]"
           >
             <Navigation size={16} style={{ color: accentColor }} />
             <span className="text-[13px] font-semibold text-ink flex-1">Abrir en Google Maps</span>
@@ -327,7 +327,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
         )}
 
         {/* Quick note input */}
-        <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+        <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 mb-3.5 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface transition-all">
           <span className="text-gold text-[15px]">✦</span>
           <input
             value={note}
@@ -340,7 +340,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
         {/* Location Section */}
         <div className="mb-3.5">
           {editingPlace ? (
-            <div className="rounded-2xl bg-white border border-line p-3 shadow-soft">
+            <div className="rounded-2xl bg-surface border border-line p-3 shadow-soft">
               <div className="relative">
                 <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
                   <MapPin size={15} className="text-slate shrink-0" />
@@ -361,7 +361,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                   )}
                 </div>
                 {placeSuggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line max-h-[160px] overflow-y-auto">
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface rounded-2xl shadow-card z-20 overflow-hidden border border-line max-h-[160px] overflow-y-auto">
                     {placeSuggestions.map((s) => (
                       <button
                         key={s.place_id}
@@ -418,7 +418,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                 setPlaceCoords(null);
                 setPlaceSuggestions([]);
               }}
-              className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line text-left hover:bg-slate-100 transition-colors active:scale-[0.99]"
+              className="w-full flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line text-left hover:bg-cloud transition-colors active:scale-[0.99]"
             >
               <MapPin size={16} style={{ color: accentColor }} />
               <span className={`text-[13px] font-medium flex-1 ${item.place ? "text-ink font-semibold" : "text-slate"}`}>
@@ -495,7 +495,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
                     </button>
                   </div>
                 ) : (
-                  <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-line bg-white shadow-xs">
+                  <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-line bg-surface shadow-xs">
                     <img
                       src={ticket.url}
                       alt={`Ticket ${idx + 1}`}
@@ -542,7 +542,7 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             value={details}
             onChange={(e) => setDetails(e.target.value)}
             placeholder={item.type === "flight" ? "Nº de vuelo, localizador, terminal..." : "Detalles, indicaciones, notas..."}
-            className="w-full rounded-2xl p-3.5 text-[13.5px] outline-none min-h-[90px] bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-normal"
+            className="w-full rounded-2xl p-3.5 text-[13.5px] outline-none min-h-[90px] bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all font-normal"
           />
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, Check, X, Plus, FileText, Download, Trash2, ChevronRight } from "lucide-react";
+import { Bed, MapPin, ExternalLink, Calendar, Navigation, Pencil, X, Plus, FileText, Download, Trash2, ChevronRight } from "lucide-react";
 import DatePicker from "./DatePicker";
 import HotelDetailSheet from "./HotelDetailSheet";
 import { compressImage } from "../lib/compressImage";
@@ -46,16 +46,6 @@ function formatStayDates(hotel) {
 }
 
 export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTrip }) {
-  const [editingUrl, setEditingUrl] = useState(null);
-  const [urlDraft, setUrlDraft] = useState("");
-  const [editingDates, setEditingDates] = useState(null);
-  const [checkinDraft, setCheckinDraft] = useState("");
-  const [checkoutDraft, setCheckoutDraft] = useState("");
-  const [editingPlace, setEditingPlace] = useState(null);
-  const [placeDraft, setPlaceDraft] = useState("");
-  const [placeCoords, setPlaceCoords] = useState(null);
-  const [placeSuggestions, setPlaceSuggestions] = useState([]);
-  const [placeSearching, setPlaceSearching] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPlace, setNewPlace] = useState("");
@@ -96,29 +86,6 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
       clearTimeout(timeout);
     };
   }, [newPlace, newCoords]);
-
-  useEffect(() => {
-    if (placeDraft.trim().length < 3 || placeCoords) {
-      setPlaceSuggestions([]);
-      return;
-    }
-    let cancelled = false;
-    setPlaceSearching(true);
-    const timeout = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=3&q=${encodeURIComponent(placeDraft)}`
-        );
-        const data = await res.json();
-        if (!cancelled) setPlaceSuggestions(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (!cancelled) setPlaceSearching(false);
-      }
-    }, 500);
-    return () => { cancelled = true; clearTimeout(timeout); };
-  }, [placeDraft, placeCoords]);
 
   function pickSuggestion(s) {
     setNewPlace(s.display_name.split(",").slice(0, 2).join(","));
@@ -161,70 +128,6 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
     if (checkin && checkin <= today) {
       currentHotel = h;
     }
-  }
-
-  function handleSaveUrl(hotel) {
-    const updatedDays = trip.days.map((d) => ({
-      ...d,
-      items: d.items.map((item) =>
-        item.id === hotel.id ? { ...item, bookingUrl: urlDraft.trim() || undefined } : item
-      ),
-    }));
-    onUpdateTrip({ days: updatedDays });
-    setEditingUrl(null);
-    setUrlDraft("");
-    addToast("Enlace de reserva guardado", "success");
-  }
-
-  function startEditUrl(hotel) {
-    setEditingUrl(hotel.id);
-    setUrlDraft(hotel.bookingUrl || "");
-  }
-
-  function startEditDates(hotel) {
-    setEditingDates(hotel.id);
-    setCheckinDraft(hotel.checkinDate || hotel.dayDate || "");
-    setCheckoutDraft(hotel.checkoutDate || "");
-  }
-
-  function startEditPlace(hotel) {
-    setEditingPlace(hotel.id);
-    setPlaceDraft(hotel.place || "");
-    setPlaceCoords(hotel.lat ? { lat: hotel.lat, lng: hotel.lng } : null);
-  }
-
-  function handleSavePlace(hotel) {
-    const updates = { place: placeDraft.trim() };
-    if (placeCoords) {
-      updates.lat = placeCoords.lat;
-      updates.lng = placeCoords.lng;
-    }
-    const updatedDays = trip.days.map((d) => ({
-      ...d,
-      items: d.items.map((item) =>
-        item.id === hotel.id ? { ...item, ...updates } : item
-      ),
-    }));
-    onUpdateTrip({ days: updatedDays });
-    setEditingPlace(null);
-    setPlaceDraft("");
-    setPlaceCoords(null);
-    addToast("Ubicación actualizada", "success");
-  }
-
-  function handleSaveDates(hotel) {
-    const updates = {};
-    if (checkinDraft) updates.checkinDate = checkinDraft;
-    if (checkoutDraft) updates.checkoutDate = checkoutDraft;
-    const updatedDays = trip.days.map((d) => ({
-      ...d,
-      items: d.items.map((item) =>
-        item.id === hotel.id ? { ...item, ...updates } : item
-      ),
-    }));
-    onUpdateTrip({ days: updatedDays });
-    setEditingDates(null);
-    addToast("Fechas actualizadas", "success");
   }
 
   function handleUpdateHotel(hotelId, updates) {
@@ -423,7 +326,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
 
       {/* Add Hotel Card */}
       {showAdd && (
-        <div className="bg-white rounded-3xl border border-line p-5 shadow-card animate-fade-in space-y-4">
+        <div className="bg-surface rounded-3xl border border-line p-5 shadow-card animate-fade-in space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-line">
             <p className="text-[15px] font-bold text-ink font-display">Nuevo alojamiento</p>
             <button onClick={() => setShowAdd(false)} className="p-1 rounded-full hover:bg-cloud text-slate">
@@ -438,14 +341,14 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Ej. Hotel Gran Vía"
-                className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+                className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface font-medium"
               />
             </div>
 
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1 block">Dirección o ciudad</label>
               <div className="relative">
-                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white">
+                <div className="flex items-center gap-2 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface">
                   <MapPin size={16} className="text-slate shrink-0" />
                   <input
                     value={newPlace}
@@ -458,7 +361,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                   />
                 </div>
                 {suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface rounded-2xl shadow-xl z-20 overflow-hidden border border-line">
                     {suggestions.map((s) => (
                       <button
                         key={s.place_id}
@@ -502,7 +405,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                 value={newBookingUrl}
                 onChange={(e) => setNewBookingUrl(e.target.value)}
                 placeholder="https://booking.com/..."
-                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white font-medium"
+                className="w-full rounded-2xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface font-medium"
               />
             </div>
 
@@ -512,7 +415,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                 <div className="flex items-center gap-2 bg-cloud rounded-2xl px-4 py-3 border border-line">
                   <FileText size={16} className="text-slate shrink-0" />
                   <span className="flex-1 text-[13px] font-semibold text-ink truncate">{newFile.name}</span>
-                  <button onClick={() => setNewFile(null)} className="p-1 hover:bg-white rounded-lg shrink-0" title="Quitar archivo">
+                  <button onClick={() => setNewFile(null)} className="p-1 hover:bg-surface rounded-lg shrink-0" title="Quitar archivo">
                     <X size={15} className="text-slate" />
                   </button>
                 </div>
@@ -551,7 +454,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
 
       {/* Empty State */}
       {hotels.length === 0 && !showAdd && (
-        <div className="bg-white rounded-3xl border border-line p-8 flex flex-col items-center justify-center text-center shadow-card">
+        <div className="bg-surface rounded-3xl border border-line p-8 flex flex-col items-center justify-center text-center shadow-card">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-xs"
             style={{ background: `${accentColor}15` }}
@@ -581,7 +484,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
           </div>
 
           <div
-            className="rounded-3xl p-5 border-2 text-left shadow-card relative overflow-hidden bg-white"
+            className="rounded-3xl p-5 border-2 text-left shadow-card relative overflow-hidden bg-surface"
             style={{ borderColor: accentColor }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -606,7 +509,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                     href={`https://www.google.com/maps?q=${currentHotel.lat},${currentHotel.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-slate-100 text-slate hover:text-ink transition-all shadow-xs"
+                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-cloud text-slate hover:text-ink transition-all shadow-xs"
                     title="Abrir en Google Maps"
                   >
                     <Navigation size={15} style={{ color: accentColor }} />
@@ -615,7 +518,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                 {currentHotel.bookingUrl && (
                   <button
                     onClick={() => openBookingLink(currentHotel.bookingUrl)}
-                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-slate-100 text-slate hover:text-ink transition-all shadow-xs"
+                    className="p-2 rounded-xl bg-cloud border border-line hover:bg-cloud text-slate hover:text-ink transition-all shadow-xs"
                     title="Abrir reserva"
                   >
                     <ExternalLink size={15} style={{ color: accentColor }} />
@@ -631,7 +534,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
             {currentHotel.bookingUrl && (
               <button
                 onClick={() => openBookingLink(currentHotel.bookingUrl)}
-                className="mt-3.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold bg-cloud hover:bg-slate-100 transition-all border border-line"
+                className="mt-3.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold bg-cloud hover:bg-cloud transition-all border border-line"
                 style={{ color: accentColor }}
               >
                 <span>Ver reserva online en Booking/Airbnb</span>
@@ -654,21 +557,21 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
           <div className="space-y-3.5">
             {hotels.map((hotel) => {
               const isCurrent = currentHotel && hotel.id === currentHotel.id;
-              const isEditingDates = editingDates === hotel.id;
-              const isEditingPlc = editingPlace === hotel.id;
-              const isEditingLink = editingUrl === hotel.id;
 
               return (
                 <div
                   key={hotel.id}
-                  className={`bg-white rounded-3xl border ${isCurrent ? 'border-ink shadow-card' : 'border-line shadow-soft'} p-4 transition-all`}
+                  onClick={() => setEditHotelId(hotel.id)}
+                  className={`bg-surface rounded-3xl border p-4 cursor-pointer transition-all active:scale-[0.99] ${
+                    isCurrent ? 'border-ink shadow-card' : 'border-line shadow-soft hover:shadow-card hover:border-slate/25'
+                  }`}
                 >
                   <div className="flex items-start gap-3.5">
                     <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 shadow-xs"
-                      style={{ background: isCurrent ? `${accentColor}18` : "#F4F4F7" }}
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 shadow-xs"
+                      style={{ background: isCurrent ? `${accentColor}18` : "rgb(var(--c-cloud))" }}
                     >
-                      <Bed size={18} style={{ color: isCurrent ? accentColor : "#64748B" }} />
+                      <Bed size={19} style={{ color: isCurrent ? accentColor : "rgb(var(--c-slate))" }} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -676,17 +579,20 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                         <h4 className="text-[15px] font-bold text-ink font-display">{hotel.title}</h4>
                         {isCurrent && (
                           <span
-                            className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full"
                             style={{ background: `${accentColor}18`, color: accentColor }}
                           >
+                            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: accentColor }} />
                             Actual
                           </span>
                         )}
                       </div>
 
-                      <p className="text-[12.5px] text-slate font-medium flex items-center gap-1 mt-0.5">
-                        <MapPin size={12} /> {hotel.place || "Sin dirección"}
-                      </p>
+                      {hotel.place ? (
+                        <p className="text-[12.5px] text-slate font-medium flex items-center gap-1 mt-0.5 truncate">
+                          <MapPin size={12} className="shrink-0" /> {hotel.place}
+                        </p>
+                      ) : null}
 
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
                         {renderHotelDates(hotel)}
@@ -699,15 +605,16 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                           href={`https://www.google.com/maps?q=${hotel.lat},${hotel.lng}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 rounded-xl bg-cloud hover:bg-slate-100 text-slate hover:text-ink transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-2 rounded-xl bg-cloud hover:bg-cloud text-slate hover:text-ink transition-all active:scale-95"
                           title="Google Maps"
                         >
                           <Navigation size={14} style={{ color: accentColor }} />
                         </a>
                       )}
                       <button
-                        onClick={() => setEditHotelId(hotel.id)}
-                        className="p-2 rounded-xl bg-cloud hover:bg-slate-100 text-slate hover:text-ink transition-all"
+                        onClick={(e) => { e.stopPropagation(); setEditHotelId(hotel.id); }}
+                        className="p-2 rounded-xl bg-cloud hover:bg-cloud text-slate hover:text-ink transition-all active:scale-95"
                         title="Editar hotel completo"
                       >
                         <Pencil size={14} />
@@ -715,184 +622,44 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
                     </div>
                   </div>
 
-                  {/* Inline Editing Modules */}
-                  {isEditingDates ? (
-                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate mb-1 block">Check-in</label>
-                          <DatePicker
-                            value={checkinDraft}
-                            onChange={setCheckinDraft}
-                            accentColor={accentColor}
-                            placeholder="Entrada"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-slate mb-1 block">Check-out</label>
-                          <DatePicker
-                            value={checkoutDraft}
-                            onChange={setCheckoutDraft}
-                            accentColor={accentColor}
-                            placeholder="Salida"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSaveDates(hotel)}
-                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
-                          style={{ background: accentColor }}
-                        >
-                          <Check size={14} /> Guardar fechas
-                        </button>
-                        <button
-                          onClick={() => setEditingDates(null)}
-                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : isEditingPlc ? (
-                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
-                      <div className="relative">
-                        <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
-                          <MapPin size={14} className="text-slate shrink-0" />
-                          <input
-                            autoFocus
-                            value={placeDraft}
-                            onChange={(e) => {
-                              setPlaceDraft(e.target.value);
-                              setPlaceCoords(null);
-                            }}
-                            placeholder="Dirección o ciudad..."
-                            className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
-                          />
-                        </div>
-                        {placeSuggestions.length > 0 && (
-                          <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-lg z-10 overflow-hidden border border-line">
-                            {placeSuggestions.map((s) => (
-                              <button
-                                key={s.place_id}
-                                onClick={() => {
-                                  setPlaceDraft(s.display_name.split(",").slice(0, 2).join(","));
-                                  setPlaceCoords({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
-                                  setPlaceSuggestions([]);
-                                }}
-                                className="w-full text-left px-3 py-2 text-[12px] text-ink hover:bg-cloud border-b border-line last:border-0 font-medium"
-                              >
-                                {s.display_name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {placeSearching && <p className="text-[11px] text-slate mt-1 ml-1">Buscando...</p>}
-                        {placeCoords && <p className="text-[11px] text-teal font-semibold mt-1 ml-1">✓ Ubicación confirmada</p>}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSavePlace(hotel)}
-                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
-                          style={{ background: accentColor }}
-                        >
-                          <Check size={14} /> Guardar dirección
-                        </button>
-                        <button
-                          onClick={() => { setEditingPlace(null); setPlaceCoords(null); }}
-                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : isEditingLink ? (
-                    <div className="mt-3.5 pt-3 border-t border-line space-y-2.5">
-                      <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line">
-                        <ExternalLink size={14} className="text-slate shrink-0" />
-                        <input
-                          autoFocus
-                          value={urlDraft}
-                          onChange={(e) => setUrlDraft(e.target.value)}
-                          placeholder="https://..."
-                          className="w-full bg-transparent text-[13px] outline-none text-ink font-medium"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSaveUrl(hotel)}
-                          className="flex-1 rounded-xl py-2 text-[12.5px] font-bold text-white flex items-center justify-center gap-1 shadow-xs"
-                          style={{ background: accentColor }}
-                        >
-                          <Check size={14} /> Guardar enlace
-                        </button>
-                        <button
-                          onClick={() => setEditingUrl(null)}
-                          className="rounded-xl py-2 px-3 text-[12.5px] font-bold bg-cloud text-slate hover:text-ink border border-line"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
+                  {/* Acciones rápidas: solo lectura; la edición vive en el sheet */}
+                  {(hotel.bookingUrl || hotel.bookingFile) && (
                     <div className="mt-3 pt-3 border-t border-line flex items-center gap-2 flex-wrap">
-                      {hotel.bookingUrl ? (
+                      {hotel.bookingUrl && (
                         <button
-                          onClick={() => openBookingLink(hotel.bookingUrl)}
-                          className="flex items-center gap-1.5 text-[12px] font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95 bg-cloud hover:bg-slate-100"
-                          style={{ color: accentColor }}
+                          onClick={(e) => { e.stopPropagation(); openBookingLink(hotel.bookingUrl); }}
+                          className="flex items-center gap-1.5 text-[12px] font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95 shadow-xs"
+                          style={{ background: `${accentColor}14`, color: accentColor }}
                         >
                           <ExternalLink size={13} />
-                          <span>Abrir reserva</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => startEditUrl(hotel)}
-                          className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-dashed border-line"
-                        >
-                          <ExternalLink size={12} /> + Enlace
+                          <span>Ver reserva</span>
                         </button>
                       )}
-                      <button
-                        onClick={() => startEditDates(hotel)}
-                        className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-line"
-                      >
-                        <Calendar size={12} /> Fechas
-                      </button>
-                      <button
-                        onClick={() => startEditPlace(hotel)}
-                        className="flex items-center gap-1 text-[12px] font-semibold text-slate hover:text-ink px-2.5 py-1 rounded-xl bg-cloud border border-line"
-                      >
-                        <MapPin size={12} /> Ubicación
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Attached Document */}
-                  {hotel.bookingFile && (
-                    <div className="mt-3 flex items-center gap-2 bg-cloud rounded-2xl px-3 py-2 border border-line">
-                      <button
-                        onClick={() => openBookingFile(hotel.bookingFile)}
-                        className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-white rounded-xl px-2 py-1 transition-colors"
-                      >
-                        <FileText size={14} className="text-slate shrink-0" />
-                        <span className="flex-1 text-[12.5px] font-semibold text-ink truncate">{hotel.bookingFile.name}</span>
-                        <ExternalLink size={12} className="text-slate shrink-0" />
-                      </button>
-                      <button
-                        onClick={() => downloadBookingFile(hotel.bookingFile)}
-                        className="p-1.5 hover:bg-white rounded-xl shrink-0 text-teal transition-colors"
-                        title="Descargar voucher"
-                      >
-                        <Download size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleUpdateHotel(hotel.id, { bookingFile: null })}
-                        className="p-1.5 hover:bg-white rounded-xl shrink-0 text-coral transition-colors"
-                        title="Eliminar voucher"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {hotel.bookingFile && (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openBookingFile(hotel.bookingFile); }}
+                            className="flex items-center gap-1.5 min-w-0 max-w-[190px] text-[12px] font-semibold px-3 py-1.5 rounded-xl bg-cloud hover:bg-cloud text-slate hover:text-ink transition-all active:scale-95"
+                          >
+                            <FileText size={13} className="shrink-0" />
+                            <span className="truncate">{hotel.bookingFile.name}</span>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); downloadBookingFile(hotel.bookingFile); }}
+                            className="p-1.5 rounded-xl hover:bg-cloud shrink-0 text-teal transition-colors"
+                            title="Descargar voucher"
+                          >
+                            <Download size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleUpdateHotel(hotel.id, { bookingFile: null }); }}
+                            className="p-1.5 rounded-xl hover:bg-cloud shrink-0 text-coral transition-colors"
+                            title="Eliminar voucher"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

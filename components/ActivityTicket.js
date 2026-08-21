@@ -83,10 +83,10 @@ export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
 
         <button
           onClick={onClick}
-          className="w-full text-left flex rounded-2xl overflow-hidden shadow-soft hover:shadow-card bg-white border border-line transition-all active:scale-[0.99] group"
+          className="w-full text-left flex rounded-2xl overflow-hidden shadow-soft hover:shadow-card bg-surface border border-line transition-all active:scale-[0.99] group"
         >
           {/* Time & icon block */}
-          <div className="w-[72px] shrink-0 flex flex-col items-center justify-center gap-1.5 py-3 px-1.5 bg-ink">
+          <div className="w-[72px] shrink-0 flex flex-col items-center justify-center gap-1.5 py-3 px-1.5 bg-[#0B0F19]">
             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
               <Icon size={15} className="text-gold" />
             </div>
@@ -178,7 +178,7 @@ export default function ActivityTicket({ item, onClick, onToggleCompleted }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-line text-teal shadow-soft hover:bg-teal/10 active:scale-95 transition-all"
+            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-surface border border-line text-teal shadow-soft hover:bg-teal/10 active:scale-95 transition-all"
             aria-label="Abrir en Google Maps"
           >
             <Navigation size={15} />

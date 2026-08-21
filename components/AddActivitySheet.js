@@ -90,7 +90,7 @@ export default function AddActivitySheet({ onClose, onSave, onAddActivity, accen
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
-      <div className="relative rounded-t-[32px] px-6 pt-3 pb-8 z-10 bg-white max-h-[90%] overflow-y-auto max-w-lg mx-auto w-full shadow-2xl border-t border-line">
+      <div className="relative rounded-t-[32px] px-6 pt-3 pb-8 z-10 bg-surface max-h-[90%] overflow-y-auto max-w-lg mx-auto w-full shadow-2xl border-t border-line">
         {/* Drag handle */}
         <div className="w-12 h-1.5 rounded-full bg-slate/20 mx-auto mb-4" />
 
@@ -143,7 +143,7 @@ export default function AddActivitySheet({ onClose, onSave, onAddActivity, accen
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="¿Qué vas a hacer? (ej: Visitar Templo Senso-ji)"
-              className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+              className="w-full rounded-xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all font-medium"
             />
           </div>
 
@@ -159,7 +159,7 @@ export default function AddActivitySheet({ onClose, onSave, onAddActivity, accen
               <label className="text-[11.5px] font-bold uppercase tracking-wider text-slate mb-1 block">
                 Lugar
               </label>
-              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface transition-all">
                 <MapPin size={15} className="text-slate/70 shrink-0" />
                 <input
                   value={place}
@@ -173,7 +173,7 @@ export default function AddActivitySheet({ onClose, onSave, onAddActivity, accen
               </div>
 
               {suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1 bg-surface rounded-2xl shadow-card z-20 overflow-hidden border border-line">
                   {suggestions.map((s) => (
                     <button
                       key={s.place_id}
@@ -196,7 +196,7 @@ export default function AddActivitySheet({ onClose, onSave, onAddActivity, accen
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Detalles, reservas, tickets o consejos (opcional)"
-              className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all"
+              className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all"
             />
           </div>
 

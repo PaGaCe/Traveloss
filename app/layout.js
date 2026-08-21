@@ -19,8 +19,14 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
+  // Aplica el tema ANTES del primer pintado para evitar parpadeo:
+  // prefiere la elección guardada y, si no hay, la del sistema.
+  const themeInit = `(function(){try{var t=localStorage.getItem("traveloss-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`;
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body className="font-body">
         <ToastProvider>{children}</ToastProvider>
       </body>

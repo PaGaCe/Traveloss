@@ -16,6 +16,7 @@ import ActivityTicket from "../../../components/ActivityTicket";
 import ActivityDetailSheet from "../../../components/ActivityDetailSheet";
 import AddActivitySheet from "../../../components/AddActivitySheet";
 import ShareTripSheet from "../../../components/ShareTripSheet";
+import ThemeToggle from "../../../components/ThemeToggle";
 import BottomNav from "../../../components/BottomNav";
 import CarSection from "../../../components/CarSection";
 import HotelSection from "../../../components/HotelSection";
@@ -171,7 +172,7 @@ export default function TripDetailPage() {
 
   if (authReady && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-ink">
+      <div className="min-h-screen flex items-center justify-center px-6 bg-[#0B0F19]">
         <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden flex flex-col items-center justify-center px-8 py-14">
           <img src="/logo.png" alt="Traveloss" className="w-16 h-16 object-contain mb-3" />
           <p className="text-white text-[15px] font-medium text-center mb-5">
@@ -181,7 +182,7 @@ export default function TripDetailPage() {
           </p>
           <button
             onClick={signInWithGoogle}
-            className="w-full flex items-center justify-center gap-3 rounded-xl py-3.5 bg-white border border-line text-[15px] font-medium text-ink shadow-sm active:scale-[0.98] transition-transform"
+            className="w-full flex items-center justify-center gap-3 rounded-xl py-3.5 bg-surface border border-line text-[15px] font-medium text-ink shadow-sm active:scale-[0.98] transition-transform"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -395,6 +396,7 @@ export default function TripDetailPage() {
               <ArrowLeft size={18} />
             </button>
             <div className="flex-1" />
+            <ThemeToggle className="text-white/70 hover:text-white hover:bg-white/10" />
             {isOwner && usingFirebase && (
               <button
                 onClick={() => setShowShare(true)}
@@ -562,7 +564,7 @@ export default function TripDetailPage() {
                     onClick={() => setDayView("timeline")}
                     className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
                     style={{
-                      background: dayView === "timeline" ? trip.stampColor : "#F4F4F7",
+                      background: dayView === "timeline" ? trip.stampColor : "rgb(var(--c-cloud))",
                       color: dayView === "timeline" ? "white" : "#5A6478",
                     }}
                   >
@@ -572,7 +574,7 @@ export default function TripDetailPage() {
                     onClick={() => setDayView("map")}
                     className="px-2.5 py-1 rounded-full text-[11.5px] font-medium flex items-center gap-1"
                     style={{
-                      background: dayView === "map" ? trip.stampColor : "#F4F4F7",
+                      background: dayView === "map" ? trip.stampColor : "rgb(var(--c-cloud))",
                       color: dayView === "map" ? "white" : "#5A6478",
                     }}
                   >
@@ -833,7 +835,7 @@ export default function TripDetailPage() {
               >
                 Cancelar
               </button>
-              <button onClick={handleDismissTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-ink text-white">
+              <button onClick={handleDismissTrip} className="flex-1 rounded-xl py-2.5 text-[13px] font-medium bg-btn text-btnText">
                 Quitar
               </button>
             </div>

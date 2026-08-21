@@ -248,7 +248,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
 
   if (!car && !editing) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl bg-white border border-line shadow-soft text-center">
+      <div className="flex flex-col items-center justify-center py-12 px-4 rounded-3xl bg-surface border border-line shadow-soft text-center">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xs"
           style={{ background: `${accentColor}18` }}
@@ -272,7 +272,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
 
   if (editing) {
     return (
-      <div className="bg-white rounded-3xl p-5 border border-line shadow-card">
+      <div className="bg-surface rounded-3xl p-5 border border-line shadow-card">
         <div className="flex items-center justify-between mb-5 pb-3 border-b border-line">
           <div className="flex items-center gap-2.5">
             <div
@@ -305,7 +305,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
               value={draft.model}
               onChange={(e) => handleFieldChange("model", e.target.value)}
               placeholder="Ej: Fiat 500, Nissan Qashqai, Toyota Yaris..."
-              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all font-medium"
             />
           </div>
 
@@ -315,7 +315,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
               value={draft.company}
               onChange={(e) => handleFieldChange("company", e.target.value)}
               placeholder="Ej: Sixt, Hertz, Europcar, Centauro..."
-              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all font-medium"
+              className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all font-medium"
             />
           </div>
 
@@ -330,7 +330,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                     onClick={() => handleFieldChange("transmission", t.key)}
                     className="flex-1 px-3 py-2.5 rounded-xl text-[12.5px] font-semibold transition-all border"
                     style={{
-                      background: draft.transmission === t.key ? accentColor : "#F4F4F7",
+                      background: draft.transmission === t.key ? accentColor : "rgb(var(--c-cloud))",
                       color: draft.transmission === t.key ? "white" : "#4B5565",
                       borderColor: draft.transmission === t.key ? accentColor : "#E2E4E9",
                     }}
@@ -351,7 +351,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                     onClick={() => handleFieldChange("fuel", f.key)}
                     className="px-2.5 py-2 rounded-xl text-[11.5px] font-semibold transition-all border text-center"
                     style={{
-                      background: draft.fuel === f.key ? accentColor : "#F4F4F7",
+                      background: draft.fuel === f.key ? accentColor : "rgb(var(--c-cloud))",
                       color: draft.fuel === f.key ? "white" : "#4B5565",
                       borderColor: draft.fuel === f.key ? accentColor : "#E2E4E9",
                     }}
@@ -408,7 +408,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
               />
             </div>
             <div className="relative mt-2">
-              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-surface border border-line">
                 <MapPin size={15} className="text-slate shrink-0" />
                 <input
                   value={draft.pickupLocation}
@@ -420,7 +420,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                 />
               </div>
               {pickupSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface rounded-2xl shadow-card z-20 overflow-hidden border border-line">
                   {pickupSuggestions.map((s) => (
                     <button
                       key={s.place_id}
@@ -458,7 +458,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
               />
             </div>
             <div className="relative mt-2">
-              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-white border border-line">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-surface border border-line">
                 <MapPin size={15} className="text-slate shrink-0" />
                 <input
                   value={draft.dropoffLocation}
@@ -470,7 +470,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                 />
               </div>
               {dropoffSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-card z-20 overflow-hidden border border-line">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-surface rounded-2xl shadow-card z-20 overflow-hidden border border-line">
                   {dropoffSuggestions.map((s) => (
                     <button
                       key={s.place_id}
@@ -494,7 +494,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
               value={draft.reservationRef}
               onChange={(e) => handleFieldChange("reservationRef", e.target.value)}
               placeholder="Ej: RENT-892344-ES"
-              className="w-full rounded-2xl px-4 py-3 text-[13.5px] font-mono outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all"
+              className="w-full rounded-2xl px-4 py-3 text-[13.5px] font-mono outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all"
             />
           </div>
         </div>
@@ -513,7 +513,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
   return (
     <div className="space-y-4">
       {/* Car Overview Card */}
-      <div className="bg-white rounded-3xl border border-line p-5 shadow-card">
+      <div className="bg-surface rounded-3xl border border-line p-5 shadow-card">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div
@@ -603,7 +603,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
       </div>
 
       {/* Documents Section */}
-      <div className="bg-white rounded-3xl border border-line p-5 shadow-card">
+      <div className="bg-surface rounded-3xl border border-line p-5 shadow-card">
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-cloud flex items-center justify-center text-ink">
@@ -634,7 +634,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                   onClick={() => openDoc(doc)}
                   className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-white border border-line flex items-center justify-center text-ink shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-surface border border-line flex items-center justify-center text-ink shrink-0">
                     <FileText size={16} className={doc.type?.includes("pdf") ? "text-coral" : "text-teal"} />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -648,14 +648,14 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => downloadDoc(doc)}
-                    className="w-8 h-8 rounded-xl bg-white border border-line flex items-center justify-center text-slate hover:text-teal active:scale-95 transition-colors"
+                    className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-slate hover:text-teal active:scale-95 transition-colors"
                     title="Descargar"
                   >
                     <Download size={13} />
                   </button>
                   <button
                     onClick={() => handleRemoveDoc(idx)}
-                    className="w-8 h-8 rounded-xl bg-white border border-line flex items-center justify-center text-slate hover:text-coral active:scale-95 transition-colors"
+                    className="w-8 h-8 rounded-xl bg-surface border border-line flex items-center justify-center text-slate hover:text-coral active:scale-95 transition-colors"
                     title="Eliminar"
                   >
                     <Trash2 size={13} />

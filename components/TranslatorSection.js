@@ -103,7 +103,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
   const toLabel = LANGUAGES.find((l) => l.code === toLang)?.label || toLang;
 
   return (
-    <div className="bg-white rounded-3xl p-5 border border-line shadow-card space-y-4">
+    <div className="bg-surface rounded-3xl p-5 border border-line shadow-card space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2.5 pb-3 border-b border-line">
         <div
@@ -124,7 +124,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
           <select
             value={fromLang}
             onChange={(e) => handleFromChange(e.target.value)}
-            className="w-full rounded-xl px-3 py-2 text-[13px] font-semibold outline-none bg-white text-ink border border-line appearance-none cursor-pointer shadow-xs text-center"
+            className="w-full rounded-xl px-3 py-2 text-[13px] font-semibold outline-none bg-surface text-ink border border-line appearance-none cursor-pointer shadow-xs text-center"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -133,7 +133,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
         </div>
         <button
           onClick={swapLanguages}
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-white border border-line hover:bg-slate-50 active:scale-95 transition-all shadow-xs"
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-surface border border-line hover:bg-slate-50 active:scale-95 transition-all shadow-xs"
           title="Intercambiar idiomas"
         >
           <ArrowRightLeft size={14} className="text-slate" />
@@ -142,7 +142,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
           <select
             value={toLang}
             onChange={(e) => handleToChange(e.target.value)}
-            className="w-full rounded-xl px-3 py-2 text-[13px] font-semibold outline-none bg-white text-ink border border-line appearance-none cursor-pointer shadow-xs text-center"
+            className="w-full rounded-xl px-3 py-2 text-[13px] font-semibold outline-none bg-surface text-ink border border-line appearance-none cursor-pointer shadow-xs text-center"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -170,7 +170,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Escribe o pega aquí la frase que quieras traducir..."
           rows={3}
-          className="w-full rounded-2xl p-4 text-[14.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-white transition-all resize-none font-medium placeholder:font-normal placeholder:text-slate/60"
+          className="w-full rounded-2xl p-4 text-[14.5px] outline-none bg-cloud text-ink border border-line focus:border-ink focus:bg-surface transition-all resize-none font-medium placeholder:font-normal placeholder:text-slate/60"
         />
       </div>
 
@@ -205,7 +205,7 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
             <div className="flex items-center gap-1.5">
               <button
                 onClick={handleCopy}
-                className="p-1.5 rounded-xl bg-white border border-line text-slate hover:text-ink active:scale-95 transition-all text-[12px] flex items-center gap-1 px-2.5 font-medium shadow-xs"
+                className="p-1.5 rounded-xl bg-surface border border-line text-slate hover:text-ink active:scale-95 transition-all text-[12px] flex items-center gap-1 px-2.5 font-medium shadow-xs"
               >
                 {copied ? <Check size={13} className="text-teal" /> : <Copy size={13} />}
                 <span>{copied ? "Copiado" : "Copiar"}</span>
@@ -213,14 +213,14 @@ export default function TranslatorSection({ translatorLangs, accentColor = "#0B0
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-3.5 border border-line shadow-xs">
+          <div className="bg-surface rounded-xl p-3.5 border border-line shadow-xs">
             <p className="text-[15.5px] text-ink font-semibold leading-relaxed select-all">{translatedText}</p>
           </div>
 
           <button
             onClick={handleSpeak}
             disabled={speaking}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold bg-white border border-line text-ink hover:bg-slate-50 active:scale-95 transition-all shadow-xs"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold bg-surface border border-line text-ink hover:bg-slate-50 active:scale-95 transition-all shadow-xs"
           >
             <Volume2 size={16} className={speaking ? "text-teal animate-pulse" : "text-slate"} />
             <span>{speaking ? "Reproduciendo audio..." : "Escuchar pronunciación"}</span>

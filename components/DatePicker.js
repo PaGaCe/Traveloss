@@ -61,8 +61,8 @@ export default function DatePicker({ value, onChange, accentColor, placeholder =
         aria-label={value || placeholder}
         className={`w-full flex items-center text-left transition-colors ${
           compact
-            ? "gap-1.5 rounded-xl px-2.5 py-1 bg-cloud hover:bg-slate-100 border border-line text-[12px]"
-            : "gap-2.5 rounded-xl px-4 py-3.5 bg-white border border-line min-h-[48px]"
+            ? "gap-1.5 rounded-xl px-2.5 py-1 bg-cloud hover:bg-cloud border border-line text-[12px]"
+            : "gap-2.5 rounded-xl px-4 py-3.5 bg-surface border border-line min-h-[48px]"
         }`}
       >
         <Calendar size={compact ? 13 : 18} className="text-slate shrink-0" />

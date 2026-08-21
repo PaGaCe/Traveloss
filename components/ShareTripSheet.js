@@ -68,9 +68,9 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
       <div
-        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
+        className="relative bg-surface w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-sheet z-10 max-h-[90vh] flex flex-col overflow-hidden pb-safe animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle for mobile */}
@@ -104,7 +104,7 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
                   Invitar por correo electrónico
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-white transition-all">
+                  <div className="flex-1 flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-cloud border border-line focus-within:border-ink focus-within:bg-surface transition-all">
                     <Mail size={16} className="text-slate shrink-0" />
                     <input
                       value={email}
@@ -122,7 +122,7 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
                   <button
                     onClick={handleShare}
                     disabled={!email.trim()}
-                    className="h-12 px-5 rounded-2xl text-[13.5px] font-bold text-white shadow-soft active:scale-95 transition-all bg-ink disabled:opacity-40 flex items-center gap-1.5 shrink-0"
+                    className="h-12 px-5 rounded-2xl text-[13.5px] font-bold text-white shadow-soft active:scale-95 transition-all bg-btn disabled:opacity-40 flex items-center gap-1.5 shrink-0"
                   >
                     <Send size={15} />
                     <span className="hidden sm:inline">Invitar</span>
@@ -174,7 +174,7 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
             <div className="space-y-2">
               {/* Current user */}
               <div className="flex items-center gap-3 rounded-2xl p-3 bg-cloud/60 border border-line">
-                <div className="w-9 h-9 rounded-2xl bg-ink text-white flex items-center justify-center font-bold text-[13px] shadow-xs">
+                <div className="w-9 h-9 rounded-2xl bg-btn text-btnText flex items-center justify-center font-bold text-[13px] shadow-xs">
                   Tú
                 </div>
                 <div className="flex-1 min-w-0">
@@ -183,13 +183,13 @@ export default function ShareTripSheet({ tripId, sharedMeta, userId, onClose, on
                   </p>
                   <p className="text-[11.5px] text-slate font-medium">Acceso activo</p>
                 </div>
-                <span className="text-[11px] font-bold px-2.5 py-1 bg-white text-slate border border-line rounded-xl">
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-surface text-slate border border-line rounded-xl">
                   {isOwner ? "Owner" : "Miembro"}
                 </span>
               </div>
 
               {sharedUsers.map((u) => (
-                <div key={u.uid} className="flex items-center gap-3 rounded-2xl p-3 bg-white border border-line shadow-xs">
+                <div key={u.uid} className="flex items-center gap-3 rounded-2xl p-3 bg-surface border border-line shadow-xs">
                   {u.photoURL ? (
                     <img src={u.photoURL} alt="" className="w-9 h-9 rounded-2xl object-cover border border-line" />
                   ) : (
