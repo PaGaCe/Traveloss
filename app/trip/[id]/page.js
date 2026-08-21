@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   Plus, MapPin, List, Map as MapIcon, ArrowLeft, Trash2, ImagePlus,
-  Share2, Users, Check, X, Upload, Camera,
+  Share2, Users, Check, X, Upload, Camera, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useTripsStore } from "../../../lib/useTripsStore";
 import { useAuth } from "../../../lib/useAuth";
@@ -79,7 +79,7 @@ export default function TripDetailPage() {
   
   const [galleryUploading, setGalleryUploading] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [lightboxImg, setLightboxImg] = useState(null);
+  const [lightboxIdx, setLightboxIdx] = useState(null);
   const [galleryScope, setGalleryScope] = useState("day"); // 'day' | 'all'
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDismissConfirm, setShowDismissConfirm] = useState(false);
@@ -101,6 +101,41 @@ export default function TripDetailPage() {
   
   const addToast = useToast();
   const galleryInputRef = useRef(null);
+  const touchStartXRef = useRef(0);
+  const displayCountRef = useRef(0);
+
+  // Datos derivados — antes de los returns tempranos para que los efectos
+  // de abajo puedan usarlos sin problemas de orden de hooks.
+  const day = trip ? trip.days.find((d) => d.id === activeDayId) || trip.days[0] : null;
+  const allPhotos = [];
+  for (const d of trip?.days || []) {
+    for (const p of d.gallery || []) {
+      allPhotos.push({ ...p, dayLabel: d.label, dayId: d.id });
+    }
+  }
+  const dayPhotos = day ? day.gallery || [] : [];
+  const displayPhotos = galleryScope === "all" ? allPhotos : dayPhotos;
+  displayCountRef.current = displayPhotos.length;
+
+  function stepPhoto(delta) {
+    setLightboxIdx((i) => {
+      const n = displayCountRef.current;
+      if (i === null || n === 0) return i;
+      return (i + delta + n) % n;
+    });
+  }
+
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    function onKey(e) {
+      if (e.key === "Escape") setLightboxIdx(null);
+      else if (e.key === "ArrowRight") stepPhoto(1);
+      else if (e.key === "ArrowLeft") stepPhoto(-1);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightboxIdx]);
 
   useEffect(() => {
     if (!isInvite || !userId || !tripId || !usingFirebase) return;
@@ -190,20 +225,9 @@ export default function TripDetailPage() {
     );
   }
 
-  const day = trip.days.find((d) => d.id === activeDayId) || trip.days[0];
   const detailItem = day ? day.items.find((i) => i.id === detailItemId) : null;
   const isOwner = !trip._isShared || (trip._sharedMeta && trip._sharedMeta.ownerId === userId);
   const sharedCount = trip._isShared && trip._sharedMeta ? trip._sharedMeta.sharedWith.length : 0;
-
-  const allPhotos = [];
-  for (const d of trip.days) {
-    for (const p of (d.gallery || [])) {
-      allPhotos.push({ ...p, dayLabel: d.label, dayId: d.id });
-    }
-  }
-
-  const dayPhotos = day ? (day.gallery || []) : [];
-  const displayPhotos = galleryScope === "all" ? allPhotos : dayPhotos;
 
   function handleTitleSave() {
     if (titleDraft.trim()) updateTrip(tripId, { title: titleDraft.trim() });
@@ -671,7 +695,7 @@ export default function TripDetailPage() {
                         src={photo.url}
                         alt={photo.caption || ""}
                         className="w-full h-full object-cover rounded-lg cursor-pointer"
-                        onClick={() => setLightboxImg(photo.url)}
+                        onClick={() => setLightboxIdx(idx)}
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo); }}
@@ -801,15 +825,54 @@ export default function TripDetailPage() {
         </div>
       )}
 
-      {lightboxImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={() => setLightboxImg(null)}>
+      {lightboxIdx !== null && displayPhotos[lightboxIdx] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setLightboxIdx(null)}
+          onTouchStart={(e) => { touchStartXRef.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            const dx = e.changedTouches[0].clientX - touchStartXRef.current;
+            if (Math.abs(dx) > 40) stepPhoto(dx < 0 ? 1 : -1);
+          }}
+        >
           <button
-            onClick={() => setLightboxImg(null)}
+            onClick={() => setLightboxIdx(null)}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center"
           >
             <X size={18} className="text-white" />
           </button>
-          <img src={lightboxImg} alt="" className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          {displayPhotos.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); stepPhoto(-1); }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center transition-colors"
+                aria-label="Foto anterior"
+              >
+                <ChevronLeft size={22} className="text-white" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); stepPhoto(1); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center transition-colors"
+                aria-label="Foto siguiente"
+              >
+                <ChevronRight size={22} className="text-white" />
+              </button>
+              <span className="absolute top-5 left-5 text-[12px] font-medium text-white/80">
+                {lightboxIdx + 1} / {displayPhotos.length}
+              </span>
+            </>
+          )}
+          {displayPhotos[lightboxIdx].caption ? (
+            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[13px] text-white/85 bg-black/50 rounded-lg px-3 py-1.5 max-w-[85vw] text-center">
+              {displayPhotos[lightboxIdx].caption}
+            </p>
+          ) : null}
+          <img
+            src={displayPhotos[lightboxIdx].url}
+            alt={displayPhotos[lightboxIdx].caption || ""}
+            className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
