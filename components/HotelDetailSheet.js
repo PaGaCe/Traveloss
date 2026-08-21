@@ -8,7 +8,7 @@ import { firebaseReady } from "../lib/firebase";
 import { useToast } from "./Toast";
 import DatePicker from "./DatePicker";
 
-const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (mismo límite que storage.rules)
 
 function isDataUrl(url) {
   return typeof url === "string" && url.startsWith("data:");

@@ -3,12 +3,13 @@ service firebase.storage {
   match /b/{bucket}/o {
     // Lectura pública: las <img> de la app cargan las URLs de descarga sin
     // cabeceras de autenticación; con reglas más estrictas no se verían.
-    // Escritura: solo usuarios autenticados, ficheros de imagen hasta 5 MB.
+    // Escritura: solo usuarios autenticados, imágenes o PDF hasta 10 MB.
     match /{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+                   && request.resource.size < 10 * 1024 * 1024
+                   && (request.resource.contentType.matches('image/.*')
+                       || request.resource.contentType == 'application/pdf');
     }
   }
 }

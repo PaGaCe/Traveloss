@@ -280,8 +280,8 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
   async function handleNewFilePick(e) {
     const picked = e.target.files && e.target.files[0];
     if (!picked) return;
-    if (picked.size > 8 * 1024 * 1024) {
-      addToast("El archivo es demasiado grande (máx 8 MB)", "warning");
+    if (picked.size > 10 * 1024 * 1024) {
+      addToast("El archivo es demasiado grande (máx 10 MB)", "warning");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
