@@ -135,6 +135,22 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
     }
   }
 
+  // Orden automático por fecha de check-in (o la fecha del día si no tiene);
+  // los que no tienen fecha válida van al final. Desempate por check-out.
+  // El sort es estable: a igualdad se conserva el orden original de días.
+  hotels.sort((a, b) => {
+    const da = parseDateFromLabel(a.checkinDate || a.dayDate);
+    const dbb = parseDateFromLabel(b.checkinDate || b.dayDate);
+    if (!da && !dbb) return 0;
+    if (!da) return 1;
+    if (!dbb) return -1;
+    if (da.getTime() !== dbb.getTime()) return da.getTime() - dbb.getTime();
+    const ca = parseDateFromLabel(a.checkoutDate || "");
+    const cb = parseDateFromLabel(b.checkoutDate || "");
+    if (ca && cb && ca.getTime() !== cb.getTime()) return ca.getTime() - cb.getTime();
+    return 0;
+  });
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

@@ -440,24 +440,28 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate mb-1.5 block">Categoría de comida</label>
               <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat === category ? "" : cat)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[12px] font-bold transition-all border ${
-                      category === cat
-                        ? "border-transparent text-white shadow-xs"
-                        : "bg-cloud text-slate border-line hover:border-slate/30"
-                    }`}
-                    style={{
-                      background: category === cat ? accentColor : undefined,
-                    }}
-                  >
-                    <CategoryIcon category={cat} size={18} />
-                    <span>{cat}</span>
-                  </button>
-                ))}
+                {CATEGORIES.map((cat) => {
+                  const isSelected = category === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCategory(isSelected ? "" : cat)}
+                      title={cat}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[12px] font-bold transition-all border ${
+                        isSelected
+                          ? "border-transparent text-white shadow-xs"
+                          : "bg-cloud text-slate border-line hover:border-slate/30"
+                      }`}
+                      style={{
+                        background: isSelected ? accentColor : undefined,
+                      }}
+                    >
+                      <CategoryIcon category={cat} size={18} />
+                      {!isSelected && <span>{cat}</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -500,20 +504,21 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
           {CATEGORIES.map((cat) => {
             const count = restaurants.filter((r) => r.category === cat).length;
             if (count === 0) return null;
+            const isSelected = filter === cat;
             return (
               <button
                 key={cat}
-                onClick={() => setFilter(filter === cat ? "" : cat)}
+                onClick={() => setFilter(isSelected ? "" : cat)}
+                title={cat}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-bold transition-all whitespace-nowrap border ${
-                  filter === cat ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
+                  isSelected ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
                 }`}
                 style={{
-                  background: filter === cat ? accentColor : undefined,
+                  background: isSelected ? accentColor : undefined,
                 }}
               >
                 <CategoryIcon category={cat} size={18} />
-                <span>{cat}</span>
-                <span className="text-[10px] opacity-70 ml-0.5 font-normal">({count})</span>
+                {!isSelected && <span>{cat}</span>}
               </button>
             );
           })}
