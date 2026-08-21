@@ -388,7 +388,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header bar */}
       <div className="flex items-center justify-between">
         <div>
@@ -558,7 +558,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
 
       {/* Current Hotel banner */}
       {currentHotel && (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div className="flex items-center gap-1.5 px-1">
             <span className="w-2 h-2 rounded-full bg-teal animate-pulse" />
             <span className="text-[11.5px] font-bold uppercase tracking-wider text-teal">Alojamiento actual</span>
@@ -628,14 +628,14 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
 
       {/* All Hotels List */}
       {hotels.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <span className="text-[11.5px] font-bold uppercase tracking-wider text-slate">
               Lista de estancias ({hotels.length})
             </span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {hotels.map((hotel) => {
               const isCurrent = currentHotel && hotel.id === currentHotel.id;
               const isEditingDates = editingDates === hotel.id;
@@ -645,7 +645,7 @@ export default function HotelSection({ trip, accentColor = "#0B0F19", onUpdateTr
               return (
                 <div
                   key={hotel.id}
-                  className={`bg-white rounded-3xl border ${isCurrent ? 'border-ink shadow-card' : 'border-line shadow-soft'} p-4.5 transition-all`}
+                  className={`bg-white rounded-3xl border ${isCurrent ? 'border-ink shadow-card' : 'border-line shadow-soft'} p-4 transition-all`}
                 >
                   <div className="flex items-start gap-3.5">
                     <div

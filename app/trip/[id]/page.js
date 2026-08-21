@@ -288,15 +288,30 @@ export default function TripDetailPage() {
     let notInCloud = 0;
     for (const file of files) {
       try {
-        const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
-        let url = dataUrl;
+        // Versión completa (alta resolución) para ampliar en el lightbox.
+        // La miniatura ligera es solo para la rejilla; si no hay nube se usa
+        // una versión intermedia única para no reventar Firestore/localStorage.
+        const fullUrl = await compressImage(file, { maxWidth: 1920, quality: 0.8 });
+        let url = fullUrl;
+        let thumbUrl = null;
         let uploadedToCloud = false;
         if (firebaseReady) {
+          const stamp = Date.now();
           try {
-            url = await uploadImageToFirebase(dataUrl, `gallery/${tripId}/${day.id}/${Date.now()}-${file.name}`);
+            url = await uploadImageToFirebase(fullUrl, `gallery/${tripId}/${day.id}/${stamp}-${file.name}`);
             uploadedToCloud = true;
           } catch (storageErr) {
             console.warn("Storage upload failed, using inline image:", storageErr);
+          }
+          if (uploadedToCloud) {
+            try {
+              const thumbData = await compressImage(file, { maxWidth: 480, quality: 0.6 });
+              thumbUrl = await uploadImageToFirebase(thumbData, `gallery/${tripId}/${day.id}/${stamp}-thumb-${file.name}`);
+            } catch (thumbErr) {
+              console.warn("Thumbnail upload failed, using full image in grid:", thumbErr);
+            }
+          } else {
+            url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
           }
         }
         if (!uploadedToCloud) notInCloud += firebaseReady ? 1 : 0;
@@ -306,6 +321,7 @@ export default function TripDetailPage() {
         }
         addDayPhoto(tripId, day.id, {
           url,
+          ...(thumbUrl ? { thumbUrl } : {}),
           caption: "",
           addedAt: Date.now(),
         });
@@ -692,7 +708,7 @@ export default function TripDetailPage() {
                   {displayPhotos.map((photo, idx) => (
                     <div key={`${photo.dayId || ""}-${photo.addedAt}-${idx}`} className="relative aspect-square group">
                       <img
-                        src={photo.url}
+                        src={photo.thumbUrl || photo.url}
                         alt={photo.caption || ""}
                         className="w-full h-full object-cover rounded-lg cursor-pointer"
                         onClick={() => setLightboxIdx(idx)}
