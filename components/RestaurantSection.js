@@ -449,14 +449,14 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                       onClick={() => setCategory(isSelected ? "" : cat)}
                       title={cat}
                       aria-label={`Categoría ${cat}`}
-                      className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all active:scale-95"
+                      className="flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all active:scale-95"
                       style={{
                         borderColor: isSelected ? accentColor : "#E2E8F0",
                         background: isSelected ? `${accentColor}14` : "#F8F9FC",
                       }}
                     >
-                      <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
-                        <CategoryIcon category={cat} size={20} />
+                      <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
+                        <CategoryIcon category={cat} size={28} />
                       </span>
                     </button>
                   );
@@ -510,7 +510,7 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                 onClick={() => setFilter(isSelected ? "" : cat)}
                 title={cat}
                 aria-label={`Filtrar por ${cat}`}
-                className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all shrink-0 active:scale-95"
+                className="flex items-center justify-center w-14 h-14 rounded-full border-2 transition-all shrink-0 active:scale-95"
                 style={{
                   borderColor: isSelected ? accentColor : "#E2E8F0",
                   background: isSelected ? `${accentColor}14` : "#ffffff",
@@ -518,8 +518,8 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
               >
                 {/* Disco blanco: el glifo del icono siempre sobre fondo claro
                     aunque el botón esté resaltado con el color del viaje */}
-                <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
-                  <CategoryIcon category={cat} size={20} />
+                <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
+                  <CategoryIcon category={cat} size={28} />
                 </span>
               </button>
             );
