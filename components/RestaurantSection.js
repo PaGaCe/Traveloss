@@ -448,17 +448,16 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                       type="button"
                       onClick={() => setCategory(isSelected ? "" : cat)}
                       title={cat}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[12px] font-bold transition-all border ${
-                        isSelected
-                          ? "border-transparent text-white shadow-xs"
-                          : "bg-cloud text-slate border-line hover:border-slate/30"
-                      }`}
+                      aria-label={`Categoría ${cat}`}
+                      className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all active:scale-95"
                       style={{
-                        background: isSelected ? accentColor : undefined,
+                        borderColor: isSelected ? accentColor : "#E2E8F0",
+                        background: isSelected ? `${accentColor}14` : "#F8F9FC",
                       }}
                     >
-                      <CategoryIcon category={cat} size={18} />
-                      {!isSelected && <span>{cat}</span>}
+                      <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
+                        <CategoryIcon category={cat} size={20} />
+                      </span>
                     </button>
                   );
                 })}
@@ -510,15 +509,18 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
                 key={cat}
                 onClick={() => setFilter(isSelected ? "" : cat)}
                 title={cat}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[12px] font-bold transition-all whitespace-nowrap border ${
-                  isSelected ? "border-transparent text-white shadow-xs" : "bg-white text-slate border-line hover:border-slate/30"
-                }`}
+                aria-label={`Filtrar por ${cat}`}
+                className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all shrink-0 active:scale-95"
                 style={{
-                  background: isSelected ? accentColor : undefined,
+                  borderColor: isSelected ? accentColor : "#E2E8F0",
+                  background: isSelected ? `${accentColor}14` : "#ffffff",
                 }}
               >
-                <CategoryIcon category={cat} size={18} />
-                {!isSelected && <span>{cat}</span>}
+                {/* Disco blanco: el glifo del icono siempre sobre fondo claro
+                    aunque el botón esté resaltado con el color del viaje */}
+                <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-xs">
+                  <CategoryIcon category={cat} size={20} />
+                </span>
               </button>
             );
           })}
