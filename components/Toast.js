@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, createContext, useContext } from "react";
+import { useState, useCallback, useEffect, createContext, useContext } from "react";
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { onPersistError } from "../lib/useTripsStore";
 
 const ToastContext = createContext(null);
 
@@ -35,6 +36,13 @@ export function ToastProvider({ children }) {
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  // Fallos de guardado (cuota de localStorage, Firestore > 1 MiB, red...)
+  // antes pasaban desapercibidos y los datos "desaparecían" al recargar.
+  useEffect(
+    () => onPersistError((message) => addToast(message, "error", 7000)),
+    [addToast]
+  );
 
   return (
     <ToastContext.Provider value={addToast}>

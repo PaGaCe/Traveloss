@@ -243,37 +243,75 @@ export default function TripDetailPage() {
       updateTrip(tripId, { image: dataUrl });
     } catch (err) {
       console.error(err);
+      addToast("No se pudo procesar la imagen de portada", "error");
     } finally {
       setUploadingCover(false);
     }
   }
 
+  // Sin Firebase Storage, las fotos se guardan incrustadas en base64 dentro del
+  // viaje (localStorage o Firestore, con límites de ~5 MB y 1 MB). Si una foto
+  // es demasiado grande, el guardado falla en silencio y la foto desaparece al
+  // recargar: mejor rechazarla avisando al usuario.
+  const MAX_INLINE_PHOTO_CHARS = 300000;
+
   async function handleGalleryUpload(e) {
     const files = e.target.files;
     if (!files || files.length === 0 || !day) return;
     setGalleryUploading(true);
+    let added = 0;
+    let failed = 0;
+    let notInCloud = 0;
     for (const file of files) {
       try {
         const dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
         let url = dataUrl;
+        let uploadedToCloud = false;
         if (firebaseReady) {
           try {
             url = await uploadImageToFirebase(dataUrl, `gallery/${tripId}/${day.id}/${Date.now()}-${file.name}`);
+            uploadedToCloud = true;
           } catch (storageErr) {
             console.warn("Storage upload failed, using inline image:", storageErr);
           }
+        }
+        if (!uploadedToCloud) notInCloud += firebaseReady ? 1 : 0;
+        if (url.length > MAX_INLINE_PHOTO_CHARS) {
+          failed++;
+          continue;
         }
         addDayPhoto(tripId, day.id, {
           url,
           caption: "",
           addedAt: Date.now(),
         });
+        added++;
       } catch (err) {
         console.error("Gallery upload error:", err);
+        failed++;
       }
     }
     setGalleryUploading(false);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
+    if (failed > 0) {
+      addToast(
+        failed === 1
+          ? "1 foto no se pudo guardar (demasiado grande o error al subirla)"
+          : `${failed} fotos no se pudieron guardar (demasiado grandes o error al subirlas)`,
+        "error",
+        6000
+      );
+    } else if (notInCloud > 0) {
+      addToast(
+        notInCloud === 1
+          ? "Foto añadida, pero no se pudo subir al servidor. Se guarda solo en este dispositivo."
+          : `${added} fotos añadidas, pero no se pudieron subir al servidor. Se guardan solo en este dispositivo.`,
+        "warning",
+        7000
+      );
+    } else if (added > 0) {
+      addToast(added === 1 ? "Foto añadida" : `${added} fotos añadidas`, "success");
+    }
   }
 
   function handleDeletePhoto(photo) {

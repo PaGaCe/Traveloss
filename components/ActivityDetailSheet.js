@@ -19,7 +19,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { compressImage } from "../lib/compressImage";
-import { uploadImageToFirebase } from "../lib/uploadImage";
+import { uploadImageToFirebase, uploadFileToFirebase } from "../lib/uploadImage";
 import { firebaseReady } from "../lib/firebase";
 import TimePicker from "./TimePicker";
 import { useToast } from "./Toast";
@@ -148,19 +148,34 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             addToast?.(`"${file.name}" es demasiado grande (máx 5 MB)`, "warning");
             continue;
           }
-          const dataUrl = await compressImage(file);
-          let url = dataUrl;
-          if (firebaseReady) {
-            try {
-              url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
-            } catch (uploadErr) {
-              console.error("No se pudo subir a la nube:", uploadErr);
-              addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
-            }
-          }
           if (isPdf) {
+            let url = null;
+            if (firebaseReady) {
+              try {
+                url = await uploadFileToFirebase(file, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
+              } catch (uploadErr) {
+                console.error("No se pudo subir a la nube:", uploadErr);
+                const detail = uploadErr?.code || uploadErr?.message || "error desconocido";
+                addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente (${detail})`, "warning");
+                url = await compressImage(file);
+              }
+            } else {
+              url = await compressImage(file);
+            }
             newTickets.push({ url, name: file.name, type: "application/pdf" });
           } else {
+            const dataUrl = await compressImage(file);
+            let url = dataUrl;
+            if (firebaseReady) {
+              try {
+                url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
+              } catch (uploadErr) {
+                console.error("No se pudo subir a la nube:", uploadErr);
+                const detail = uploadErr?.code || uploadErr?.message || "error desconocido";
+                addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente (${detail})`, "warning");
+                url = dataUrl;
+              }
+            }
             newTickets.push(url);
           }
           added++;
