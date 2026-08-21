@@ -42,6 +42,7 @@ const EMPTY_CAR = {
 export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", onUpdateCar, onUpdateDocs }) {
   const [editing, setEditing] = useState(!car);
   const [draft, setDraft] = useState(car || { ...EMPTY_CAR });
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const docInputRef = useRef(null);
   const addToast = useToast();
@@ -122,6 +123,19 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
     onUpdateCar(draft);
     setEditing(false);
     addToast?.("Coche guardado correctamente", "success");
+  }
+
+  function handleDeleteCar() {
+    // Confirmación en dos toques para evitar borrados accidentales
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    onUpdateCar(null);
+    setDraft({ ...EMPTY_CAR });
+    setEditing(false);
+    setConfirmDelete(false);
+    addToast?.("Datos del coche eliminados", "success");
   }
 
   function handleFieldChange(field, value) {
@@ -290,7 +304,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
           </div>
           {car && (
             <button
-              onClick={() => { setDraft(car); setEditing(false); }}
+              onClick={() => { setDraft(car); setConfirmDelete(false); setEditing(false); }}
               className="text-[12.5px] font-medium text-slate hover:text-ink px-3 py-1.5 rounded-xl hover:bg-cloud transition-colors"
             >
               Cancelar
@@ -499,13 +513,30 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
           </div>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="w-full mt-6 rounded-2xl py-3.5 text-[15px] font-bold text-white flex items-center justify-center gap-2 shadow-card active:scale-[0.98] transition-all"
-          style={{ background: accentColor }}
-        >
-          <Check size={18} /> Guardar datos del coche
-        </button>
+        <div className="mt-6 flex items-center gap-3">
+          {car && (
+            <button
+              onClick={handleDeleteCar}
+              onBlur={() => setConfirmDelete(false)}
+              className={`flex items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-[13.5px] font-bold border transition-all active:scale-95 shrink-0 ${
+                confirmDelete
+                  ? "bg-coral text-white border-coral"
+                  : "bg-surface text-coral border-coral/30 hover:bg-coral/10"
+              }`}
+              title="Eliminar los datos del coche"
+            >
+              <Trash2 size={16} />
+              <span>{confirmDelete ? "¿Seguro?" : ""}</span>
+            </button>
+          )}
+          <button
+            onClick={handleSave}
+            className="flex-1 rounded-2xl py-3.5 text-[15px] font-bold text-white flex items-center justify-center gap-2 shadow-card active:scale-[0.98] transition-all"
+            style={{ background: accentColor }}
+          >
+            <Check size={18} /> Guardar datos del coche
+          </button>
+        </div>
       </div>
     );
   }
@@ -528,7 +559,7 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
             </div>
           </div>
           <button
-            onClick={() => { setDraft(car); setEditing(true); }}
+            onClick={() => { setDraft(car); setConfirmDelete(false); setEditing(true); }}
             className="w-9 h-9 rounded-2xl bg-cloud flex items-center justify-center text-slate hover:text-ink hover:bg-slate-200 active:scale-95 transition-all"
             title="Editar coche"
           >
