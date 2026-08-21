@@ -117,15 +117,26 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
     if (!file) return;
     setUploading(true);
     try {
-      const dataUrl = await compressImage(file);
+      // Alta resolución para poder ampliarla sin pixelar; la versión media es
+      // solo el fallback cuando la foto se guarda incrustada en el dispositivo.
+      const fullDataUrl = await compressImage(file, { maxWidth: 1920, quality: 0.8 });
+      let url = fullDataUrl;
       if (firebaseReady) {
-        const url = await uploadImageToFirebase(dataUrl, `activities/${item.id}-${Date.now()}.jpg`);
-        onUpdate({ image: url });
+        try {
+          url = await uploadImageToFirebase(fullDataUrl, `activities/${item.id}-${Date.now()}.jpg`);
+        } catch (uploadErr) {
+          console.error("No se pudo subir a la nube:", uploadErr);
+          const detail = uploadErr?.code || uploadErr?.message || "error desconocido";
+          addToast?.(`No se pudo subir la foto a la nube, se guarda localmente (${detail})`, "warning");
+          url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
+        }
       } else {
-        onUpdate({ image: dataUrl });
+        url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
       }
+      onUpdate({ image: url });
     } catch (err) {
       console.error(err);
+      addToast?.("No se pudo procesar la imagen", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -164,17 +175,21 @@ export default function ActivityDetailSheet({ item, onClose, onUpdate, onDelete,
             }
             newTickets.push({ url, name: file.name, type: "application/pdf" });
           } else {
-            const dataUrl = await compressImage(file);
-            let url = dataUrl;
+            // Alta resolución para el lightbox; versión media solo como
+            // fallback incrustado (límites de Firestore/localStorage).
+            const fullDataUrl = await compressImage(file, { maxWidth: 1920, quality: 0.8 });
+            let url = fullDataUrl;
             if (firebaseReady) {
               try {
-                url = await uploadImageToFirebase(dataUrl, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
+                url = await uploadImageToFirebase(fullDataUrl, `tickets/${item.id}-${Date.now()}-${sanitizeFileName(file.name)}`);
               } catch (uploadErr) {
                 console.error("No se pudo subir a la nube:", uploadErr);
                 const detail = uploadErr?.code || uploadErr?.message || "error desconocido";
                 addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente (${detail})`, "warning");
-                url = dataUrl;
+                url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
               }
+            } else {
+              url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
             }
             newTickets.push(url);
           }

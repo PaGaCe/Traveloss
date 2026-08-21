@@ -154,7 +154,9 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
             addToast?.(`"${file.name}" es demasiado grande (máx 10 MB)`, "warning");
             continue;
           }
-          dataUrl = await compressImage(file, { maxWidth: 600, quality: 0.5 });
+          // Alta resolución para ampliar sin pixelar; versión media solo como
+          // fallback incrustado (límites de Firestore/localStorage).
+          dataUrl = await compressImage(file, { maxWidth: 1920, quality: 0.8 });
         }
         let url = dataUrl;
         if (firebaseReady) {
@@ -162,7 +164,10 @@ export default function CarSection({ car, rentalDocs, accentColor = "#0B0F19", o
             url = await uploadImageToFirebase(dataUrl, `cars/${Date.now()}-${file.name}`);
           } catch (uploadErr) {
             addToast?.(`No se pudo subir "${file.name}" a la nube, se guarda localmente`, "warning");
+            url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
           }
+        } else {
+          url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
         }
         newDocs.push({
           name: file.name,

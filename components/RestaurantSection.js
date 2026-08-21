@@ -214,17 +214,22 @@ export default function RestaurantSection({ trip, accentColor = "#0B0F19", onUpd
     if (!file) return;
     setUploading(true);
     try {
-      const dataUrl = await compressImage(file);
+      // Alta resolución para ampliar sin pixelar; versión media solo como
+      // fallback incrustado (límites de Firestore/localStorage).
+      const fullDataUrl = await compressImage(file, { maxWidth: 1920, quality: 0.8 });
+      let url = fullDataUrl;
       if (firebaseReady) {
         try {
-          const url = await uploadImageToFirebase(dataUrl, `restaurants/${Date.now()}-${file.name}`);
+          url = await uploadImageToFirebase(fullDataUrl, `restaurants/${Date.now()}-${file.name}`);
           setImage(url);
         } catch (storageErr) {
           console.warn("Storage upload failed, using inline image:", storageErr);
-          setImage(dataUrl);
+          url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
+          setImage(url);
         }
       } else {
-        setImage(dataUrl);
+        url = await compressImage(file, { maxWidth: 900, quality: 0.6 });
+        setImage(url);
       }
     } catch (err) {
       console.error(err);
